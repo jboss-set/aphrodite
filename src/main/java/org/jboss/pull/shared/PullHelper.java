@@ -1,3 +1,24 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright (c) 2013, Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags. See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.pull.shared;
 
 import org.eclipse.egit.github.core.CommitStatus;
@@ -14,13 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.redhat.engineering.bugzilla.Bug;
-import com.redhat.engineering.bugzilla.BugzillaClient;
-import com.redhat.engineering.bugzilla.BugzillaClientImpl;
-import com.redhat.engineering.bugzilla.Flag;
 
 /**
  * A shared functionality regarding mergeable PRs, Github and Bugzilla.
@@ -37,17 +54,15 @@ public class PullHelper {
     public static final String QA_ACK = "qa_ack";
     public static final String DEVEL_ACK = "devel_ack";//FIXME is it dev_ or devel_ack?
 
-    public static final String STATUS_MODIFIED = "MODIFIED";
-
-    private static final Map<String, String> MERGEABLE_FLAGS;
-    private static final Map<String, String> UNMERGEABLE_FLAGS;
+    private static final Map<String, Flag.Status> MERGEABLE_FLAGS;
+    private static final Map<String, Flag.Status> UNMERGEABLE_FLAGS;
 
     static {
-        MERGEABLE_FLAGS = new HashMap<String, String>();
-        MERGEABLE_FLAGS.put(PM_ACK, "+");
-        MERGEABLE_FLAGS.put(QA_ACK, "+");
-        UNMERGEABLE_FLAGS = new HashMap<String, String>();
-        UNMERGEABLE_FLAGS.put(DEVEL_ACK, "-");
+        MERGEABLE_FLAGS = new HashMap<String, Flag.Status>();
+        MERGEABLE_FLAGS.put(PM_ACK, Flag.Status.POSITIVE);
+        MERGEABLE_FLAGS.put(QA_ACK, Flag.Status.POSITIVE);
+        UNMERGEABLE_FLAGS = new HashMap<String, Flag.Status>();
+        UNMERGEABLE_FLAGS.put(DEVEL_ACK, Flag.Status.NEGATIVE);
     }
 
     private String GITHUB_ORGANIZATION;
@@ -66,7 +81,7 @@ public class PullHelper {
     private IssueService issueService;
     private PullRequestService pullRequestService;
 
-    private BugzillaClient bugzillaClient;
+    private Bugzilla bugzillaClient;
 
     private Properties props;
 
@@ -83,7 +98,7 @@ public class PullHelper {
 
             String flagEapVersion = Util.get(props, "eap.version.flag");
             if (flagEapVersion != null && !flagEapVersion.isEmpty()) {
-                MERGEABLE_FLAGS.put(flagEapVersion, "+");
+                MERGEABLE_FLAGS.put(flagEapVersion, Flag.Status.POSITIVE);
             }
 
             // initialize client and services
@@ -100,7 +115,7 @@ public class PullHelper {
             BUGZILLA_PASSWORD = Util.require(props, "bugzilla.password");
 
             // initialize bugzilla client
-            bugzillaClient = new BugzillaClientImpl(BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
+            bugzillaClient = new Bugzilla(BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
 
         } catch (Exception e) {
             System.err.println("Cannot initialize: " + e);
@@ -114,7 +129,7 @@ public class PullHelper {
         return isMergeable(pull, null);
     }
 
-    public boolean isMergeable(PullRequest pull, Map<String, String> requiredFlags) {
+    public boolean isMergeable(PullRequest pull, Map<String, Flag.Status> requiredFlags) {
         boolean mergeable = true;
         mergeable = mergeable && isMergeableByUpstream(pull);
         mergeable = mergeable && isMergeableByBugzilla(pull, requiredFlags);
@@ -134,25 +149,25 @@ public class PullHelper {
         return false;
     }
 
-    public boolean isMergeableByBugzilla(PullRequest pull, Map<String, String> requiredFlags) {
+    public boolean isMergeableByBugzilla(PullRequest pull, Map<String, Flag.Status> requiredFlags) {
         Bug bug = getBug(pull);
         if (bug == null) {
             return false;
         }
 
-        Map<String, String> flagsToCheck = new HashMap<String, String>(MERGEABLE_FLAGS);
+        Map<String, Flag.Status> flagsToCheck = new HashMap<String, Flag.Status>(MERGEABLE_FLAGS);
         if (requiredFlags != null) {
             flagsToCheck.putAll(requiredFlags);
         }
 
-        List<Flag> flags = bug.getFlags();
+        Set<Flag> flags = bug.getFlags();
         for (Flag flag : flags) {
-            String bannedValue = UNMERGEABLE_FLAGS.get(flag.getName());
-            if (bannedValue != null && flag.getStatus().endsWith(bannedValue)) { //FIXME endsWith or equals?
+            Flag.Status bannedValue = UNMERGEABLE_FLAGS.get(flag.getName());
+            if ((bannedValue != null) && (flag.getStatus() == bannedValue)) {
                 return false;
             }
-            String requiredValue = flagsToCheck.get(flag.getName());
-            if (requiredValue != null && flag.getStatus().endsWith(requiredValue)) { //FIXME endsWith or equals?
+            Flag.Status requiredValue = flagsToCheck.get(flag.getName());
+            if ((requiredValue != null) && (flag.getStatus() == requiredValue)) {
                 flagsToCheck.remove(flag.getName());
             }
         }
@@ -206,11 +221,10 @@ public class PullHelper {
         return upstreamPull;
     }
 
-    public void updateBugzillaStatus(PullRequest pull, String status) throws Exception {
+    public void updateBugzillaStatus(PullRequest pull, Bug.Status status) throws Exception {
         Bug bug = getBug(pull);
         if (bug != null) {
-            bug.setStatus(status);
-            bugzillaClient.update(bug);
+            bugzillaClient.updateBugzillaStatus(bug.getId(), status);
         }
     }
 
