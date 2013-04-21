@@ -31,6 +31,7 @@ import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,8 +73,8 @@ public class PullHelper {
     private String GITHUB_TOKEN;
     private String GITHUB_BRANCH;
 
-    private static String BUGZILLA_LOGIN;
-    private static String BUGZILLA_PASSWORD;
+    private String BUGZILLA_LOGIN;
+    private String BUGZILLA_PASSWORD;
 
     private IRepositoryIdProvider repositoryEAP;
     private IRepositoryIdProvider repositoryAS;
@@ -138,92 +139,103 @@ public class PullHelper {
 
     public boolean isMergeableByUpstream(PullRequest pull) {
         try {
-            PullRequest upstreamPull = getUpstreamPullRequest(pull);
-            if (upstreamPull != null && upstreamPull.isMerged()) {
-                return true;
+            List<PullRequest> upstreamPulls = getUpstreamPullRequest(pull);
+            if (upstreamPulls.size() == 0)
+                return false;
+            for (PullRequest pullRequest : upstreamPulls) {
+                if (!pullRequest.getState().equals("closed"))
+                    return false;
             }
         } catch (Exception ignore) {
             System.err.printf("Cannot get an upstream pull request of the pull request %d: %s.\n", pull.getNumber(), ignore);
             ignore.printStackTrace(System.err);
         }
-        return false;
+        return true;
     }
 
     public boolean isMergeableByBugzilla(PullRequest pull, Map<String, Flag.Status> requiredFlags) {
-        Bug bug = getBug(pull);
-        if (bug == null) {
+        List<Bug> bugs = getBug(pull);
+        if (bugs.size() == 0)
             return false;
-        }
 
         Map<String, Flag.Status> flagsToCheck = new HashMap<String, Flag.Status>(MERGEABLE_FLAGS);
-        if (requiredFlags != null) {
-            flagsToCheck.putAll(requiredFlags);
-        }
 
-        Set<Flag> flags = bug.getFlags();
-        for (Flag flag : flags) {
-            Flag.Status bannedValue = UNMERGEABLE_FLAGS.get(flag.getName());
-            if ((bannedValue != null) && (flag.getStatus() == bannedValue)) {
-                return false;
+        for (Bug bug : bugs) {
+            flagsToCheck = new HashMap<String, Flag.Status>(MERGEABLE_FLAGS);
+            if (requiredFlags != null) {
+                flagsToCheck.putAll(requiredFlags);
             }
-            Flag.Status requiredValue = flagsToCheck.get(flag.getName());
-            if ((requiredValue != null) && (flag.getStatus() == requiredValue)) {
-                flagsToCheck.remove(flag.getName());
+
+            Set<Flag> flags = bug.getFlags();
+            for (Flag flag : flags) {
+                Flag.Status bannedValue = UNMERGEABLE_FLAGS.get(flag.getName());
+                if ((bannedValue != null) && (flag.getStatus() == bannedValue)) {
+                    return false;
+                }
+                Flag.Status requiredValue = flagsToCheck.get(flag.getName());
+                if ((requiredValue != null) && (flag.getStatus() == requiredValue)) {
+                    flagsToCheck.remove(flag.getName());
+                }
             }
         }
 
         return flagsToCheck.isEmpty();
     }
 
-    public static Integer checkBugzillaId(String body) {
+    public static List<Integer> checkBugzillaId(String body) {
+        ArrayList<Integer> ids = new ArrayList<Integer>();
         Matcher matcher = BUGZILLA_ID_PATTERN.matcher(body);
-        while (matcher.find()) {    //FIXME what if there are more than one?
+        while (matcher.find()) {
             try {
-                return Integer.parseInt(matcher.group(1));
+                ids.add(Integer.parseInt(matcher.group(1)));
             } catch (NumberFormatException ignore) {
                 System.err.println("Invalid bug number: " + ignore);
             }
         }
-        return null;
+        return ids;
     }
 
-    public static Integer checkUpStreamPullRequestId(String body) {
+    public static List<Integer> checkUpStreamPullRequestId(String body) {
+        ArrayList<Integer> ids = new ArrayList<Integer>();
         Matcher matcher = UPSTREAM_PATTERN.matcher(body);
-        while (matcher.find()) {    //FIXME what if there are more than one?
+        while (matcher.find()) {
             try {
-                return Integer.parseInt(matcher.group(1));
+                ids.add(Integer.parseInt(matcher.group(1)));
             } catch (NumberFormatException ignore) {
                 System.err.println("Invalid pull request number: " + ignore);
             }
         }
-        return null;
+        return ids;
     }
 
-    public Bug getBug(PullRequest pull) {
-        Bug bug = null;
-        Integer bugId = checkBugzillaId(pull.getBody());
-        if (bugId == null) {
+    public List<Bug> getBug(PullRequest pull) {
+        List<Integer> ids = checkBugzillaId(pull.getBody());
+        ArrayList<Bug> bugs = new ArrayList<Bug>();
+
+        for (Integer id : ids) {
             try {
-                bug = bugzillaClient.getBug(bugId);
+                Bug bug = bugzillaClient.getBug(id);
+                bugs.add(bug);
             } catch (Exception ignore) {
                 System.err.printf("Cannot get a bug related to the pull request %d: %s.\n", pull.getNumber(), ignore);
             }
         }
-        return bug;
+        return bugs;
     }
 
-    public PullRequest getUpstreamPullRequest(PullRequest pull) throws IOException {
-        PullRequest upstreamPull = null;
-        Integer pullNo = checkUpStreamPullRequestId(pull.getBody());
-        if (pullNo != null) {
-            upstreamPull = pullRequestService.getPullRequest(repositoryAS, pullNo);
+    public List<PullRequest> getUpstreamPullRequest(PullRequest pull) throws IOException {
+        ArrayList<PullRequest> upstreamPulls = new ArrayList<PullRequest>();
+
+        List<Integer> pullIds = checkUpStreamPullRequestId(pull.getBody());
+        for (Integer id : pullIds) {
+            upstreamPulls.add(pullRequestService.getPullRequest(repositoryAS, id));
         }
-        return upstreamPull;
+        return upstreamPulls;
     }
 
     public void updateBugzillaStatus(PullRequest pull, Bug.Status status) throws Exception {
-        Bug bug = getBug(pull);
-        if (bug != null) {
+        List<Bug> bugs = getBug(pull);
+        for (Bug bug : bugs) {
             bugzillaClient.updateBugzillaStatus(bug.getId(), status);
         }
     }
@@ -281,5 +293,4 @@ public class PullHelper {
     public String getGithubLogin() {
         return GITHUB_LOGIN;
     }
-
 }
