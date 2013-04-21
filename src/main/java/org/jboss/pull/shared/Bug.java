@@ -21,7 +21,6 @@
  */
 package org.jboss.pull.shared;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +40,7 @@ public class Bug {
         CLOSED
     }
 
-    private HashMap<String, Object> bugMap;
+    private Map<String, Object> bugMap;
 
     //includes attributes for Bug.get execution
     public static final Object[] include_fields = {"id", "assigned_to", "status", "flags"};
@@ -51,13 +50,12 @@ public class Bug {
     private Status status;
     private Set<Flag> flags;
 
-    public Bug(HashMap<String, Object> bugMap) {
+    public Bug(Map<String, Object> bugMap) {
         this.bugMap = bugMap;
         initBug();
 
     }
 
-    @SuppressWarnings("unchecked")
     private void initBug() {
         id = (Integer) bugMap.get("id");
         assigned_to = (String) bugMap.get("assigned_to");
@@ -66,6 +64,7 @@ public class Bug {
 
         Object[] flagObjs = (Object[]) bugMap.get("flags");
         for(Object obj : flagObjs){
+            @SuppressWarnings("unchecked")
             Map<String, Object> flag = (Map<String, Object>)obj;
             String name = (String) flag.get("name");
             String setter = (String) flag.get("setter");
@@ -88,11 +87,11 @@ public class Bug {
         }
     }
 
-    public HashMap<String, Object> getBugMap() {
+    public Map<String, Object> getBugMap() {
         return bugMap;
     }
 
-    public void setBugMap(HashMap<String, Object> bugMap) {
+    public void setBugMap(Map<String, Object> bugMap) {
         this.bugMap = bugMap;
     }
 
