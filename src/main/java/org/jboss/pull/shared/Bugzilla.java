@@ -66,8 +66,42 @@ public class Bugzilla {
         return null;
     }
 
+    /**
+     * Get an initialized parameter map with login and password
+     *
+     * @return
+     */
+    private Map<Object, Object> getParameterMap() {
+        Map<Object, Object> params = new HashMap<Object, Object>();
+        params.put("Bugzilla_login", login);
+        params.put("Bugzilla_password", password);
+        return params;
+    }
+
     public Bug getBug(Integer bugzillaId) {
-        //TODO
+        XmlRpcClient rpcClient = getClient(baseURL);
+        Map<Object, Object> params = getParameterMap();
+        params.put("include_fields", Bug.include_fields);
+        params.put("ids", bugzillaId);
+        params.put("permissive", true);
+        Object[] objs = { params };
+        try {
+            Object resultObj = rpcClient.execute("Bug.get", objs);
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
+
+            Object[] bugs = (Object[]) resultMap.get("bugs");
+            // Only retrieve one bug
+            if (bugs.length == 1) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> bugMap = (Map<String, Object>) bugs[0];
+                Bug bug = new Bug(bugMap);
+                return bug;
+            }
+        } catch (XmlRpcException e) {
+            System.err.println("Can not get bug with id : " + bugzillaId);
+            e.printStackTrace(System.err);
+        }
         return null;
     }
 
@@ -79,20 +113,14 @@ public class Bugzilla {
      * @return true if post successes
      */
     public boolean postBugzillaComment(Integer bugzillaId, String comment) {
-        System.out.println(comment);
         try {
             XmlRpcClient rpcClient = getClient(baseURL);
-            Map<Object, Object> params = new HashMap<Object, Object>();
-
-            params.put("Bugzilla_login", login);
-            params.put("Bugzilla_password", password);
+            Map<Object, Object> params = getParameterMap();
             params.put("id", bugzillaId);
             params.put("comment", comment);
             Object[] objs = { params };
-            Object result = (HashMap) rpcClient.execute("Bug.add_comment", objs);
-
+            rpcClient.execute("Bug.add_comment", objs);
             return true;
-
         } catch (XmlRpcException e) {
             e.printStackTrace();
         }
@@ -106,23 +134,20 @@ public class Bugzilla {
      * @param status The status you want to change the bug to
      * @return true if status changed otherwise false
      */
-    @SuppressWarnings("unchecked")
     public boolean updateBugzillaStatus(Integer bugzillaId, Bug.Status status) {
         try {
             XmlRpcClient rpcClient = getClient(baseURL);
-            Map<Object, Object> params = new HashMap<Object, Object>();
+            Map<Object, Object> params = getParameterMap();
 
             // update bug status.
-            params.put("Bugzilla_login", login);
-            params.put("Bugzilla_password", password);
             params.put("ids", bugzillaId);
             params.put("status", status);
             Object[] objParams = { params };
-            Object result = (HashMap) rpcClient.execute("Bug.update", objParams);
-            Map<Object,Object> res = (Map<Object, Object>) result;
-            int id = (Integer) res.get("id");
+            Object resultObj = rpcClient.execute("Bug.update", objParams);
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
+            int id = (Integer) resultMap.get("id");
             return id == bugzillaId;
-
         } catch (XmlRpcException e) {
             e.printStackTrace();
             return false;
@@ -137,8 +162,7 @@ public class Bugzilla {
      * @param status The flag's new status(+,-,X,?)
      * @return true if update successful, otherwise false;
      */
-    @SuppressWarnings("unused")
-    private boolean updateBugzillaFlag(Integer[] ids, String name, Status status) {
+    public boolean updateBugzillaFlag(Integer[] ids, String name, Status status) {
 
         String flagStatus;
         if(status.equals(Status.POSITIVE))
@@ -151,16 +175,14 @@ public class Bugzilla {
             flagStatus = " ";
 
         XmlRpcClient rpcClient = getClient(baseURL);
-        Map<Object, Object> params = new HashMap<Object, Object>();
+        Map<Object, Object> params = getParameterMap();
 
-        HashMap<String, String> updates = new HashMap<String, String>();
+        Map<String, String> updates = new HashMap<String, String>();
         updates.put("name", name);
         updates.put("status", flagStatus);
         Object[] updateArray = {updates};
 
         //update bugzilla bugs flag.
-        params.put("Bugzilla_login", login);
-        params.put("Bugzilla_password", password);
         params.put("ids", ids);
         params.put("updates", updateArray);
         params.put("permissive", true);
