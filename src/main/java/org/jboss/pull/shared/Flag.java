@@ -21,7 +21,11 @@
  */
 package org.jboss.pull.shared;
 
-public class Flag {
+import java.io.Serializable;
+
+public class Flag implements Serializable{
+
+    private static final long serialVersionUID = -4167575539988047120L;
 
     public enum Status {
         /**

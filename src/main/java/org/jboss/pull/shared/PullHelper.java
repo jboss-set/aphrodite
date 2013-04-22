@@ -182,7 +182,7 @@ public class PullHelper {
         return flagsToCheck.isEmpty();
     }
 
-    public static List<Integer> checkBugzillaId(String body) {
+    public List<Integer> checkBugzillaId(String body) {
         ArrayList<Integer> ids = new ArrayList<Integer>();
         Matcher matcher = BUGZILLA_ID_PATTERN.matcher(body);
         while (matcher.find()) {
@@ -195,7 +195,7 @@ public class PullHelper {
         return ids;
     }
 
-    public static List<Integer> checkUpStreamPullRequestId(String body) {
+    public List<Integer> checkUpStreamPullRequestId(String body) {
         ArrayList<Integer> ids = new ArrayList<Integer>();
         Matcher matcher = UPSTREAM_PATTERN.matcher(body);
         while (matcher.find()) {

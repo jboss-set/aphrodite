@@ -21,11 +21,12 @@
  */
 package org.jboss.pull.shared;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class Bug {
+public class Bug implements Serializable{
 
     // Bug Status
     public enum Status {
@@ -39,6 +40,8 @@ public class Bug {
         RELEASE_PENDING,
         CLOSED
     }
+
+    private static final long serialVersionUID = 6967220126171894474L;
 
     private Map<String, Object> bugMap;
 
