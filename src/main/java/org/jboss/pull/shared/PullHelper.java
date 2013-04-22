@@ -155,13 +155,12 @@ public class PullHelper {
 
     public boolean isMergeableByBugzilla(PullRequest pull, Map<String, Flag.Status> requiredFlags) {
         List<Bug> bugs = getBug(pull);
-        if (bugs.size() == 0)
+        if (bugs.size() == 0) {
             return false;
-
-        Map<String, Flag.Status> flagsToCheck = new HashMap<String, Flag.Status>(MERGEABLE_FLAGS);
+        }
 
         for (Bug bug : bugs) {
-            flagsToCheck = new HashMap<String, Flag.Status>(MERGEABLE_FLAGS);
+            Map<String, Flag.Status> flagsToCheck = new HashMap<String, Flag.Status>(MERGEABLE_FLAGS);
             if (requiredFlags != null) {
                 flagsToCheck.putAll(requiredFlags);
             }
@@ -177,9 +176,11 @@ public class PullHelper {
                     flagsToCheck.remove(flag.getName());
                 }
             }
+            if (! flagsToCheck.isEmpty()) {
+                return false;
+            }
         }
-
-        return flagsToCheck.isEmpty();
+        return true;
     }
 
     public List<Integer> checkBugzillaId(String body) {
