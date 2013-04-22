@@ -21,6 +21,7 @@
  */
 package org.jboss.pull.shared;
 
+import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.IRepositoryIdProvider;
 import org.eclipse.egit.github.core.PullRequest;
@@ -49,6 +50,7 @@ public class PullHelper {
 
     private static final Pattern BUGZILLA_ID_PATTERN = Pattern.compile("bugzilla\\.redhat\\.com/show_bug\\.cgi\\?id=(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern UPSTREAM_PATTERN = Pattern.compile("github\\.com/jbossas/jboss-as/pull/(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BUILD_OUTCOME = Pattern.compile("Build (\\d+) outcome was (SUCCESS|FAILURE|ABORTED) using a merge of ([a-z0-9]+) on branch (.+):", Pattern.CASE_INSENSITIVE);
     private static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
 
     public static final String PM_ACK = "pm_ack";
@@ -222,6 +224,25 @@ public class PullHelper {
             }
         }
         return bugs;
+    }
+
+    public BuildResult checkBuildResult(PullRequest pullRequest) {
+        BuildResult buildResult = BuildResult.UNKNOWN;
+        List<Comment> comments;
+        try {
+            comments = issueService.getComments(repositoryEAP, pullRequest.getNumber());
+        } catch (IOException e) {
+            System.err.println("Error to get comments for pull request : " + pullRequest.getNumber());
+            e.printStackTrace(System.err);
+            return buildResult;
+        }
+        for (Comment comment : comments) {
+            Matcher matcher = BUILD_OUTCOME.matcher(comment.getBody());
+            while (matcher.find()) {
+                buildResult = BuildResult.valueOf(matcher.group(2));
+            }
+        }
+        return buildResult;
     }
 
     public List<PullRequest> getUpstreamPullRequest(PullRequest pull) throws IOException {
