@@ -145,7 +145,7 @@ public class PullHelper {
             if (upstreamPulls.size() == 0)
                 return false;
             for (PullRequest pullRequest : upstreamPulls) {
-                if (!pullRequest.getState().equals("closed"))
+                if (! pullRequestService.isMerged(repositoryAS, pullRequest.getNumber()))
                     return false;
             }
         } catch (Exception ignore) {
