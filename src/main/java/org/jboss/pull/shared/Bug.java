@@ -22,9 +22,9 @@
 package org.jboss.pull.shared;
 
 import java.io.Serializable;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class Bug implements Serializable{
 
@@ -51,7 +51,7 @@ public class Bug implements Serializable{
     private int id;
     private String assigned_to;
     private Status status;
-    private Set<Flag> flags;
+    private List<Flag> flags;
 
     public Bug(Map<String, Object> bugMap) {
         this.bugMap = bugMap;
@@ -63,7 +63,7 @@ public class Bug implements Serializable{
         id = (Integer) bugMap.get("id");
         assigned_to = (String) bugMap.get("assigned_to");
         status = Status.valueOf((String)bugMap.get("status"));
-        flags = new HashSet<Flag>();
+        flags = new ArrayList<Flag>();
 
         Object[] flagObjs = (Object[]) bugMap.get("flags");
         for(Object obj : flagObjs){
@@ -122,11 +122,11 @@ public class Bug implements Serializable{
         this.status = status;
     }
 
-    public Set<Flag> getFlags() {
+    public List<Flag> getFlags() {
         return flags;
     }
 
-    public void setFlags(Set<Flag> flags) {
+    public void setFlags(List<Flag> flags) {
         this.flags = flags;
     }
 }
