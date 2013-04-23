@@ -167,7 +167,7 @@ public class PullHelper {
                 flagsToCheck.putAll(requiredFlags);
             }
 
-            Set<Flag> flags = bug.getFlags();
+            List<Flag> flags = bug.getFlags();
             for (Flag flag : flags) {
                 Flag.Status bannedValue = UNMERGEABLE_FLAGS.get(flag.getName());
                 if ((bannedValue != null) && (flag.getStatus() == bannedValue)) {
