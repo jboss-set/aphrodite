@@ -167,14 +167,19 @@ public class PullHelper {
         }
 
         try {
+            if (pullRequestService.isMerged(repositoryAS, pull.getNumber())) {
+                return true;
+            }
+        } catch (IOException ignored) {}
+
+        try {
             final List<Comment> comments = issueService.getComments(repositoryAS, pull.getNumber());
             for (Comment comment : comments) {
                 if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
                     return true;
                 }
             }
-        } catch (IOException ignore) {
-        }
+        } catch (IOException ignore) {}
 
         return false;
     }
