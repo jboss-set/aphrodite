@@ -139,20 +139,44 @@ public class PullHelper {
         return mergeable;
     }
 
-    public boolean isMergeableByUpstream(PullRequest pull) {
+    public boolean isMergeableByUpstream(final PullRequest pull) {
         try {
             List<PullRequest> upstreamPulls = getUpstreamPullRequest(pull);
-            if (upstreamPulls.size() == 0)
+            if (upstreamPulls.size() == 0) {
                 return false;
+            }
             for (PullRequest pullRequest : upstreamPulls) {
-                if (! pullRequestService.isMerged(repositoryAS, pullRequest.getNumber()))
+                if (! isMerged(pullRequest)) {
                     return false;
+                }
             }
         } catch (Exception ignore) {
             System.err.printf("Cannot get an upstream pull request of the pull request %d: %s.\n", pull.getNumber(), ignore);
             ignore.printStackTrace(System.err);
         }
         return true;
+    }
+
+    private boolean isMerged(final PullRequest pull) {
+        if (pull == null) {
+            return false;
+        }
+
+        if (! pull.getState().equals("closed")) {
+            return false;
+        }
+
+        try {
+            final List<Comment> comments = issueService.getComments(repositoryAS, pull.getNumber());
+            for (Comment comment : comments) {
+                if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
+                    return true;
+                }
+            }
+        } catch (IOException ignore) {
+        }
+
+        return false;
     }
 
     public boolean isMergeableByBugzilla(PullRequest pull, Map<String, Flag.Status> requiredFlags) {
