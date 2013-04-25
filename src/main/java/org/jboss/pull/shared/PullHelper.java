@@ -68,9 +68,10 @@ public class PullHelper {
         UNMERGEABLE_FLAGS.put(DEVEL_ACK, Flag.Status.NEGATIVE);
     }
 
-    private String GITHUB_ORGANIZATION;
+    private String GITHUB_ORGANIZATION_EAP;
+    private String GITHUB_ORGANIZATION_WILDFLY;
     private String GITHUB_EAP_REPO;
-    private String GITHUB_AS_REPO;
+    private String GITHUB_WILDFLY_REPO;
     private String GITHUB_LOGIN;
     private String GITHUB_TOKEN;
     private String GITHUB_BRANCH;
@@ -92,9 +93,10 @@ public class PullHelper {
         try {
             props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
 
-            GITHUB_ORGANIZATION = Util.require(props, "github.organization");
+            GITHUB_ORGANIZATION_EAP = Util.require(props, "github.organization.eap");
+            GITHUB_ORGANIZATION_WILDFLY = Util.require(props, "github.organization.wildfly");
             GITHUB_EAP_REPO = Util.require(props, "github.eap.repo");
-            GITHUB_AS_REPO = Util.require(props, "github.as.repo");
+            GITHUB_WILDFLY_REPO = Util.require(props, "github.wildfly.repo");
             GITHUB_LOGIN = Util.require(props, "github.login");
             GITHUB_TOKEN = Util.get(props, "github.token");
             GITHUB_BRANCH = Util.require(props, "github.branch");
@@ -108,8 +110,8 @@ public class PullHelper {
             GitHubClient client = new GitHubClient();
             if (GITHUB_TOKEN != null && GITHUB_TOKEN.length() > 0)
                 client.setOAuth2Token(GITHUB_TOKEN);
-            repositoryEAP = RepositoryId.create(GITHUB_ORGANIZATION, GITHUB_EAP_REPO);
-            repositoryAS = RepositoryId.create(GITHUB_ORGANIZATION, GITHUB_AS_REPO);
+            repositoryEAP = RepositoryId.create(GITHUB_ORGANIZATION_EAP, GITHUB_EAP_REPO);
+            repositoryAS = RepositoryId.create(GITHUB_ORGANIZATION_WILDFLY, GITHUB_WILDFLY_REPO);
             commitService = new CommitService(client);
             issueService = new IssueService(client);
             pullRequestService = new PullRequestService(client);
