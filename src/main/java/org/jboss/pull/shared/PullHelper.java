@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,10 +67,10 @@ public class PullHelper {
         UNMERGEABLE_FLAGS.put(DEVEL_ACK, Flag.Status.NEGATIVE);
     }
 
-    private String GITHUB_ORGANIZATION_EAP;
-    private String GITHUB_ORGANIZATION_WILDFLY;
-    private String GITHUB_EAP_REPO;
-    private String GITHUB_WILDFLY_REPO;
+    private String GITHUB_ORGANIZATION;
+    private String GITHUB_ORGANIZATION_UPSTREAM;
+    private String GITHUB_REPO;
+    private String GITHUB_REPO_UPSTREAM;
     private String GITHUB_LOGIN;
     private String GITHUB_TOKEN;
     private String GITHUB_BRANCH;
@@ -79,8 +78,8 @@ public class PullHelper {
     private String BUGZILLA_LOGIN;
     private String BUGZILLA_PASSWORD;
 
-    private IRepositoryIdProvider repositoryEAP;
-    private IRepositoryIdProvider repositoryAS;
+    private IRepositoryIdProvider repository;
+    private IRepositoryIdProvider repositoryUpstream;
     private CommitService commitService;
     private IssueService issueService;
     private PullRequestService pullRequestService;
@@ -93,15 +92,15 @@ public class PullHelper {
         try {
             props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
 
-            GITHUB_ORGANIZATION_EAP = Util.require(props, "github.organization.eap");
-            GITHUB_ORGANIZATION_WILDFLY = Util.require(props, "github.organization.wildfly");
-            GITHUB_EAP_REPO = Util.require(props, "github.eap.repo");
-            GITHUB_WILDFLY_REPO = Util.require(props, "github.wildfly.repo");
+            GITHUB_ORGANIZATION = Util.require(props, "github.organization");
+            GITHUB_ORGANIZATION_UPSTREAM = Util.require(props, "github.organization.upstream");
+            GITHUB_REPO = Util.require(props, "github.repo");
+            GITHUB_REPO_UPSTREAM = Util.require(props, "github.repo.upstream");
             GITHUB_LOGIN = Util.require(props, "github.login");
             GITHUB_TOKEN = Util.get(props, "github.token");
             GITHUB_BRANCH = Util.require(props, "github.branch");
 
-            String flagEapVersion = Util.get(props, "eap.version.flag");
+            String flagEapVersion = Util.get(props, "version.flag");
             if (flagEapVersion != null && !flagEapVersion.isEmpty()) {
                 MERGEABLE_FLAGS.put(flagEapVersion, Flag.Status.POSITIVE);
             }
@@ -110,8 +109,8 @@ public class PullHelper {
             GitHubClient client = new GitHubClient();
             if (GITHUB_TOKEN != null && GITHUB_TOKEN.length() > 0)
                 client.setOAuth2Token(GITHUB_TOKEN);
-            repositoryEAP = RepositoryId.create(GITHUB_ORGANIZATION_EAP, GITHUB_EAP_REPO);
-            repositoryAS = RepositoryId.create(GITHUB_ORGANIZATION_WILDFLY, GITHUB_WILDFLY_REPO);
+            repository = RepositoryId.create(GITHUB_ORGANIZATION, GITHUB_REPO);
+            repositoryUpstream = RepositoryId.create(GITHUB_ORGANIZATION_UPSTREAM, GITHUB_REPO_UPSTREAM);
             commitService = new CommitService(client);
             issueService = new IssueService(client);
             pullRequestService = new PullRequestService(client);
@@ -169,13 +168,13 @@ public class PullHelper {
         }
 
         try {
-            if (pullRequestService.isMerged(repositoryAS, pull.getNumber())) {
+            if (pullRequestService.isMerged(repositoryUpstream, pull.getNumber())) {
                 return true;
             }
         } catch (IOException ignored) {}
 
         try {
-            final List<Comment> comments = issueService.getComments(repositoryAS, pull.getNumber());
+            final List<Comment> comments = issueService.getComments(repositoryUpstream, pull.getNumber());
             for (Comment comment : comments) {
                 if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
                     return true;
@@ -261,7 +260,7 @@ public class PullHelper {
         BuildResult buildResult = BuildResult.UNKNOWN;
         List<Comment> comments;
         try {
-            comments = issueService.getComments(repositoryEAP, pullRequest.getNumber());
+            comments = issueService.getComments(repository, pullRequest.getNumber());
         } catch (IOException e) {
             System.err.println("Error to get comments for pull request : " + pullRequest.getNumber());
             e.printStackTrace(System.err);
@@ -281,7 +280,7 @@ public class PullHelper {
 
         List<Integer> pullIds = checkUpStreamPullRequestId(pull.getBody());
         for (Integer id : pullIds) {
-            upstreamPulls.add(pullRequestService.getPullRequest(repositoryAS, id));
+            upstreamPulls.add(pullRequestService.getPullRequest(repositoryUpstream, id));
         }
         return upstreamPulls;
     }
@@ -298,7 +297,7 @@ public class PullHelper {
             CommitStatus commitStatus = new CommitStatus();
             commitStatus.setTargetUrl(targetUrl);
             commitStatus.setState(status);
-            commitService.createStatus(repositoryEAP, pull.getHead().getSha(), commitStatus);
+            commitService.createStatus(repository, pull.getHead().getSha(), commitStatus);
         } catch (Exception e) {
             System.err.printf("Problem posting a status build for sha: %s\n", pull.getHead().getSha());
             e.printStackTrace(System.err);
@@ -307,7 +306,7 @@ public class PullHelper {
 
     public void postGithubComment(PullRequest pull, String comment) {
         try {
-            issueService.createComment(repositoryEAP, pull.getNumber(), comment);
+            issueService.createComment(repository, pull.getNumber(), comment);
         } catch (IOException e) {
             System.err.printf("Problem posting a comment build for pull: %d\n", pull.getNumber());
             e.printStackTrace(System.err);
@@ -319,12 +318,12 @@ public class PullHelper {
         return props;
     }
 
-    public IRepositoryIdProvider getRepositoryEAP() {
-        return repositoryEAP;
+    public IRepositoryIdProvider getRepository() {
+        return repository;
     }
 
-    public IRepositoryIdProvider getRepositoryAS() {
-        return repositoryAS;
+    public IRepositoryIdProvider getRepositoryUpstream() {
+        return repositoryUpstream;
     }
 
     public CommitService getCommitService() {
