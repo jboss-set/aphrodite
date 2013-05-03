@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 public class PullHelper {
 
     private static final Pattern BUGZILLA_ID_PATTERN = Pattern.compile("bugzilla\\.redhat\\.com/show_bug\\.cgi\\?id=(\\d+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern UPSTREAM_PATTERN = Pattern.compile("github\\.com/jbossas/jboss-as/pull/(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPSTREAM_PATTERN = Pattern.compile("github\\.com/wildfly/wildfly/pull/(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern BUILD_OUTCOME = Pattern.compile("Build (\\d+) outcome was (SUCCESS|FAILURE|ABORTED) using a merge of ([a-z0-9]+) on branch (.+):", Pattern.CASE_INSENSITIVE);
     private static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
 
