@@ -171,7 +171,10 @@ public class PullHelper {
             if (pullRequestService.isMerged(repositoryUpstream, pull.getNumber())) {
                 return true;
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignore) {
+            System.err.printf("Cannot get Merged information of the pull request %d: %s.\n", pull.getNumber(), ignore);
+            ignore.printStackTrace(System.err);
+        }
 
         try {
             final List<Comment> comments = issueService.getComments(repositoryUpstream, pull.getNumber());
@@ -179,8 +182,11 @@ public class PullHelper {
                 if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
                     return true;
                 }
-            }
-        } catch (IOException ignore) {}
+			}
+        } catch (IOException ignore) {
+            System.err.printf("Cannot get comments of the pull request %d: %s.\n", pull.getNumber(), ignore);
+            ignore.printStackTrace(System.err);
+        }
 
         return false;
     }
