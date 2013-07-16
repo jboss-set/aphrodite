@@ -254,7 +254,8 @@ public class PullHelper {
         for (Integer id : ids) {
             try {
                 Bug bug = bugzillaClient.getBug(id);
-                bugs.add(bug);
+                if(bug != null)
+                    bugs.add(bug);
             } catch (Exception ignore) {
                 System.err.printf("Cannot get a bug related to the pull request %d: %s.\n", pull.getNumber(), ignore);
             }
