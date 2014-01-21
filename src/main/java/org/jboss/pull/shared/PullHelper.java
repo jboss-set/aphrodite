@@ -30,6 +30,7 @@ import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
+import org.eclipse.egit.github.core.service.RepositoryService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -80,6 +81,7 @@ public class PullHelper {
 
     private IRepositoryIdProvider repository;
     private IRepositoryIdProvider repositoryUpstream;
+    private RepositoryService repositoryService;
     private CommitService commitService;
     private IssueService issueService;
     private PullRequestService pullRequestService;
@@ -111,6 +113,7 @@ public class PullHelper {
                 client.setOAuth2Token(GITHUB_TOKEN);
             repository = RepositoryId.create(GITHUB_ORGANIZATION, GITHUB_REPO);
             repositoryUpstream = RepositoryId.create(GITHUB_ORGANIZATION_UPSTREAM, GITHUB_REPO_UPSTREAM);
+            repositoryService = new RepositoryService(client);
             commitService = new CommitService(client);
             issueService = new IssueService(client);
             pullRequestService = new PullRequestService(client);
@@ -323,6 +326,10 @@ public class PullHelper {
 
     public Properties getProps() {
         return props;
+    }
+
+    public RepositoryService getRepositoryService() {
+        return repositoryService;
     }
 
     public IRepositoryIdProvider getRepository() {
