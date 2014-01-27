@@ -48,9 +48,14 @@ import java.util.regex.Pattern;
  */
 public class PullHelper {
 
+//    alternative way configure in property file, better configuration but hard to debug
+//    private static Pattern BUGZILLA_ID_PATTERN;
+//    private static Pattern UPSTREAM_PATTERN;
+//    private static Pattern BUILD_OUTCOME_PATTERN;
     private static final Pattern BUGZILLA_ID_PATTERN = Pattern.compile("bugzilla\\.redhat\\.com/show_bug\\.cgi\\?id=(\\d+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern UPSTREAM_PATTERN = Pattern.compile("github\\.com/wildfly/wildfly/pull/(\\d+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern BUILD_OUTCOME = Pattern.compile("Build (\\d+) outcome was (SUCCESS|FAILURE|ABORTED) using a merge of ([a-z0-9]+) on branch (.+):", Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPSTREAM_PATTERN = Pattern.compile("github\\.com/(wildfly/wildfly|jbossas/jboss-eap)/pull/(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BUILD_OUTCOME = Pattern.compile("outcome was (\\*\\*)?+(SUCCESS|FAILURE|ABORTED)(\\*\\*)?+ using a merge of ([a-z0-9]+)", Pattern.CASE_INSENSITIVE);
+
     private static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
 
     public static final String PM_ACK = "pm_ack";
@@ -93,6 +98,14 @@ public class PullHelper {
     public PullHelper(String configurationFileProperty, String configurationFileDefault) throws Exception {
         try {
             props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
+
+//            alternative way configure in property file, better configuration but hard to debug
+//            String buildIdPattern = Util.require(props, "bugzilla.id.pattern");
+//            BUGZILLA_ID_PATTERN = Pattern.compile(buildIdPattern, Pattern.CASE_INSENSITIVE);
+//            String upstreamPattern = Util.require(props, "upstream.pattern");
+//            UPSTREAM_PATTERN = Pattern.compile(upstreamPattern, Pattern.CASE_INSENSITIVE);
+//            String buildOutcomePattern = Util.require(props, "build.outcome.pattern");
+//            BUILD_OUTCOME_PATTERN = Pattern.compile(buildOutcomePattern, Pattern.CASE_INSENSITIVE);
 
             GITHUB_ORGANIZATION = Util.require(props, "github.organization");
             GITHUB_ORGANIZATION_UPSTREAM = Util.require(props, "github.organization.upstream");
@@ -237,12 +250,14 @@ public class PullHelper {
         return ids;
     }
 
-    public List<Integer> checkUpStreamPullRequestId(String body) {
-        ArrayList<Integer> ids = new ArrayList<Integer>();
+    public Map<Integer, String> checkUpStreamPullRequestId(String body) {
+        Map<Integer, String> ids = new HashMap<Integer, String>();
         Matcher matcher = UPSTREAM_PATTERN.matcher(body);
         while (matcher.find()) {
             try {
-                ids.add(Integer.parseInt(matcher.group(1)));
+                String organazationbranch = matcher.group(1);
+                Integer id = Integer.parseInt(matcher.group(2));
+                ids.put(id, organazationbranch);
             } catch (NumberFormatException ignore) {
                 System.err.println("Invalid pull request number: " + ignore);
             }
@@ -288,9 +303,16 @@ public class PullHelper {
     public List<PullRequest> getUpstreamPullRequest(PullRequest pull) throws IOException {
         ArrayList<PullRequest> upstreamPulls = new ArrayList<PullRequest>();
 
-        List<Integer> pullIds = checkUpStreamPullRequestId(pull.getBody());
-        for (Integer id : pullIds) {
-            upstreamPulls.add(pullRequestService.getPullRequest(repositoryUpstream, id));
+        Map<Integer, String> pullIds = checkUpStreamPullRequestId(pull.getBody());
+
+        for (Integer key : pullIds.keySet()) {
+            String organazationbranch = pullIds.get(key);
+            String[] organazation_repo = organazationbranch.split("/");
+            if (organazation_repo.length != 2)
+                throw new RuntimeException("organazation/repository format error: " + organazationbranch);
+
+            upstreamPulls.add(pullRequestService.getPullRequest(
+                    RepositoryId.create(organazation_repo[0], organazation_repo[1]), key));
         }
         return upstreamPulls;
     }
