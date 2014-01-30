@@ -31,6 +31,8 @@ import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
+import org.jboss.pull.shared.evaluators.ServicePullEvaluator;
+import org.jboss.pull.shared.spi.PullEvaluator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,44 +61,30 @@ public class PullHelper {
 
     private static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
 
-    public static final String PM_ACK = "pm_ack";
-    public static final String QA_ACK = "qa_ack";
-    public static final String DEVEL_ACK = "devel_ack";//FIXME is it dev_ or devel_ack?
+    private final String GITHUB_ORGANIZATION;
+    private final String GITHUB_ORGANIZATION_UPSTREAM;
+    private final String GITHUB_REPO;
+    private final String GITHUB_REPO_UPSTREAM;
+    private final String GITHUB_LOGIN;
+    private final String GITHUB_TOKEN;
 
-    private static final Map<String, Flag.Status> MERGEABLE_FLAGS;
-    private static final Map<String, Flag.Status> UNMERGEABLE_FLAGS;
+    private final String BUGZILLA_LOGIN;
+    private final String BUGZILLA_PASSWORD;
 
-    static {
-        MERGEABLE_FLAGS = new HashMap<String, Flag.Status>();
-        MERGEABLE_FLAGS.put(PM_ACK, Flag.Status.POSITIVE);
-        MERGEABLE_FLAGS.put(QA_ACK, Flag.Status.POSITIVE);
-        UNMERGEABLE_FLAGS = new HashMap<String, Flag.Status>();
-        UNMERGEABLE_FLAGS.put(DEVEL_ACK, Flag.Status.NEGATIVE);
-    }
+    private final IRepositoryIdProvider repository;
+    private final IRepositoryIdProvider repositoryUpstream;
+    private final RepositoryService repositoryService;
+    private final CommitService commitService;
+    private final IssueService issueService;
+    private final PullRequestService pullRequestService;
 
-    private String GITHUB_ORGANIZATION;
-    private String GITHUB_ORGANIZATION_UPSTREAM;
-    private String GITHUB_REPO;
-    private String GITHUB_REPO_UPSTREAM;
-    private String GITHUB_LOGIN;
-    private String GITHUB_TOKEN;
-    private String GITHUB_BRANCH;
+    private final Bugzilla bugzillaClient;
 
-    private String BUGZILLA_LOGIN;
-    private String BUGZILLA_PASSWORD;
+    private final Properties props;
 
-    private IRepositoryIdProvider repository;
-    private IRepositoryIdProvider repositoryUpstream;
-    private RepositoryService repositoryService;
-    private CommitService commitService;
-    private IssueService issueService;
-    private PullRequestService pullRequestService;
+    private final ServicePullEvaluator evaluator = new ServicePullEvaluator();
 
-    private Bugzilla bugzillaClient;
-
-    private Properties props;
-
-    public PullHelper(String configurationFileProperty, String configurationFileDefault) throws Exception {
+    public PullHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
         try {
             props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
 
@@ -113,12 +102,6 @@ public class PullHelper {
             GITHUB_REPO_UPSTREAM = Util.require(props, "github.repo.upstream");
             GITHUB_LOGIN = Util.require(props, "github.login");
             GITHUB_TOKEN = Util.get(props, "github.token");
-            GITHUB_BRANCH = Util.require(props, "github.branch");
-
-            String flagEapVersion = Util.get(props, "version.flag");
-            if (flagEapVersion != null && !flagEapVersion.isEmpty()) {
-                MERGEABLE_FLAGS.put(flagEapVersion, Flag.Status.POSITIVE);
-            }
 
             // initialize client and services
             GitHubClient client = new GitHubClient();
@@ -137,6 +120,9 @@ public class PullHelper {
             // initialize bugzilla client
             bugzillaClient = new Bugzilla(BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
 
+            // initialize the service evaluator
+            evaluator.init(this, props);
+
         } catch (Exception e) {
             System.err.println("Cannot initialize: " + e);
             e.printStackTrace(System.err);
@@ -144,37 +130,11 @@ public class PullHelper {
         }
     }
 
-
-    public boolean isMergeable(PullRequest pull) {
-        return isMergeable(pull, null);
+    public PullEvaluator.Result isMergeable(final PullRequest pull) {
+        return evaluator.isMergeable(pull);
     }
 
-    public boolean isMergeable(PullRequest pull, Map<String, Flag.Status> requiredFlags) {
-        boolean mergeable = true;
-        mergeable = mergeable && isMergeableByUpstream(pull);
-        mergeable = mergeable && isMergeableByBugzilla(pull, requiredFlags);
-        return mergeable;
-    }
-
-    public boolean isMergeableByUpstream(final PullRequest pull) {
-        try {
-            List<PullRequest> upstreamPulls = getUpstreamPullRequest(pull);
-            if (upstreamPulls.size() == 0) {
-                return false;
-            }
-            for (PullRequest pullRequest : upstreamPulls) {
-                if (! isMerged(pullRequest)) {
-                    return false;
-                }
-            }
-        } catch (Exception ignore) {
-            System.err.printf("Cannot get an upstream pull request of the pull request %d: %s.\n", pull.getNumber(), ignore);
-            ignore.printStackTrace(System.err);
-        }
-        return true;
-    }
-
-    private boolean isMerged(final PullRequest pull) {
+    public boolean isMerged(final PullRequest pull) {
         if (pull == null) {
             return false;
         }
@@ -207,36 +167,6 @@ public class PullHelper {
         return false;
     }
 
-    public boolean isMergeableByBugzilla(PullRequest pull, Map<String, Flag.Status> requiredFlags) {
-        List<Bug> bugs = getBug(pull);
-        if (bugs.size() == 0) {
-            return false;
-        }
-
-        for (Bug bug : bugs) {
-            Map<String, Flag.Status> flagsToCheck = new HashMap<String, Flag.Status>(MERGEABLE_FLAGS);
-            if (requiredFlags != null) {
-                flagsToCheck.putAll(requiredFlags);
-            }
-
-            List<Flag> flags = bug.getFlags();
-            for (Flag flag : flags) {
-                Flag.Status bannedValue = UNMERGEABLE_FLAGS.get(flag.getName());
-                if ((bannedValue != null) && (flag.getStatus() == bannedValue)) {
-                    return false;
-                }
-                Flag.Status requiredValue = flagsToCheck.get(flag.getName());
-                if ((requiredValue != null) && (flag.getStatus() == requiredValue)) {
-                    flagsToCheck.remove(flag.getName());
-                }
-            }
-            if (! flagsToCheck.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public List<Integer> checkBugzillaId(String body) {
         ArrayList<Integer> ids = new ArrayList<Integer>();
         Matcher matcher = BUGZILLA_ID_PATTERN.matcher(body);
@@ -255,9 +185,9 @@ public class PullHelper {
         Matcher matcher = UPSTREAM_PATTERN.matcher(body);
         while (matcher.find()) {
             try {
-                String organazationbranch = matcher.group(1);
+                String organizationBranch = matcher.group(1);
                 Integer id = Integer.parseInt(matcher.group(2));
-                ids.put(id, organazationbranch);
+                ids.put(id, organizationBranch);
             } catch (NumberFormatException ignore) {
                 System.err.println("Invalid pull request number: " + ignore);
             }
@@ -306,13 +236,13 @@ public class PullHelper {
         Map<Integer, String> pullIds = checkUpStreamPullRequestId(pull.getBody());
 
         for (Integer key : pullIds.keySet()) {
-            String organazationbranch = pullIds.get(key);
-            String[] organazation_repo = organazationbranch.split("/");
-            if (organazation_repo.length != 2)
-                throw new RuntimeException("organazation/repository format error: " + organazationbranch);
+            String organizationBranch = pullIds.get(key);
+            String[] organizationRepo = organizationBranch.split("/");
+            if (organizationRepo.length != 2)
+                throw new RuntimeException("organization/repository format error: " + organizationBranch);
 
             upstreamPulls.add(pullRequestService.getPullRequest(
-                    RepositoryId.create(organazation_repo[0], organazation_repo[1]), key));
+                    RepositoryId.create(organizationRepo[0], organizationRepo[1]), key));
         }
         return upstreamPulls;
     }
@@ -374,11 +304,11 @@ public class PullHelper {
         return pullRequestService;
     }
 
-    public String getGithubBranch() {
-        return GITHUB_BRANCH;
-    }
-
     public String getGithubLogin() {
         return GITHUB_LOGIN;
+    }
+
+    public Set<String> getCoveredBranches() {
+        return evaluator.getCoveredBranches();
     }
 }
