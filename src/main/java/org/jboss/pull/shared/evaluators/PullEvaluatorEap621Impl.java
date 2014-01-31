@@ -26,6 +26,16 @@ package org.jboss.pull.shared.evaluators;
  *
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
-public class PullEvaluatorEap621Impl {
-    // TODO
+public class PullEvaluatorEap621Impl extends AbstractParentBugBasedPullEvaluator {
+
+    @Override
+    protected String getGithubBranchPropertyName() {
+        return "eap621.github.branch";
+    }
+
+    @Override
+    protected String[] parentBugNames() {
+        return new String[] {"eap621.parent.bug"};
+    }
+
 }

@@ -21,10 +21,12 @@
  */
 package org.jboss.pull.shared.evaluators;
 
+import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -54,6 +56,39 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     @Override
     public String getTargetBranch() {
         return githubBranch;
+    }
+
+
+    protected Result isMergeableByUpstream(final PullRequest pull) {
+        final Result mergeable = new Result(true);
+
+        try {
+            final List<PullRequest> upstreamPulls = helper.getUpstreamPullRequest(pull);
+            if (upstreamPulls.isEmpty()) {
+                mergeable.setMergeable(false);
+                mergeable.addDescription("Missing any upstream pull request");
+                return mergeable;
+            }
+
+            for (PullRequest pullRequest : upstreamPulls) {
+                if (! helper.isMerged(pullRequest)) {
+                    mergeable.setMergeable(false);
+                    mergeable.addDescription("Upstream pull request #" + pullRequest.getNumber() + " has not been merged yet");
+                }
+            }
+        } catch (Exception ignore) {
+            System.err.printf("Cannot get an upstream pull request of the pull request %d: %s.\n", pull.getNumber(), ignore);
+            ignore.printStackTrace(System.err);
+
+            mergeable.setMergeable(false);
+            mergeable.addDescription("Cannot get an upstream pull request of the pull request " + pull.getNumber() + ": " + ignore.getMessage());
+        }
+
+        if (mergeable.isMergeable()) {
+            mergeable.addDescription("Upstream pull request is OK");
+        }
+
+        return mergeable;
     }
 
 }

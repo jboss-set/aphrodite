@@ -23,8 +23,10 @@ package org.jboss.pull.shared;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Bug implements Serializable{
 
@@ -46,25 +48,25 @@ public class Bug implements Serializable{
     private Map<String, Object> bugMap;
 
     //includes attributes for Bug.get execution
-    public static final Object[] include_fields = {"id", "assigned_to", "status", "flags"};
+    public static final Object[] include_fields = {"id", "assigned_to", "status", "flags", "blocks"};
 
     private int id;
-    private String assigned_to;
+    private String assignedTo;
     private Status status;
     private List<Flag> flags;
+    private Set<Integer> blocks;
 
     public Bug(Map<String, Object> bugMap) {
         this.bugMap = bugMap;
         initBug();
-
     }
 
     private void initBug() {
         id = (Integer) bugMap.get("id");
-        assigned_to = (String) bugMap.get("assigned_to");
+        assignedTo = (String) bugMap.get("assigned_to");
         status = Status.valueOf((String)bugMap.get("status"));
-        flags = new ArrayList<Flag>();
 
+        flags = new ArrayList<Flag>();
         Object[] flagObjs = (Object[]) bugMap.get("flags");
         for(Object obj : flagObjs){
             @SuppressWarnings("unchecked")
@@ -88,6 +90,12 @@ public class Bug implements Serializable{
 
             flags.add(new Flag(name, setter, status));
         }
+
+        Object[] blockObjs = (Object[]) bugMap.get("blocks");
+        blocks = new HashSet<Integer>(blockObjs.length);
+        for (Object obj : blockObjs) {
+            blocks.add((Integer) obj);
+        }
     }
 
     public Map<String, Object> getBugMap() {
@@ -106,12 +114,12 @@ public class Bug implements Serializable{
         this.id = id;
     }
 
-    public String getAssigned_to() {
-        return assigned_to;
+    public String getAssignedTo() {
+        return assignedTo;
     }
 
-    public void setAssigned_to(String assigned_to) {
-        this.assigned_to = assigned_to;
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
     }
 
     public Status getStatus() {
@@ -129,4 +137,13 @@ public class Bug implements Serializable{
     public void setFlags(List<Flag> flags) {
         this.flags = flags;
     }
+
+    public Set<Integer> getBlocks() {
+        return blocks;
+    }
+
+    public void setBlocks(Set<Integer> blocks) {
+        this.blocks = blocks;
+    }
+
 }
