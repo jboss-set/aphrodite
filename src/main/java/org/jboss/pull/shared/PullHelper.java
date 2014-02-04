@@ -31,7 +31,7 @@ import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
-import org.jboss.pull.shared.evaluators.ServicePullEvaluator;
+import org.jboss.pull.shared.evaluators.PullEvaluatorUtil;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
 import java.io.IOException;
@@ -82,7 +82,7 @@ public class PullHelper {
 
     private final Properties props;
 
-    private final ServicePullEvaluator evaluator = new ServicePullEvaluator();
+    private final PullEvaluatorUtil evaluator;
 
     public PullHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
         try {
@@ -121,7 +121,7 @@ public class PullHelper {
             bugzillaClient = new Bugzilla(BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
 
             // initialize the service evaluator
-            evaluator.init(this, props);
+            evaluator = new PullEvaluatorUtil(this, props);
 
         } catch (Exception e) {
             System.err.println("Cannot initialize: " + e);

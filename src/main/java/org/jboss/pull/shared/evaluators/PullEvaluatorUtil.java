@@ -23,14 +23,16 @@ package org.jboss.pull.shared.evaluators;
 
 import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.PullHelper;
+import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
-import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 /**
  * Collects all {@code PullEvaluator} services and redirects to them
@@ -39,35 +41,37 @@ import java.util.Set;
  *
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
-public class ServicePullEvaluator implements PullEvaluator {
-    private ServiceLoader<PullEvaluator> serviceLoader = ServiceLoader.load(PullEvaluator.class);
-
-    private boolean initialized = false;
+public class PullEvaluatorUtil {
 
     private final Map<String, PullEvaluator> evaluators = new HashMap<String, PullEvaluator>();
 
-    @Override
-    public void init(PullHelper helper, Properties configuration) {
-        if (initialized)
-            throw new IllegalStateException("ServicePullEvaluator has already been initialized");
+    public PullEvaluatorUtil(final PullHelper helper, final Properties configuration) {
+        final String versions = Util.require(configuration, "versions");
 
-        // initiate available evaluators
-        for (PullEvaluator evaluator : serviceLoader) {
-            evaluator.init(helper, configuration);
-            final String evaluatorTargetBranch = evaluator.getTargetBranch();
-            if (evaluators.containsKey(evaluatorTargetBranch))
-                throw new IllegalStateException("Multiple evaluators dedicated to the branch " + evaluatorTargetBranch);
-            evaluators.put(evaluatorTargetBranch, evaluator);
+        final StringTokenizer tokenizer = new StringTokenizer(versions, ", ");
+        while (tokenizer.hasMoreTokens()) {
+            final String version = tokenizer.nextToken();
+
+            final String evaluatorClassName = Util.require(configuration, version + "." + BasePullEvaluator.EVALUATOR_PROPERTY);
+            try {
+                Class evaluatorClass = Class.forName(evaluatorClassName);
+                Constructor ctor = evaluatorClass.getConstructor();
+                PullEvaluator evaluator = (PullEvaluator) ctor.newInstance();
+
+                evaluator.init(helper, configuration, version);
+                final String evaluatorTargetBranch = evaluator.getTargetBranch();
+                if (evaluators.containsKey(evaluatorTargetBranch))
+                    throw new IllegalStateException("Multiple evaluators dedicated to the branch " + evaluatorTargetBranch);
+
+                evaluators.put(evaluatorTargetBranch, evaluator);
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
-
-        initialized = true;
     }
 
-    @Override
     public PullEvaluator.Result isMergeable(final PullRequest pull) {
-        if (!initialized)
-            throw new IllegalStateException("ServicePullEvaluator has not been initialized yet");
-
         final String targetBranch = pull.getBase().getRef();
         final PullEvaluator evaluator = evaluators.get(targetBranch);
 
@@ -75,12 +79,6 @@ public class ServicePullEvaluator implements PullEvaluator {
             throw new IllegalStateException("Couldn't find any evaluator for target github branch " + targetBranch);
 
         return evaluator.isMergeable(pull);
-    }
-
-    @Override
-    public String getTargetBranch() {
-        // doesn't make sense for this class
-        throw new IllegalStateException("Unsupported operation");
     }
 
     public Set<String> getCoveredBranches() {

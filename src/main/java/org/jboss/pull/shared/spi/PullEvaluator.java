@@ -40,8 +40,9 @@ public interface PullEvaluator {
      * Initializes the evaluator.
      * @param helper {@code PullHelper} instance
      * @param configuration configuration properties
+     * @param version version name related to this evaluator in the configuration properties
      */
-    void init(final PullHelper helper, final Properties configuration);
+    void init(final PullHelper helper, final Properties configuration, final String version);
 
     /**
      * Returns the github branch this evaluator is dedicated to.
