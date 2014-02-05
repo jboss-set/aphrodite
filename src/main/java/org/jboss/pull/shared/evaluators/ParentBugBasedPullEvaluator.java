@@ -67,7 +67,7 @@ public class ParentBugBasedPullEvaluator extends BasePullEvaluator {
 
         final List<Bug> bugs = helper.getBug(pull);
         if (bugs.isEmpty()) {
-            mergeable.addDescription("Missing any bugzilla bug");
+            mergeable.addDescription("- Missing any bugzilla bug");
             return mergeable;
         }
 
@@ -88,7 +88,7 @@ public class ParentBugBasedPullEvaluator extends BasePullEvaluator {
         }
 
         if (mergeable.isMergeable()) {
-            mergeable.addDescription("Bugzilla is OK");
+            mergeable.addDescription("+ Bugzilla is OK");
         } else {
             mergeable.addDescription(missingParentsDescription());
         }
@@ -97,7 +97,7 @@ public class ParentBugBasedPullEvaluator extends BasePullEvaluator {
     }
 
     private String missingParentsDescription() {
-        final StringBuilder description = new StringBuilder("Referenced BZs should block ");
+        final StringBuilder description = new StringBuilder("- Referenced BZs should block ");
 
         if (REQUIRED_PARENTS.size() > 1)
             description.append("at least one of ");

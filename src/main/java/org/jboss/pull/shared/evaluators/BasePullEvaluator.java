@@ -65,16 +65,21 @@ public abstract class BasePullEvaluator implements PullEvaluator {
             final List<PullRequest> upstreamPulls = helper.getUpstreamPullRequest(pull);
             if (upstreamPulls.isEmpty()) {
                 mergeable.setMergeable(false);
-                mergeable.addDescription("Missing any upstream pull request");
+                mergeable.addDescription("- Missing any upstream pull request");
                 return mergeable;
             }
 
             for (PullRequest pullRequest : upstreamPulls) {
                 if (! helper.isMerged(pullRequest)) {
                     mergeable.setMergeable(false);
-                    mergeable.addDescription("Upstream pull request #" + pullRequest.getNumber() + " has not been merged yet");
+                    mergeable.addDescription("- Upstream pull request #" + pullRequest.getNumber() + " has not been merged yet");
                 }
             }
+
+            if (mergeable.isMergeable()) {
+                mergeable.addDescription("+ Upstream pull request is OK");
+            }
+
         } catch (Exception ignore) {
             System.err.printf("Cannot get an upstream pull request of the pull request %d: %s.\n", pull.getNumber(), ignore);
             ignore.printStackTrace(System.err);
