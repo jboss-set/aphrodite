@@ -35,23 +35,22 @@ import java.util.Properties;
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
 public abstract class BasePullEvaluator implements PullEvaluator {
-    protected PullHelper helper;
-    protected Properties configuration;
+    public static final String EVALUATOR_PROPERTY = "evaluator";
+    public static final String GITHUB_BRANCH_PROPERTY = "github.branch";
 
+    protected PullHelper helper;
+//    protected Properties configuration;
+
+    protected String version;
     protected String githubBranch;
 
     @Override
-    public void init(final PullHelper helper, final Properties configuration) {
+    public void init(final PullHelper helper, final Properties configuration, final String version) {
         this.helper = helper;
-        this.configuration = configuration;
-        this.githubBranch = Util.require(configuration, getGithubBranchPropertyName());
+//        this.configuration = configuration;
+        this.version = version;
+        this.githubBranch = Util.require(configuration, version + "." + GITHUB_BRANCH_PROPERTY);
     }
-
-    /**
-     * A property name of a github branch this evaluator should be dedicated to.
-     * @return property name of the target github branch
-     */
-    protected abstract String getGithubBranchPropertyName();
 
     @Override
     public String getTargetBranch() {
