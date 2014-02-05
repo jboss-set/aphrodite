@@ -79,7 +79,7 @@ public class FlagBasedPullEvaluator extends BasePullEvaluator {
         final List<Bug> bugs = helper.getBug(pull);
         if (bugs.isEmpty()) {
             mergeable.setMergeable(false);
-            mergeable.addDescription("Missing any bugzilla bug");
+            mergeable.addDescription("- Missing any bugzilla bug");
             return mergeable;
         }
 
@@ -99,14 +99,14 @@ public class FlagBasedPullEvaluator extends BasePullEvaluator {
         }
 
         if (mergeable.isMergeable()) {
-            mergeable.addDescription("Bugzilla is OK");
+            mergeable.addDescription("+ Bugzilla is OK");
         }
 
         return mergeable;
     }
 
     private String missingFlagsDescription(Bug bug, Set<String> missingFlags) {
-        final StringBuilder description = new StringBuilder("Bug bz").append(bug.getId()).append(" is missing flags");
+        final StringBuilder description = new StringBuilder("- Bug bz").append(bug.getId()).append(" is missing flags");
 
         String delim = " ";
         for (String missingFlag : missingFlags) {
