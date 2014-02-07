@@ -88,10 +88,6 @@ public abstract class BasePullEvaluator implements PullEvaluator {
             mergeable.addDescription("Cannot get an upstream pull request of the pull request " + pull.getNumber() + ": " + ignore.getMessage());
         }
 
-        if (mergeable.isMergeable()) {
-            mergeable.addDescription("Upstream pull request is OK");
-        }
-
         return mergeable;
     }
 
