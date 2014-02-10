@@ -60,10 +60,8 @@ public class Bugzilla {
             rpcClient.setConfig(config);
             return rpcClient;
         } catch (MalformedURLException e) {
-            System.err.println("Can not get XmlRpcClient from " + baseURL);
-            e.printStackTrace();
+            throw new RuntimeException("Can not get XmlRpcClient from " + baseURL);
         }
-        return null;
     }
 
     /**
@@ -87,27 +85,25 @@ public class Bugzilla {
 
         XmlRpcClient rpcClient = getClient();
 
-        if (rpcClient != null) {
-            try {
-                Object resultObj = rpcClient.execute("Bug.get", objs);
-                @SuppressWarnings("unchecked")
-                Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
+        try {
+            Object resultObj = rpcClient.execute("Bug.get", objs);
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
 
-                Object[] bugs = (Object[]) resultMap.get("bugs");
-                if (bugs.length == 1) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> bugMap = (Map<String, Object>) bugs[0];
-                    Bug bug = new Bug(bugMap);
-                    return bug;
-                } else {
-                    throw new XmlRpcException("Zero or more than one bug found with id: " + bugzillaId);
-                }
-            } catch (XmlRpcException e) {
-                System.err.println("Can not get bug with id : " + bugzillaId);
-                e.printStackTrace(System.err);
-            } finally {
-                rpcClient = null;
+            Object[] bugs = (Object[]) resultMap.get("bugs");
+            if (bugs.length == 1) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> bugMap = (Map<String, Object>) bugs[0];
+                Bug bug = new Bug(bugMap);
+                return bug;
+            } else {
+                throw new RuntimeException("Zero or more than one bug found with id: " + bugzillaId);
             }
+        } catch (XmlRpcException e) {
+            System.err.println("Can not get bug with id : " + bugzillaId);
+            e.printStackTrace(System.err);
+        } finally {
+            rpcClient = null;
         }
         return null;
     }
@@ -155,19 +151,17 @@ public class Bugzilla {
         Object[] objParams = { params };
 
         XmlRpcClient rpcClient = getClient();
-        if (rpcClient != null) {
-            try {
+        try {
 
-                Object resultObj = rpcClient.execute("Bug.update", objParams);
-                @SuppressWarnings("unchecked")
-                Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
-                int id = (Integer) resultMap.get("id");
-                return id == bugzillaId;
-            } catch (XmlRpcException e) {
-                e.printStackTrace();
-            } finally {
-                rpcClient = null;
-            }
+            Object resultObj = rpcClient.execute("Bug.update", objParams);
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
+            int id = (Integer) resultMap.get("id");
+            return id == bugzillaId;
+        } catch (XmlRpcException e) {
+            e.printStackTrace();
+        } finally {
+            rpcClient = null;
         }
         return false;
     }
@@ -204,15 +198,13 @@ public class Bugzilla {
 
         XmlRpcClient rpcClient = getClient();
 
-        if (rpcClient != null) {
-            try {
-                rpcClient.execute("Flag.update", objs);
-                return true;
-            } catch (XmlRpcException e) {
-                e.printStackTrace();
-            } finally {
-                rpcClient = null;
-            }
+        try {
+            rpcClient.execute("Flag.update", objs);
+            return true;
+        } catch (XmlRpcException e) {
+            e.printStackTrace();
+        } finally {
+            rpcClient = null;
         }
         return false;
     }

@@ -65,7 +65,7 @@ public class ParentBugBasedPullEvaluator extends BasePullEvaluator {
     protected Result isMergeableByBugzilla(final PullRequest pull) {
         final Result mergeable = new Result(false);
 
-        final List<Bug> bugs = helper.getBug(pull);
+        final List<Bug> bugs = helper.getBug(pull, version);
         if (bugs.isEmpty()) {
             mergeable.addDescription("- Missing any bugzilla bug");
             return mergeable;

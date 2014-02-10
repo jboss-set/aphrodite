@@ -48,13 +48,14 @@ public class Bug implements Serializable{
     private Map<String, Object> bugMap;
 
     //includes attributes for Bug.get execution
-    public static final Object[] include_fields = {"id", "assigned_to", "status", "flags", "blocks"};
+    public static final Object[] include_fields = {"id", "assigned_to", "status", "flags", "blocks", "target_release"};
 
     private int id;
     private String assignedTo;
     private Status status;
     private List<Flag> flags;
     private Set<Integer> blocks;
+    private Set<String> targetRelease;
 
     public Bug(Map<String, Object> bugMap) {
         this.bugMap = bugMap;
@@ -95,6 +96,12 @@ public class Bug implements Serializable{
         blocks = new HashSet<Integer>(blockObjs.length);
         for (Object obj : blockObjs) {
             blocks.add((Integer) obj);
+        }
+
+        Object[] targetReleaseObjs = (Object[]) bugMap.get("target_release");
+        targetRelease = new HashSet<String>(targetReleaseObjs.length);
+        for (Object obj : targetReleaseObjs) {
+            targetRelease.add((String) obj);
         }
     }
 
@@ -144,6 +151,10 @@ public class Bug implements Serializable{
 
     public void setBlocks(Set<Integer> blocks) {
         this.blocks = blocks;
+    }
+
+    public Set<String> getTargetRelease() {
+        return targetRelease;
     }
 
 }

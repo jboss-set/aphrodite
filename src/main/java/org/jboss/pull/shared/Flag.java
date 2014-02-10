@@ -23,7 +23,7 @@ package org.jboss.pull.shared;
 
 import java.io.Serializable;
 
-public class Flag implements Serializable{
+public class Flag implements Serializable {
 
     private static final long serialVersionUID = -4167575539988047120L;
 
@@ -85,6 +85,24 @@ public class Flag implements Serializable{
 
     public String toString() {
         return setter + "\t" + " set " + name + "\t" + " to " + status + "\t\n";
+    }
+
+    public String getConvertedFlag() {
+        String convertedFlag = " "; // default is UNSET
+        switch (status) {
+            case POSITIVE:
+                convertedFlag = "+";
+                break;
+            case NEGATIVE:
+                convertedFlag = "-";
+                break;
+            case UNKNOWN:
+                convertedFlag = "?";
+                break;
+            default:
+                break;
+        }
+        return convertedFlag;
     }
 
 }

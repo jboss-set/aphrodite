@@ -37,12 +37,16 @@ import java.util.Properties;
 public abstract class BasePullEvaluator implements PullEvaluator {
     public static final String EVALUATOR_PROPERTY = "evaluator";
     public static final String GITHUB_BRANCH_PROPERTY = "github.branch";
+    public static final String GITHUB_ORGANIZAITON_UPSTREAM = "github.organization.upstream";
+    public static final String GITHUB_REPOSITORY_UPSTREAM = "github.repo.upstream";
 
     protected PullHelper helper;
 //    protected Properties configuration;
 
     protected String version;
     protected String githubBranch;
+    protected String upstreamOrganization;
+    protected String upstreamRepository;
 
     @Override
     public void init(final PullHelper helper, final Properties configuration, final String version) {
@@ -50,6 +54,13 @@ public abstract class BasePullEvaluator implements PullEvaluator {
 //        this.configuration = configuration;
         this.version = version;
         this.githubBranch = Util.require(configuration, version + "." + GITHUB_BRANCH_PROPERTY);
+        this.upstreamOrganization = Util.require(configuration, version + "." + GITHUB_ORGANIZAITON_UPSTREAM);
+        this.upstreamRepository = Util.require(configuration, version + "." + GITHUB_REPOSITORY_UPSTREAM);
+    }
+
+    @Override
+    public String getVersion() {
+        return version;
     }
 
     @Override
@@ -57,6 +68,15 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         return githubBranch;
     }
 
+    @Override
+    public String getUpstreamOrganization() {
+        return upstreamOrganization;
+    }
+
+    @Override
+    public String getUpstreamRepository() {
+        return upstreamRepository;
+    }
 
     protected Result isMergeableByUpstream(final PullRequest pull) {
         final Result mergeable = new Result(true);
