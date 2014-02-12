@@ -72,13 +72,18 @@ public class PullEvaluatorUtil {
     }
 
     public PullEvaluator.Result isMergeable(final PullRequest pull) {
-        final String targetBranch = pull.getBase().getRef();
-        final PullEvaluator evaluator = evaluators.get(targetBranch);
+        PullEvaluator evaluator = getPullEvaluator(pull);
+        return evaluator.isMergeable(pull);
+    }
+
+    public PullEvaluator getPullEvaluator(final PullRequest pull) {
+        String targetBranch = pull.getBase().getRef();
+        PullEvaluator evaluator = evaluators.get(targetBranch);
 
         if (evaluator == null)
             throw new IllegalStateException("Couldn't find any evaluator for target github branch " + targetBranch);
 
-        return evaluator.isMergeable(pull);
+        return evaluator;
     }
 
     public Set<String> getCoveredBranches() {

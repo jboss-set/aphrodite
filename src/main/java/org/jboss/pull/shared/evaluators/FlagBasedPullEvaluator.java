@@ -76,7 +76,7 @@ public class FlagBasedPullEvaluator extends BasePullEvaluator {
     protected Result isMergeableByBugzilla(final PullRequest pull) {
         final Result mergeable = new Result(true);
 
-        final List<Bug> bugs = helper.getBug(pull);
+        final List<Bug> bugs = helper.getBug(pull, version);
         if (bugs.isEmpty()) {
             mergeable.setMergeable(false);
             mergeable.addDescription("- Missing any bugzilla bug");

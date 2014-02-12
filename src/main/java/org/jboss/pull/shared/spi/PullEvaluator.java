@@ -50,6 +50,10 @@ public interface PullEvaluator {
      */
     String getTargetBranch();
 
+    String getUpstreamOrganization();
+    String getUpstreamRepository();
+    String getVersion();
+
     /**
      * Evaluates if the given pull request is mergeable according to
      * the rules of the relevant EAP version.
