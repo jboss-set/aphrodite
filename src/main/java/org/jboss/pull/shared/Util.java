@@ -25,7 +25,10 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -66,7 +69,7 @@ public class Util {
         if (ret == null)
             throw new RuntimeException(name + " must be specified in processor.properties");
 
-        return ret;
+        return ret.trim();
     }
 
     public static String get(Properties props, String name) {
@@ -77,4 +80,15 @@ public class Util {
         String value = (String) props.get(name);
         return (value == null) ? defaultValue : value;
     }
+
+    public static String getTime() {
+        Date date = new Date();
+        return getTime(date);
+    }
+
+    public static String getTime(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        return dateFormat.format(date);
+    }
+
 }
