@@ -34,13 +34,12 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
- * An evaluator based on Bugzilla flags resolution.
- * It can be configured to which flags are needed in order
- * to merge a pull request.
+ * An evaluator based on Bugzilla or Jira flags resolution.
+ * TODO
  *
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
-public class FlagBasedPullEvaluator extends BasePullEvaluator {
+public class BugAndJiraFlagBasedPullEvaluator extends BasePullEvaluator {
     public static final String REQUIRED_FLAGS_PROPERTY = "required.flags";
 
     public static final String PM_ACK = "pm_ack";
@@ -76,7 +75,7 @@ public class FlagBasedPullEvaluator extends BasePullEvaluator {
     protected Result isMergeableByBugzilla(final PullRequest pull) {
         final Result mergeable = new Result(true);
 
-        final List<Bug> bugs = helper.getBug(pull, version);
+        final List<Bug> bugs = (List<Bug>) getIssue(pull);
         if (bugs.isEmpty()) {
             mergeable.setMergeable(false);
             mergeable.addDescription("- Missing any bugzilla bug");
@@ -106,7 +105,7 @@ public class FlagBasedPullEvaluator extends BasePullEvaluator {
     }
 
     private String missingFlagsDescription(Bug bug, Set<String> missingFlags) {
-        final StringBuilder description = new StringBuilder("- Bug bz").append(bug.getId()).append(" is missing flags");
+        final StringBuilder description = new StringBuilder("- Bug bz").append(bug.getNumber()).append(" is missing flags");
 
         String delim = " ";
         for (String missingFlag : missingFlags) {

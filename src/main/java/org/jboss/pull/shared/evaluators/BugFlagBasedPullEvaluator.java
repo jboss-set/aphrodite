@@ -23,6 +23,7 @@ package org.jboss.pull.shared.evaluators;
 
 import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.Bug;
+import org.jboss.pull.shared.Flag;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 
@@ -33,24 +34,34 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
- * An evaluator based on a parent Bugzilla bug resolution.
+ * An evaluator based on Bugzilla flags resolution.
+ * It can be configured to which flags are needed in order
+ * to merge a pull request.
  *
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
-public class ParentBugBasedPullEvaluator extends BasePullEvaluator {
-    public static final String PARENT_BUGS_PROPERTY = "parent.bug";
+public class BugFlagBasedPullEvaluator extends BasePullEvaluator {
+    public static final String REQUIRED_FLAGS_PROPERTY = "required.flags";
 
-    protected final Set<Integer> REQUIRED_PARENTS = new HashSet<Integer>();
+    public static final String PM_ACK = "pm_ack";
+    public static final String QA_ACK = "qa_ack";
+    public static final String DEVEL_ACK = "devel_ack";
+
+    protected final Set<String> REQUIRED_FLAGS = new HashSet<String>();
 
     @Override
     public void init(final PullHelper helper, final Properties configuration, final String version) {
         super.init(helper, configuration, version);
 
-        final String parentBugs = Util.require(configuration, version + "." + PARENT_BUGS_PROPERTY);
-        final StringTokenizer tokenizer = new StringTokenizer(parentBugs, ", ");
+        REQUIRED_FLAGS.add(PM_ACK);
+        REQUIRED_FLAGS.add(DEVEL_ACK);
+        REQUIRED_FLAGS.add(QA_ACK);
+
+        final String requiredFlags = Util.require(configuration, version + "." + REQUIRED_FLAGS_PROPERTY);
+        final StringTokenizer tokenizer = new StringTokenizer(requiredFlags, ", ");
         while (tokenizer.hasMoreTokens()) {
-            final String parentBug = tokenizer.nextToken();
-            REQUIRED_PARENTS.add(Integer.valueOf(parentBug));
+            final String requiredFlag = tokenizer.nextToken();
+            REQUIRED_FLAGS.add(requiredFlag);
         }
     }
 
@@ -63,48 +74,43 @@ public class ParentBugBasedPullEvaluator extends BasePullEvaluator {
     }
 
     protected Result isMergeableByBugzilla(final PullRequest pull) {
-        final Result mergeable = new Result(false);
+        final Result mergeable = new Result(true);
 
         final List<Bug> bugs = (List<Bug>) getIssue(pull);
         if (bugs.isEmpty()) {
+            mergeable.setMergeable(false);
             mergeable.addDescription("- Missing any bugzilla bug");
             return mergeable;
         }
 
-        // any referenced (blocked) bug has to...
         for (Bug bug : bugs) {
-            final Set<Integer> blocks = bug.getBlocks();
-            if (blocks == null || blocks.isEmpty())
-                continue;
+            final Set<String> flagsToCheck = new HashSet<String>(this.REQUIRED_FLAGS);
 
-            // ...contain at least one of the required parent bugs
-            boolean hit = false;
-            for (Integer parentBug : REQUIRED_PARENTS) {
-                if (blocks.contains(parentBug))
-                    hit = true;
+            final List<Flag> flags = bug.getFlags();
+            for (Flag flag : flags) {
+                if (flag.getStatus() == Flag.Status.POSITIVE) {
+                    flagsToCheck.remove(flag.getName());
+                }
             }
-
-            mergeable.setMergeable(mergeable.isMergeable() || hit);
+            if (! flagsToCheck.isEmpty()) {
+                mergeable.setMergeable(false);
+                mergeable.addDescription(missingFlagsDescription(bug, flagsToCheck));
+            }
         }
 
         if (mergeable.isMergeable()) {
             mergeable.addDescription("+ Bugzilla is OK");
-        } else {
-            mergeable.addDescription(missingParentsDescription());
         }
 
         return mergeable;
     }
 
-    private String missingParentsDescription() {
-        final StringBuilder description = new StringBuilder("- Referenced BZs should block ");
-
-        if (REQUIRED_PARENTS.size() > 1)
-            description.append("at least one of ");
+    private String missingFlagsDescription(Bug bug, Set<String> missingFlags) {
+        final StringBuilder description = new StringBuilder("- Bug bz").append(bug.getNumber()).append(" is missing flags");
 
         String delim = " ";
-        for (Integer requiredParent : REQUIRED_PARENTS) {
-            description.append(delim).append("bz").append(requiredParent);
+        for (String missingFlag : missingFlags) {
+            description.append(delim).append(missingFlag);
             delim = ", ";
         }
         return description.toString();

@@ -22,6 +22,7 @@
 package org.jboss.pull.shared.evaluators;
 
 import org.eclipse.egit.github.core.PullRequest;
+import org.jboss.pull.shared.Issue;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.spi.PullEvaluator;
@@ -29,6 +30,7 @@ import org.jboss.pull.shared.spi.PullEvaluator;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -41,11 +43,11 @@ import java.util.StringTokenizer;
  *
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
-public class PullEvaluatorUtil {
+public class PullEvaluatorFacade {
 
     private final Map<String, PullEvaluator> evaluators = new HashMap<String, PullEvaluator>();
 
-    public PullEvaluatorUtil(final PullHelper helper, final Properties configuration) {
+    public PullEvaluatorFacade(final PullHelper helper, final Properties configuration) {
         final String versions = Util.require(configuration, "versions");
 
         final StringTokenizer tokenizer = new StringTokenizer(versions, ", ");
@@ -72,13 +74,28 @@ public class PullEvaluatorUtil {
     }
 
     public PullEvaluator.Result isMergeable(final PullRequest pull) {
-        PullEvaluator evaluator = getPullEvaluator(pull);
+        final PullEvaluator evaluator = getPullEvaluator(pull);
         return evaluator.isMergeable(pull);
     }
 
-    public PullEvaluator getPullEvaluator(final PullRequest pull) {
-        String targetBranch = pull.getBase().getRef();
-        PullEvaluator evaluator = evaluators.get(targetBranch);
+    public List<? extends Issue> getIssue(final PullRequest pull) {
+        final PullEvaluator evaluator = getPullEvaluator(pull);
+        return evaluator.getIssue(pull);
+    }
+
+    public List<PullRequest> getUpstreamPullRequest(final PullRequest pull) {
+        final PullEvaluator evaluator = getPullEvaluator(pull);
+        return evaluator.getUpstreamPullRequest(pull);
+    }
+
+    public boolean updateIssueAsMerged(final PullRequest pull) {
+        final PullEvaluator evaluator = getPullEvaluator(pull);
+        return evaluator.updateIssueAsMerged(pull);
+    }
+
+    private PullEvaluator getPullEvaluator(final PullRequest pull) {
+        final String targetBranch = pull.getBase().getRef();
+        final PullEvaluator evaluator = evaluators.get(targetBranch);
 
         if (evaluator == null)
             throw new IllegalStateException("Couldn't find any evaluator for target github branch " + targetBranch);

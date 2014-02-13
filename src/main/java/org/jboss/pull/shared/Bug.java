@@ -21,14 +21,13 @@
  */
 package org.jboss.pull.shared;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class Bug implements Serializable{
+public class Bug implements Issue {
 
     // Bug Status
     public enum Status {
@@ -45,8 +44,6 @@ public class Bug implements Serializable{
 
     private static final long serialVersionUID = 6967220126171894474L;
 
-    private Map<String, Object> bugMap;
-
     //includes attributes for Bug.get execution
     public static final Object[] include_fields = {"id", "assigned_to", "status", "flags", "blocks", "target_release"};
 
@@ -58,11 +55,6 @@ public class Bug implements Serializable{
     private Set<String> targetRelease;
 
     public Bug(Map<String, Object> bugMap) {
-        this.bugMap = bugMap;
-        initBug();
-    }
-
-    private void initBug() {
         id = (Integer) bugMap.get("id");
         assignedTo = (String) bugMap.get("assigned_to");
         status = Status.valueOf((String)bugMap.get("status"));
@@ -105,16 +97,13 @@ public class Bug implements Serializable{
         }
     }
 
-    public Map<String, Object> getBugMap() {
-        return bugMap;
-    }
-
-    public void setBugMap(Map<String, Object> bugMap) {
-        this.bugMap = bugMap;
-    }
-
     public int getId() {
         return id;
+    }
+
+    @Override
+    public String getNumber() {
+        return Integer.toString(id);
     }
 
     public void setId(int id) {
@@ -129,14 +118,20 @@ public class Bug implements Serializable{
         this.assignedTo = assignedTo;
     }
 
-    public Status getStatus() {
+    public Status getBugzillaStatus() {
         return status;
+    }
+
+    @Override
+    public String getStatus() {
+        return status.toString();
     }
 
     public void setStatus(Status status) {
         this.status = status;
     }
 
+    @Override
     public List<Flag> getFlags() {
         return flags;
     }
@@ -155,6 +150,11 @@ public class Bug implements Serializable{
 
     public Set<String> getTargetRelease() {
         return targetRelease;
+    }
+
+    @Override
+    public String getUrl() {
+        return "https://bugzilla.redhat.com/show_bug.cgi?id=" + id;
     }
 
 }

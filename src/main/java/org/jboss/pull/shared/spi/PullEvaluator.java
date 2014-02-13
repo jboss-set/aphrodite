@@ -22,6 +22,7 @@
 package org.jboss.pull.shared.spi;
 
 import org.eclipse.egit.github.core.PullRequest;
+import org.jboss.pull.shared.Issue;
 import org.jboss.pull.shared.PullHelper;
 
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public interface PullEvaluator {
      * Initializes the evaluator.
      * @param helper {@code PullHelper} instance
      * @param configuration configuration properties
-     * @param version version name related to this evaluator in the configuration properties
+     * @param version issueFixVersion name related to this evaluator in the configuration properties
      */
     void init(final PullHelper helper, final Properties configuration, final String version);
 
@@ -50,17 +51,37 @@ public interface PullEvaluator {
      */
     String getTargetBranch();
 
-    String getUpstreamOrganization();
-    String getUpstreamRepository();
-    String getVersion();
-
     /**
      * Evaluates if the given pull request is mergeable according to
-     * the rules of the relevant EAP version.
+     * the rules of the relevant EAP issueFixVersion.
      * @param pull a pull request to be evaluated
      * @return {@code Result} result of the evaluation
      */
     Result isMergeable(final PullRequest pull);
+
+    /**
+     * Returns the issue(-s) related to the given pull request.
+     * It can either be a {@code JiraIssue} if the pull request is tracked in Jira
+     * or a {@code Bug} if it is tracked by Bugzilla or a list of both.
+     * @param pull a pull request
+     * @return the issue(-s) related to the pull request.
+     */
+    List<? extends Issue> getIssue(final PullRequest pull);
+
+    /**
+     * Returns the upstream pull request(-s) related to the given pull request.
+     * @param pull a pull request
+     * @return the upstream pull request(-s) related to the pull request.
+     */
+    List<PullRequest> getUpstreamPullRequest(final PullRequest pull);
+
+    /**
+     * Marks the issue related to the given pull request merged.
+     * Typically in Bugzilla to state MODIFIED, in JIRA to state Resolved.
+     * @param pull a pull request
+     * @return true if the issue has been updated, false otherwise
+     */
+    boolean updateIssueAsMerged(final PullRequest pull);
 
 
     /**
@@ -73,13 +94,19 @@ public interface PullEvaluator {
         private List<String> description;
 
         public Result() {
-            description = new ArrayList<String>();
+            this.description = new ArrayList<String>();
+        }
+
+        public Result(final boolean mergeable) {
+            this.mergeable = mergeable;
+            this.description = new ArrayList<String>();
         }
 
         public Result(final boolean mergeable, final String... description) {
             this.mergeable = mergeable;
             this.description = new ArrayList<String>(Arrays.asList(description));
         }
+
         public boolean isMergeable() {
             return mergeable;
         }
