@@ -23,6 +23,7 @@ package org.jboss.pull.shared;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * JIRA issue representation.
@@ -32,14 +33,18 @@ import java.util.List;
  */
 public class JiraIssue implements Issue {
 
+    private static final long serialVersionUID = 7228344342017879011L;
+
     private String id;
     private String status;
     private List<Flag> flags;
+    private Set<String> fixVersions;
 
-    public JiraIssue(final String id, final String status, final List<Flag> flags) {
+    public JiraIssue(final String id, final String status, final List<Flag> flags, final Set<String> fixVersions) {
         this.id = id;
         this.status = status;
         this.flags = new ArrayList<Flag>(flags);
+        this.fixVersions = fixVersions;
     }
 
     @Override
@@ -60,5 +65,10 @@ public class JiraIssue implements Issue {
     @Override
     public List<Flag> getFlags() {
         return flags;
+    }
+
+    @Override
+    public Set<String> getFixVersions() {
+        return fixVersions;
     }
 }
