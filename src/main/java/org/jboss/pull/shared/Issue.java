@@ -23,6 +23,7 @@ package org.jboss.pull.shared;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a general issue.
@@ -39,4 +40,7 @@ public interface Issue extends Serializable {
     String getStatus();
     /** flags of the issue */
     List<Flag> getFlags();   // our Flag class will be enough for both Bugzilla and Jira hopefully
+
+    /** Jira Fix Version/s, Bugzilla calls Target Release **/
+    Set<String> getFixVersions();
 }

@@ -157,4 +157,9 @@ public class Bug implements Issue {
         return "https://bugzilla.redhat.com/show_bug.cgi?id=" + id;
     }
 
+    @Override
+    public Set<String> getFixVersions() {
+        return targetRelease;
+    }
+
 }
