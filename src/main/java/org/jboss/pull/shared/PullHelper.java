@@ -24,11 +24,13 @@ package org.jboss.pull.shared;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.IRepositoryIdProvider;
+import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
+import org.eclipse.egit.github.core.service.MilestoneService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.jboss.pull.shared.evaluators.PullEvaluatorFacade;
 import org.jboss.pull.shared.spi.PullEvaluator;
@@ -69,6 +71,7 @@ public class PullHelper {
     private final CommitService commitService;
     private final IssueService issueService;
     private final PullRequestService pullRequestService;
+    private final MilestoneService milestoneService;
 
     private final Bugzilla bugzillaClient;
 
@@ -96,6 +99,7 @@ public class PullHelper {
             commitService = new CommitService(client);
             issueService = new IssueService(client);
             pullRequestService = new PullRequestService(client);
+            milestoneService = new MilestoneService(client);
 
             BUGZILLA_LOGIN = Util.require(props, "bugzilla.login");
             BUGZILLA_PASSWORD = Util.require(props, "bugzilla.password");
@@ -293,7 +297,65 @@ public class PullHelper {
             e.printStackTrace(System.err);
         }
     }
+    
+    public Milestone findOrCreateMilestone(String title){
+    	List<Milestone> milestones = getMilestones();
+    	
+    	for(Milestone milestone : milestones){
+			if( milestone.getTitle().equals(title)){		
+				return milestone;
+			}
+    	}
+    	
+		return createMilestone(title);
 
+    }
+    private List<Milestone> getMilestones(){
+    	List<Milestone> milestones;
+    	try {
+			milestones = milestoneService.getMilestones(repository, "open");
+		} catch (IOException e) {
+            System.err.printf("Problem getting milestones");
+            e.printStackTrace(System.err);
+            milestones = new ArrayList<Milestone>();
+		}
+    	return milestones;
+    }
+
+    private Milestone createMilestone(String title){
+		Milestone newMilestone = new Milestone();
+		newMilestone.setTitle(title);
+		Milestone returnMilestone = null;
+		try {
+			returnMilestone = milestoneService.createMilestone(repository, newMilestone);
+		} catch (IOException e) {
+            System.err.printf("Problem creating new milestone. title: " + title);
+            e.printStackTrace(System.err);
+		}	
+		return returnMilestone;
+    }
+    
+    public org.eclipse.egit.github.core.Issue getIssue(int id){
+    	org.eclipse.egit.github.core.Issue issue = null;
+		try {
+			issue = issueService.getIssue(repository, id);
+		} catch (IOException e) {
+            System.err.printf("Problem getting issue. id: " + id);
+            e.printStackTrace(System.err);
+		}
+		return issue;
+    }
+    
+    public org.eclipse.egit.github.core.Issue editIssue(org.eclipse.egit.github.core.Issue issue){
+    	org.eclipse.egit.github.core.Issue returnIssue = null; 
+		try {
+			returnIssue = issueService.editIssue(repository, issue);
+		} catch (IOException e) {
+            System.err.printf("Problem editing issue. id: " + issue.getId());
+            e.printStackTrace(System.err);
+		}
+		return returnIssue;
+    }
 
     public PullEvaluatorFacade getEvaluatorFacade() {
         return evaluatorFacade;
