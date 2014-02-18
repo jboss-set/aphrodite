@@ -297,64 +297,64 @@ public class PullHelper {
             e.printStackTrace(System.err);
         }
     }
-    
+
     public Milestone findOrCreateMilestone(String title){
-    	List<Milestone> milestones = getMilestones();
-    	
-    	for(Milestone milestone : milestones){
-			if( milestone.getTitle().equals(title)){		
-				return milestone;
-			}
-    	}
-    	
-		return createMilestone(title);
+        List<Milestone> milestones = getMilestones();
+
+        for(Milestone milestone : milestones){
+            if( milestone.getTitle().equals(title)){
+                return milestone;
+            }
+        }
+
+        return createMilestone(title);
 
     }
     private List<Milestone> getMilestones(){
-    	List<Milestone> milestones;
-    	try {
-			milestones = milestoneService.getMilestones(repository, "open");
-		} catch (IOException e) {
+        List<Milestone> milestones;
+        try {
+            milestones = milestoneService.getMilestones(repository, "open");
+        } catch (IOException e) {
             System.err.printf("Problem getting milestones");
             e.printStackTrace(System.err);
             milestones = new ArrayList<Milestone>();
-		}
-    	return milestones;
+        }
+        return milestones;
     }
 
     private Milestone createMilestone(String title){
-		Milestone newMilestone = new Milestone();
-		newMilestone.setTitle(title);
-		Milestone returnMilestone = null;
-		try {
-			returnMilestone = milestoneService.createMilestone(repository, newMilestone);
-		} catch (IOException e) {
+        Milestone newMilestone = new Milestone();
+        newMilestone.setTitle(title);
+        Milestone returnMilestone = null;
+        try {
+            returnMilestone = milestoneService.createMilestone(repository, newMilestone);
+        } catch (IOException e) {
             System.err.printf("Problem creating new milestone. title: " + title);
             e.printStackTrace(System.err);
-		}	
-		return returnMilestone;
+        }
+        return returnMilestone;
     }
-    
+
     public org.eclipse.egit.github.core.Issue getIssue(int id){
-    	org.eclipse.egit.github.core.Issue issue = null;
-		try {
-			issue = issueService.getIssue(repository, id);
-		} catch (IOException e) {
+        org.eclipse.egit.github.core.Issue issue = null;
+        try {
+            issue = issueService.getIssue(repository, id);
+        } catch (IOException e) {
             System.err.printf("Problem getting issue. id: " + id);
             e.printStackTrace(System.err);
-		}
-		return issue;
+        }
+        return issue;
     }
-    
+
     public org.eclipse.egit.github.core.Issue editIssue(org.eclipse.egit.github.core.Issue issue){
-    	org.eclipse.egit.github.core.Issue returnIssue = null; 
-		try {
-			returnIssue = issueService.editIssue(repository, issue);
-		} catch (IOException e) {
+        org.eclipse.egit.github.core.Issue returnIssue = null;
+        try {
+            returnIssue = issueService.editIssue(repository, issue);
+        } catch (IOException e) {
             System.err.printf("Problem editing issue. id: " + issue.getId());
             e.printStackTrace(System.err);
-		}
-		return returnIssue;
+        }
+        return returnIssue;
     }
 
     public PullEvaluatorFacade getEvaluatorFacade() {
