@@ -49,13 +49,19 @@ import java.util.regex.Pattern;
  * @author wangchao
  */
 public class PullHelper {
-    private static final Pattern BUILD_OUTCOME = Pattern.compile("outcome was (\\*\\*)?+(SUCCESS|FAILURE|ABORTED)(\\*\\*)?+ using a merge of ([a-z0-9]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BUILD_OUTCOME = Pattern.compile(
+            "outcome was (\\*\\*)?+(SUCCESS|FAILURE|ABORTED)(\\*\\*)?+ using a merge of ([a-z0-9]+)", Pattern.CASE_INSENSITIVE);
 
-    public static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern FINISHED = Pattern.compile(".*Build.*merging.*has\\W+been\\W+finished.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern MERGE = Pattern.compile(".*(re)?merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern FORCE_MERGE = Pattern.compile(".*force\\W+merge\\W+this.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static final Pattern FINISHED = Pattern.compile(".*Build.*merging.*has\\W+been\\W+finished.*",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static final Pattern MERGE = Pattern.compile(".*(re)?merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE
+            | Pattern.DOTALL);
+    public static final Pattern FORCE_MERGE = Pattern.compile(".*force\\W+merge\\W+this.*", Pattern.CASE_INSENSITIVE
+            | Pattern.DOTALL);
 
     private static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
 
@@ -121,6 +127,7 @@ public class PullHelper {
 
     /**
      * Checks the state of the given pull request from the pull-processor perspective.
+     * 
      * @param pull the pull request
      * @return relevant state
      */
@@ -231,8 +238,7 @@ public class PullHelper {
         return buildResult;
     }
 
-
-    // --------  Bugzilla related methods
+    // -------- Bugzilla related methods
     public Bug getBug(Integer bugzillaId) {
         return bugzillaClient.getBug(bugzillaId);
     }
@@ -241,8 +247,7 @@ public class PullHelper {
         return bugzillaClient.updateBugzillaStatus(bugzillaId, status);
     }
 
-
-    // --------  Github related methods
+    // -------- Github related methods
     public PullRequest getPullRequest(int id) throws IOException {
         return getPullRequest(repository, id);
     }
@@ -298,19 +303,7 @@ public class PullHelper {
         }
     }
 
-    public Milestone findOrCreateMilestone(String title){
-        List<Milestone> milestones = getMilestones();
-
-        for(Milestone milestone : milestones){
-            if( milestone.getTitle().equals(title)){
-                return milestone;
-            }
-        }
-
-        return createMilestone(title);
-
-    }
-    private List<Milestone> getMilestones(){
+    public List<Milestone> getMilestones() {
         List<Milestone> milestones;
         try {
             milestones = milestoneService.getMilestones(repository, "open");
@@ -322,7 +315,7 @@ public class PullHelper {
         return milestones;
     }
 
-    private Milestone createMilestone(String title){
+    public Milestone createMilestone(String title) {
         Milestone newMilestone = new Milestone();
         newMilestone.setTitle(title);
         Milestone returnMilestone = null;
@@ -335,7 +328,7 @@ public class PullHelper {
         return returnMilestone;
     }
 
-    public org.eclipse.egit.github.core.Issue getIssue(int id){
+    public org.eclipse.egit.github.core.Issue getIssue(int id) {
         org.eclipse.egit.github.core.Issue issue = null;
         try {
             issue = issueService.getIssue(repository, id);
@@ -346,7 +339,7 @@ public class PullHelper {
         return issue;
     }
 
-    public org.eclipse.egit.github.core.Issue editIssue(org.eclipse.egit.github.core.Issue issue){
+    public org.eclipse.egit.github.core.Issue editIssue(org.eclipse.egit.github.core.Issue issue) {
         org.eclipse.egit.github.core.Issue returnIssue = null;
         try {
             returnIssue = issueService.editIssue(repository, issue);
