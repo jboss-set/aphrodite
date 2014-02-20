@@ -127,7 +127,7 @@ public class PullHelper {
 
     /**
      * Checks the state of the given pull request from the pull-processor perspective.
-     * 
+     *
      * @param pull the pull request
      * @return relevant state
      */
