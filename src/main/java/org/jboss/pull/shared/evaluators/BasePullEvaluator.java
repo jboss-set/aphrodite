@@ -27,7 +27,7 @@ import org.eclipse.egit.github.core.RepositoryId;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
-import org.jboss.pull.shared.connectors.bugzilla.Issue;
+import org.jboss.pull.shared.connectors.common.Issue;
 import org.jboss.pull.shared.connectors.jira.JiraIssue;
 import org.jboss.pull.shared.spi.PullEvaluator;
 

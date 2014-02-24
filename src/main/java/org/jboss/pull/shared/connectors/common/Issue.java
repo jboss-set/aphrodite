@@ -19,11 +19,13 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.pull.shared.connectors.bugzilla;
+package org.jboss.pull.shared.connectors.common;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+
+import org.jboss.pull.shared.connectors.bugzilla.Flag;
 
 
 /**

@@ -24,7 +24,7 @@ package org.jboss.pull.shared.evaluators;
 import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
-import org.jboss.pull.shared.connectors.bugzilla.Issue;
+import org.jboss.pull.shared.connectors.common.Issue;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
 import java.lang.reflect.Constructor;
