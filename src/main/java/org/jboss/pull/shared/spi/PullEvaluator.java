@@ -22,8 +22,8 @@
 package org.jboss.pull.shared.spi;
 
 import org.eclipse.egit.github.core.PullRequest;
-import org.jboss.pull.shared.Issue;
 import org.jboss.pull.shared.PullHelper;
+import org.jboss.pull.shared.connectors.bugzilla.Issue;
 
 import java.util.ArrayList;
 import java.util.Arrays;

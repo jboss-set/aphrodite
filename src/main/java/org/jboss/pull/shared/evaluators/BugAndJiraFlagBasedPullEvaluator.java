@@ -22,10 +22,10 @@
 package org.jboss.pull.shared.evaluators;
 
 import org.eclipse.egit.github.core.PullRequest;
-import org.jboss.pull.shared.Bug;
-import org.jboss.pull.shared.Flag;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.bugzilla.Bug;
+import org.jboss.pull.shared.connectors.bugzilla.Flag;
 
 import java.util.HashSet;
 import java.util.List;

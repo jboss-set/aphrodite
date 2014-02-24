@@ -24,11 +24,11 @@ package org.jboss.pull.shared.evaluators;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryId;
-import org.jboss.pull.shared.Bug;
-import org.jboss.pull.shared.Issue;
-import org.jboss.pull.shared.JiraIssue;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.bugzilla.Bug;
+import org.jboss.pull.shared.connectors.bugzilla.Issue;
+import org.jboss.pull.shared.connectors.jira.JiraIssue;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
 import java.io.IOException;
@@ -95,7 +95,7 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     private Result isReviewed(PullRequest pull) {
         final Result result = new Result(false);
 
-        final List<Comment> comments = helper.getPullRequestComments(pull.getNumber());
+        final List<Comment> comments = helper.getGHHelper().getPullRequestComments(pull.getNumber());
         for (Comment comment : comments) {
             if (PullHelper.MERGE.matcher(comment.getBody()).matches()) {
                 System.out.printf("issue #%d updated at: %s\n", pull.getNumber(), Util.getTime(pull.getUpdatedAt()));
@@ -162,7 +162,7 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         while (matcher.find()) {
             final Integer id = Integer.valueOf(matcher.group(2));
             try {
-                final PullRequest upstreamPull = helper.getPullRequest(RepositoryId.create(upstreamOrganization, upstreamRepository), id);
+                final PullRequest upstreamPull = helper.getGHHelper().getPullRequest(RepositoryId.create(upstreamOrganization, upstreamRepository), id);
 
                 if (upstreamBranch.equals(upstreamPull.getBase().getRef()))
                     upstreamPulls.add(upstreamPull);
@@ -177,12 +177,12 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     private boolean updateBugzillaAsMerged(final Bug bug) {
         boolean result = false;
         try {
-            result = helper.updateBugzillaStatus(bug.getId(), Bug.Status.MODIFIED);
+            result = helper.getBZHelper().updateBugzillaStatus(bug.getId(), Bug.Status.MODIFIED);
         } catch (Exception e) {
             System.err.printf("Update of the status of bugzilla bz%d failed due to %s.\n", bug.getId(), e);
             System.err.printf("Retrying...\n");
             try {
-                result = helper.updateBugzillaStatus(bug.getId(), Bug.Status.MODIFIED);
+                result = helper.getBZHelper().updateBugzillaStatus(bug.getId(), Bug.Status.MODIFIED);
             } catch (Exception ex) {
                 System.err.printf("Update of the status of bugzilla bz%d failed again due to %s.\n", bug.getId(), ex);
             }
@@ -239,7 +239,7 @@ public abstract class BasePullEvaluator implements PullEvaluator {
 
         for (Integer id : ids) {
             try {
-                final Bug bug = helper.getBug(id);
+                final Bug bug = helper.getBZHelper().getBug(id);
                 if (bug == null)
                     continue;
 
