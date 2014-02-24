@@ -19,7 +19,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.pull.shared;
+package org.jboss.pull.shared.connectors.bugzilla;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,7 +30,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 
-import org.jboss.pull.shared.Flag.Status;
+import org.jboss.pull.shared.connectors.bugzilla.Flag.Status;
 
 public class Bugzilla {
 

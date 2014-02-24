@@ -22,21 +22,13 @@
 package org.jboss.pull.shared;
 
 import org.eclipse.egit.github.core.Comment;
-import org.eclipse.egit.github.core.CommitStatus;
-import org.eclipse.egit.github.core.IRepositoryIdProvider;
-import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
-import org.eclipse.egit.github.core.RepositoryId;
-import org.eclipse.egit.github.core.client.GitHubClient;
-import org.eclipse.egit.github.core.service.CommitService;
-import org.eclipse.egit.github.core.service.IssueService;
-import org.eclipse.egit.github.core.service.MilestoneService;
-import org.eclipse.egit.github.core.service.PullRequestService;
+import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
+import org.jboss.pull.shared.connectors.github.GithubHelper;
 import org.jboss.pull.shared.evaluators.PullEvaluatorFacade;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -63,55 +55,33 @@ public class PullHelper {
     public static final Pattern FORCE_MERGE = Pattern.compile(".*force\\W+merge\\W+this.*", Pattern.CASE_INSENSITIVE
             | Pattern.DOTALL);
 
-    private static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
-
-    private final String GITHUB_ORGANIZATION;
-    private final String GITHUB_REPO;
-    private final String GITHUB_LOGIN;
-    private final String GITHUB_TOKEN;
-
-    private final String BUGZILLA_LOGIN;
-    private final String BUGZILLA_PASSWORD;
-
-    private final IRepositoryIdProvider repository;
-    private final CommitService commitService;
-    private final IssueService issueService;
-    private final PullRequestService pullRequestService;
-    private final MilestoneService milestoneService;
-
-    private final Bugzilla bugzillaClient;
-
-    private final Properties props;
+//    private final Properties props;
 
     private final PullEvaluatorFacade evaluatorFacade;
 
     private final UserList adminList;
 
+    // ------- Specific Helpers
+    private final GithubHelper ghHelper;
+    public GithubHelper getGHHelper(){
+        return ghHelper;
+    }
+    private final BZHelper bzHelper;
+    public BZHelper getBZHelper(){
+        return bzHelper;
+    }
+
+    private final Properties props;
+    public Properties getProperties(){
+        return props;
+    }
+
     public PullHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
         try {
+            ghHelper = new GithubHelper(configurationFileProperty, configurationFileDefault);
+            bzHelper = new BZHelper(configurationFileProperty, configurationFileDefault);
+
             props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
-
-            GITHUB_ORGANIZATION = Util.require(props, "github.organization");
-            GITHUB_REPO = Util.require(props, "github.repo");
-
-            GITHUB_LOGIN = Util.require(props, "github.login");
-            GITHUB_TOKEN = Util.get(props, "github.token");
-
-            // initialize client and services
-            GitHubClient client = new GitHubClient();
-            if (GITHUB_TOKEN != null && GITHUB_TOKEN.length() > 0)
-                client.setOAuth2Token(GITHUB_TOKEN);
-            repository = RepositoryId.create(GITHUB_ORGANIZATION, GITHUB_REPO);
-            commitService = new CommitService(client);
-            issueService = new IssueService(client);
-            pullRequestService = new PullRequestService(client);
-            milestoneService = new MilestoneService(client);
-
-            BUGZILLA_LOGIN = Util.require(props, "bugzilla.login");
-            BUGZILLA_PASSWORD = Util.require(props, "bugzilla.password");
-
-            // initialize bugzilla client
-            bugzillaClient = new Bugzilla(BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
 
             // initialize evaluators
             evaluatorFacade = new PullEvaluatorFacade(this, props);
@@ -125,19 +95,23 @@ public class PullHelper {
         }
     }
 
+    public PullEvaluatorFacade getEvaluatorFacade() {
+        return evaluatorFacade;
+    }
+
     /**
      * Checks the state of the given pull request from the pull-processor perspective.
      *
-     * @param pull the pull request
+     * @param pullRequest the pull request
      * @return relevant state
      */
-    public ProcessorPullState checkPullRequestState(final PullRequest pull) {
+    public ProcessorPullState checkPullRequestState(final PullRequest pullRequest) {
         ProcessorPullState result = ProcessorPullState.NEW;
 
         try {
-            final List<Comment> comments = issueService.getComments(repository, pull.getNumber());
+            final List<Comment> comments = ghHelper.getComments(pullRequest);
             for (Comment comment : comments) {
-                if (GITHUB_LOGIN.equals(comment.getUser().getLogin())) {
+                if (ghHelper.getGithubLogin().equals(comment.getUser().getLogin())) {
                     if (PENDING.matcher(comment.getBody()).matches()) {
                         result = ProcessorPullState.PENDING;
                         continue;
@@ -162,7 +136,7 @@ public class PullHelper {
 
             if (result == ProcessorPullState.MERGEABLE || result == ProcessorPullState.NEW) {
                 // check other conditions, i.e. upstream pull request and bugzilla and jira...
-                final PullEvaluator.Result mergeable = evaluatorFacade.isMergeable(pull);
+                final PullEvaluator.Result mergeable = evaluatorFacade.isMergeable(pullRequest);
                 if (!mergeable.isMergeable()) {
                     result = ProcessorPullState.INCOMPLETE;
                 }
@@ -175,7 +149,7 @@ public class PullHelper {
             }
 
         } catch (IOException e) {
-            System.err.printf("Cannot read comments of PR#%d due to %s\n", pull.getNumber(), e);
+            System.err.printf("Cannot read comments of PR#%d due to %s\n", pullRequest.getNumber(), e);
             result = ProcessorPullState.ERROR;
         }
 
@@ -186,33 +160,33 @@ public class PullHelper {
         return adminList.has(username);
     }
 
-    public boolean isMerged(final PullRequest pull) {
-        if (pull == null) {
+    public boolean isMerged(final PullRequest pullRequest) {
+        if (pullRequest == null) {
             return false;
         }
 
-        if (!pull.getState().equals("closed")) {
+        if (!pullRequest.getState().equals("closed")) {
             return false;
         }
 
         try {
-            if (pullRequestService.isMerged(pull.getBase().getRepo(), pull.getNumber())) {
+            if (ghHelper.isMerged(pullRequest)) {
                 return true;
             }
         } catch (IOException ignore) {
-            System.err.printf("Cannot get Merged information of the pull request %d: %s.\n", pull.getNumber(), ignore);
+            System.err.printf("Cannot get Merged information of the pull request %d: %s.\n", pullRequest.getNumber(), ignore);
             ignore.printStackTrace(System.err);
         }
 
         try {
-            final List<Comment> comments = issueService.getComments(pull.getBase().getRepo(), pull.getNumber());
+            final List<Comment> comments = ghHelper.getComments(pullRequest);
             for (Comment comment : comments) {
                 if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
                     return true;
                 }
             }
         } catch (IOException ignore) {
-            System.err.printf("Cannot get comments of the pull request %d: %s.\n", pull.getNumber(), ignore);
+            System.err.printf("Cannot get comments of the pull request %d: %s.\n", pullRequest.getNumber(), ignore);
             ignore.printStackTrace(System.err);
         }
 
@@ -223,7 +197,7 @@ public class PullHelper {
         BuildResult buildResult = BuildResult.UNKNOWN;
         List<Comment> comments;
         try {
-            comments = issueService.getComments(repository, pullRequest.getNumber());
+            comments = ghHelper.getComments(pullRequest);
         } catch (IOException e) {
             System.err.println("Error to get comments for pull request : " + pullRequest.getNumber());
             e.printStackTrace(System.err);
@@ -236,126 +210,6 @@ public class PullHelper {
             }
         }
         return buildResult;
-    }
-
-    // -------- Bugzilla related methods
-    public Bug getBug(Integer bugzillaId) {
-        return bugzillaClient.getBug(bugzillaId);
-    }
-
-    public boolean updateBugzillaStatus(Integer bugzillaId, Bug.Status status) {
-        return bugzillaClient.updateBugzillaStatus(bugzillaId, status);
-    }
-
-    // -------- Github related methods
-    public PullRequest getPullRequest(int id) throws IOException {
-        return getPullRequest(repository, id);
-    }
-
-    public PullRequest getPullRequest(String upstreamOrganization, String upstreamRepository, int id) throws IOException {
-        return getPullRequest(RepositoryId.create(upstreamOrganization, upstreamRepository), id);
-    }
-
-    public PullRequest getPullRequest(IRepositoryIdProvider repository, int id) throws IOException {
-        return pullRequestService.getPullRequest(repository, id);
-    }
-
-    public List<PullRequest> getPullRequests(String state) {
-        List<PullRequest> result;
-        try {
-            result = pullRequestService.getPullRequests(repository, state);
-        } catch (IOException e) {
-            System.err.printf("Couldn't get pull requests in state %s of repository %s due to %s.\n", state, repository, e);
-            result = new ArrayList<PullRequest>();
-        }
-        return result;
-    }
-
-    public List<Comment> getPullRequestComments(int pullNumber) {
-        List<Comment> result;
-        try {
-            result = issueService.getComments(repository, pullNumber);
-        } catch (IOException e) {
-            System.err.printf("Couldn't get comments of pull request #%d due to %s.\n", pullNumber, e);
-            result = new ArrayList<Comment>();
-        }
-        return result;
-    }
-
-    public void postGithubStatus(PullRequest pull, String targetUrl, String status) {
-        try {
-            CommitStatus commitStatus = new CommitStatus();
-            commitStatus.setTargetUrl(targetUrl);
-            commitStatus.setState(status);
-            commitService.createStatus(repository, pull.getHead().getSha(), commitStatus);
-        } catch (Exception e) {
-            System.err.printf("Problem posting a status build for sha: %s\n", pull.getHead().getSha());
-            e.printStackTrace(System.err);
-        }
-    }
-
-    public void postGithubComment(PullRequest pull, String comment) {
-        try {
-            issueService.createComment(repository, pull.getNumber(), comment);
-        } catch (IOException e) {
-            System.err.printf("Problem posting a comment build for pull: %d\n", pull.getNumber());
-            e.printStackTrace(System.err);
-        }
-    }
-
-    public List<Milestone> getMilestones() {
-        List<Milestone> milestones;
-        try {
-            milestones = milestoneService.getMilestones(repository, "open");
-        } catch (IOException e) {
-            System.err.printf("Problem getting milestones");
-            e.printStackTrace(System.err);
-            milestones = new ArrayList<Milestone>();
-        }
-        return milestones;
-    }
-
-    public Milestone createMilestone(String title) {
-        Milestone newMilestone = new Milestone();
-        newMilestone.setTitle(title);
-        Milestone returnMilestone = null;
-        try {
-            returnMilestone = milestoneService.createMilestone(repository, newMilestone);
-        } catch (IOException e) {
-            System.err.printf("Problem creating new milestone. title: " + title);
-            e.printStackTrace(System.err);
-        }
-        return returnMilestone;
-    }
-
-    public org.eclipse.egit.github.core.Issue getIssue(int id) {
-        org.eclipse.egit.github.core.Issue issue = null;
-        try {
-            issue = issueService.getIssue(repository, id);
-        } catch (IOException e) {
-            System.err.printf("Problem getting issue. id: " + id);
-            e.printStackTrace(System.err);
-        }
-        return issue;
-    }
-
-    public org.eclipse.egit.github.core.Issue editIssue(org.eclipse.egit.github.core.Issue issue) {
-        org.eclipse.egit.github.core.Issue returnIssue = null;
-        try {
-            returnIssue = issueService.editIssue(repository, issue);
-        } catch (IOException e) {
-            System.err.printf("Problem editing issue. id: " + issue.getId());
-            e.printStackTrace(System.err);
-        }
-        return returnIssue;
-    }
-
-    public PullEvaluatorFacade getEvaluatorFacade() {
-        return evaluatorFacade;
-    }
-
-    public Properties getProps() {
-        return props;
     }
 
 }
