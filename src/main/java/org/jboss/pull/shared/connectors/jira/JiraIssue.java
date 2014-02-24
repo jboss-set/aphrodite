@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.pull.shared.connectors.bugzilla.Flag;
-import org.jboss.pull.shared.connectors.bugzilla.Issue;
+import org.jboss.pull.shared.connectors.common.Issue;
 
 /**
  * JIRA issue representation.
