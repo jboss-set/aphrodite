@@ -152,12 +152,46 @@ public class Bugzilla {
 
         XmlRpcClient rpcClient = getClient();
         try {
+            rpcClient.execute("Bug.update", objParams);
+            return true;
+        } catch (XmlRpcException e) {
+            e.printStackTrace();
+        } finally {
+            rpcClient = null;
+        }
+        return false;
+    }
 
-            Object resultObj = rpcClient.execute("Bug.update", objParams);
-            @SuppressWarnings("unchecked")
-            Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
-            int id = (Integer) resultMap.get("id");
-            return id == bugzillaId;
+    public boolean updateBugzillaTargetMilestone(final int ids, final String taregtMilestone) {
+        Map<Object, Object> params = getParameterMap();
+
+        params.put("ids", ids);
+        params.put("target_milestone", taregtMilestone);
+        Object[] objParams = { params };
+
+        XmlRpcClient rpcClient = getClient();
+        try {
+            rpcClient.execute("Bug.update", objParams);
+            return true;
+        } catch (XmlRpcException e) {
+            e.printStackTrace();
+        } finally {
+            rpcClient = null;
+        }
+        return false;
+    }
+
+    public boolean updateBugzillaTargetRelease(final int ids, final String... targetRelease) {
+        Map<Object, Object> params = getParameterMap();
+
+        params.put("ids", ids);
+        params.put("target_release", targetRelease);
+        Object[] objParams = { params };
+
+        XmlRpcClient rpcClient = getClient();
+        try {
+            rpcClient.execute("Bug.update", objParams);
+            return true;
         } catch (XmlRpcException e) {
             e.printStackTrace();
         } finally {
