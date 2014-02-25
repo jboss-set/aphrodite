@@ -4,11 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <artifactId>jboss-parent</artifactId>
+        <groupId>org.jboss</groupId>
+        <version>11-redhat-1</version>
+        <relativePath />
+    </parent>
+
     <groupId>org.jboss.jbossset</groupId>
     <artifactId>pull-shared</artifactId>
     <version>1.0-SNAPSHOT</version>
-
     <packaging>jar</packaging>
+    <name>Pull Shared</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -20,6 +27,13 @@
         <checkstyle.plugin.version>2.11</checkstyle.plugin.version>
         <org.wildfly.wildfly.build.config.version>8.0.0.Final</org.wildfly.wildfly.build.config.version>
     </properties>
+
+    <scm>
+        <connection>scm:git:git://github.com/jboss-set/pull-shared.git</connection>
+        <developerConnection>scm:git:git@github.com:jboss-set/pull-shared.git</developerConnection>
+        <url>https://github.com/jboss-set/pull-shared</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <build>
         <plugins>
