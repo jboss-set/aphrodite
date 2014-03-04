@@ -21,9 +21,9 @@
  */
 package org.jboss.pull.shared.evaluators;
 
-import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
 import org.jboss.pull.shared.connectors.bugzilla.Flag;
 
@@ -65,14 +65,14 @@ public class BugAndJiraFlagBasedPullEvaluator extends BasePullEvaluator {
     }
 
     @Override
-    public Result isMergeable(final PullRequest pull) {
+    public Result isMergeable(final RedhatPullRequest pull) {
         final Result mergeable;
         mergeable = isMergeableByUpstream(pull);
         mergeable.and(isMergeableByBugzilla(pull));
         return mergeable;
     }
 
-    protected Result isMergeableByBugzilla(final PullRequest pull) {
+    protected Result isMergeableByBugzilla(final RedhatPullRequest pull) {
         final Result mergeable = new Result(true);
 
         final List<Bug> bugs = (List<Bug>) getIssue(pull);

@@ -27,15 +27,13 @@ import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
 import org.jboss.pull.shared.connectors.common.Issue;
+import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.jira.JiraIssue;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * An abstract base evaluator which holds the target github branch.
@@ -52,8 +50,6 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     public static final String ISSUE_FIX_VERSION = "issue.fix.version";
 
     private static final String NOT_REVIEWED_TAG = "Pull request has not been reviewed yet";
-
-    private Pattern UPSTREAM_PATTERN = null;
 
     protected PullHelper helper;
 
@@ -73,8 +69,6 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         this.upstreamRepository = Util.require(configuration, version + "." + GITHUB_REPOSITORY_UPSTREAM);
         this.upstreamBranch = Util.require(configuration, version + "." + GITHUB_BRANCH_UPSTREAM);
 
-        final String repo = upstreamOrganization + "/" + upstreamRepository;
-        UPSTREAM_PATTERN = Pattern.compile("(github\\.com/" + repo + "/pull/|" + repo + "#)(\\d+)", Pattern.CASE_INSENSITIVE);
     }
 
     @Override
@@ -83,23 +77,25 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     }
 
     @Override
-    public Result isMergeable(final PullRequest pull) {
+    public Result isMergeable(final RedhatPullRequest pull) {
         final Result mergeable;
-        mergeable = isReviewed(pull);
+        mergeable = isMarkedForMerge(pull);
         mergeable.and(isMergeableByUpstream(pull));
         return mergeable;
     }
 
-    private Result isReviewed(PullRequest pull) {
+    private Result isMarkedForMerge(RedhatPullRequest pullRequest) {
         final Result result = new Result(false);
 
-        Comment comment = helper.getGHHelper().getLastMatchingComment(pull, PullHelper.MERGE);
+        Comment comment = pullRequest.getLastMatchingGithubComment(PullHelper.MERGE);
 
         if (comment != null) {
-            System.out.printf("issue #%d updated at: %s\n", pull.getNumber(), Util.getTime(pull.getUpdatedAt()));
-            System.out.printf("issue #%d reviewed at: %s\n", pull.getNumber(), Util.getTime(comment.getCreatedAt()));
+            System.out.printf("issue #%d updated at: %s\n", pullRequest.getNumber(),
+                    Util.getTime(pullRequest.getGithubUpdatedAt()));
+            System.out.printf("issue #%d reviewed at: %s\n", pullRequest.getNumber(), Util.getTime(comment.getCreatedAt()));
 
-            if (pull.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0 && helper.isAdminUser(comment.getUser().getLogin())) {
+            if (pullRequest.getGithubUpdatedAt().compareTo(comment.getCreatedAt()) <= 0
+                    && helper.isAdminUser(comment.getUser().getLogin())) {
                 result.setMergeable(true);
                 result.addDescription("+ Pull request has been reviewed");
             }
@@ -111,16 +107,8 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         return result;
     }
 
-    public static boolean isReviewed(final Result result) {
-        for (String description : result.getDescription()) {
-            if (description.indexOf(NOT_REVIEWED_TAG) != -1)
-                return false;
-        }
-        return true;
-    }
-
     @Override
-    public boolean updateIssueAsMerged(final PullRequest pull) {
+    public boolean updateIssueAsMerged(final RedhatPullRequest pull) {
         final List<Issue> issues = (List<Issue>) getIssue(pull);
 
         if (issues.isEmpty() || issues.size() > 1) {
@@ -139,7 +127,7 @@ public abstract class BasePullEvaluator implements PullEvaluator {
 
         final Issue issue = issues.get(0);
         if (issue instanceof Bug) {
-            return updateBugzillaAsMerged((Bug) issue);
+            return pull.updateBugzillaStatus((Bug) issue, Bug.Status.MODIFIED);
         } else if (issue instanceof JiraIssue) {
             return updateJiraAsMerged((JiraIssue) issue);
         } else {
@@ -148,61 +136,39 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     }
 
     @Override
-    public List<? extends Issue> getIssue(final PullRequest pull) {
-        return getBug(pull); // default implementation at the moment
+    public List<? extends Issue> getIssue(final RedhatPullRequest pull) {
+        return getBugsThatMatchFixVersion(pull); // default implementation at the moment
     }
 
     @Override
-    public List<PullRequest> getUpstreamPullRequest(final PullRequest pull) {
-        final ArrayList<PullRequest> upstreamPulls = new ArrayList<PullRequest>();
+    public List<RedhatPullRequest> getUpstreamPullRequest(final RedhatPullRequest pullRequest) {
+        final ArrayList<RedhatPullRequest> upstreamPulls = new ArrayList<RedhatPullRequest>();
 
-        final Matcher matcher = UPSTREAM_PATTERN.matcher(pull.getBody());
-        while (matcher.find()) {
-            final Integer id = Integer.valueOf(matcher.group(2));
-            try {
-                final PullRequest upstreamPull = helper.getGHHelper().getPullRequest(upstreamOrganization, upstreamRepository,
-                        id);
+        final List<RedhatPullRequest> relatedPullRequests = pullRequest.getRelatedPullRequests();
 
-                if (upstreamBranch.equals(upstreamPull.getBase().getRef()))
-                    upstreamPulls.add(upstreamPull);
-
-            } catch (IOException e) {
-                System.err.printf("Couldn't get a pull request #%d of repository %s/%s due to %s.\n", id, upstreamOrganization,
-                        upstreamRepository, e);
-            }
+        for (RedhatPullRequest relatedPullRequest : relatedPullRequests) {
+            if (upstreamOrganization.equals(relatedPullRequest.getOrganization())
+                    && upstreamRepository.equals(relatedPullRequest.getRepository())
+                    && upstreamBranch.equals(relatedPullRequest.getTargetBranchTitle()))
+                upstreamPulls.add(relatedPullRequest);
         }
+
         return upstreamPulls;
     }
 
-    private boolean updateBugzillaAsMerged(final Bug bug) {
-        boolean result = false;
-        try {
-            result = helper.getBZHelper().updateBugzillaStatus(bug.getId(), Bug.Status.MODIFIED);
-        } catch (Exception e) {
-            System.err.printf("Update of the status of bugzilla bz%d failed due to %s.\n", bug.getId(), e);
-            System.err.printf("Retrying...\n");
-            try {
-                result = helper.getBZHelper().updateBugzillaStatus(bug.getId(), Bug.Status.MODIFIED);
-            } catch (Exception ex) {
-                System.err.printf("Update of the status of bugzilla bz%d failed again due to %s.\n", bug.getId(), ex);
-            }
-        }
-        return result;
-    }
-
-    protected Result isMergeableByUpstream(final PullRequest pull) {
+    protected Result isMergeableByUpstream(final RedhatPullRequest pull) {
         final Result mergeable = new Result(true);
 
         try {
-            final List<PullRequest> upstreamPulls = getUpstreamPullRequest(pull);
+            final List<RedhatPullRequest> upstreamPulls = getUpstreamPullRequest(pull);
             if (upstreamPulls.isEmpty()) {
                 mergeable.setMergeable(false);
                 mergeable.addDescription("- Missing any upstream pull request");
                 return mergeable;
             }
 
-            for (PullRequest pullRequest : upstreamPulls) {
-                if (!helper.isMerged(pullRequest)) {
+            for (RedhatPullRequest pullRequest : upstreamPulls) {
+                if (!pullRequest.isMerged()) {
                     mergeable.setMergeable(false);
                     mergeable
                             .addDescription("- Upstream pull request #" + pullRequest.getNumber() + " has not been merged yet");
@@ -225,8 +191,9 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         return mergeable;
     }
 
-    protected List<Bug> getBug(PullRequest pull) {
-        final List<Bug> bugs = helper.getBZHelper().getBugFromDescription(pull);
+    protected List<Bug> getBugsThatMatchFixVersion(RedhatPullRequest pullRequest) {
+        List<Bug> bugs = pullRequest.getBugs();
+
         final List<Bug> returnBugs = new ArrayList<Bug>();
         for (Bug bug : bugs) {
             for (String target : bug.getTargetRelease()) {
