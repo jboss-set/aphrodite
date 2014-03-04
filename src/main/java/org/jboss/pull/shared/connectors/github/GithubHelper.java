@@ -61,16 +61,23 @@ public class GithubHelper {
 
     }
 
-    public PullRequest getPullRequest(int id) throws IOException {
+    public PullRequest getPullRequest(int id) {
         return getPullRequest(repository, id);
     }
 
-    public PullRequest getPullRequest(String upstreamOrganization, String upstreamRepository, int id) throws IOException {
+    public PullRequest getPullRequest(String upstreamOrganization, String upstreamRepository, int id) {
         return getPullRequest(RepositoryId.create(upstreamOrganization, upstreamRepository), id);
     }
 
-    private PullRequest getPullRequest(IRepositoryIdProvider repository, int id) throws IOException {
-        return pullRequestService.getPullRequest(repository, id);
+    private PullRequest getPullRequest(IRepositoryIdProvider repository, int id) {
+        PullRequest pullRequest = null;
+        try {
+            pullRequest = pullRequestService.getPullRequest(repository, id);
+        } catch (IOException e) {
+            System.err.printf("Couldn't retrieve PullRequestId: '" + id + "' from Repository: '" + repository.generateId() + "'");
+            e.printStackTrace();
+        }
+        return pullRequest;
     }
 
     public List<PullRequest> getPullRequests(String state) {
@@ -130,7 +137,8 @@ public class GithubHelper {
         return returnMilestone;
     }
 
-    public Issue getIssue(int id) {
+    public Issue getIssue(PullRequest pullRequest) {
+        int id = getIssueIdFromIssueURL(pullRequest.getIssueUrl());
         Issue issue = null;
         try {
             issue = issueService.getIssue(repository, id);
@@ -139,6 +147,10 @@ public class GithubHelper {
             e.printStackTrace(System.err);
         }
         return issue;
+    }
+
+    private int getIssueIdFromIssueURL(String issueURL) {
+        return Integer.valueOf(issueURL.substring(issueURL.lastIndexOf("/") + 1));
     }
 
     public Issue editIssue(Issue issue) {
@@ -169,7 +181,7 @@ public class GithubHelper {
 
     public Comment getLastMatchingComment(PullRequest pullRequest, Pattern pattern) {
         Comment lastComment = null;
-        List<Comment> comments = getPullRequestComments(pullRequest);
+        List<Comment> comments = getComments(pullRequest);
 
         for (Comment comment : comments) {
             Matcher matcher = pattern.matcher(comment.getBody());
@@ -181,7 +193,7 @@ public class GithubHelper {
         return lastComment;
     }
 
-    public List<Comment> getPullRequestComments(PullRequest pullRequest) {
+    public List<Comment> getComments(PullRequest pullRequest) {
         try {
             return issueService.getComments(repository, pullRequest.getNumber());
         } catch (IOException e) {

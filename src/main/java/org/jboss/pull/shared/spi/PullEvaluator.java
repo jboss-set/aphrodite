@@ -21,8 +21,8 @@
  */
 package org.jboss.pull.shared.spi;
 
-import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.PullHelper;
+import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.common.Issue;
 
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ public interface PullEvaluator {
      * @param pull a pull request to be evaluated
      * @return {@code Result} result of the evaluation
      */
-    Result isMergeable(final PullRequest pull);
+    Result isMergeable(final RedhatPullRequest pull);
 
     /**
      * Returns the issue(-s) related to the given pull request.
@@ -66,14 +66,14 @@ public interface PullEvaluator {
      * @param pull a pull request
      * @return the issue(-s) related to the pull request.
      */
-    List<? extends Issue> getIssue(final PullRequest pull);
+    List<? extends Issue> getIssue(final RedhatPullRequest pull);
 
     /**
      * Returns the upstream pull request(-s) related to the given pull request.
      * @param pull a pull request
      * @return the upstream pull request(-s) related to the pull request.
      */
-    List<PullRequest> getUpstreamPullRequest(final PullRequest pull);
+    List<RedhatPullRequest> getUpstreamPullRequest(final RedhatPullRequest pull);
 
     /**
      * Marks the issue related to the given pull request merged.
@@ -81,7 +81,7 @@ public interface PullEvaluator {
      * @param pull a pull request
      * @return true if the issue has been updated, false otherwise
      */
-    boolean updateIssueAsMerged(final PullRequest pull);
+    boolean updateIssueAsMerged(final RedhatPullRequest pull);
 
 
     /**

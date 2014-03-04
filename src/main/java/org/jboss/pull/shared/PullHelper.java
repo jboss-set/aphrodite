@@ -22,15 +22,17 @@
 package org.jboss.pull.shared;
 
 import org.eclipse.egit.github.core.Comment;
+import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
+import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.github.GithubHelper;
 import org.jboss.pull.shared.evaluators.PullEvaluatorFacade;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -40,9 +42,8 @@ import java.util.regex.Pattern;
  * @author wangchao
  */
 public class PullHelper {
-    private static final Pattern BUILD_OUTCOME = Pattern.compile(
+    public static final Pattern BUILD_OUTCOME = Pattern.compile(
             "outcome was (\\*\\*)?+(SUCCESS|FAILURE|ABORTED)(\\*\\*)?+ using a merge of ([a-z0-9]+)", Pattern.CASE_INSENSITIVE);
-
     public static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     public static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*",
@@ -62,16 +63,7 @@ public class PullHelper {
 
     // ------- Specific Helpers
     private final GithubHelper ghHelper;
-
-    public GithubHelper getGHHelper() {
-        return ghHelper;
-    }
-
     private final BZHelper bzHelper;
-
-    public BZHelper getBZHelper() {
-        return bzHelper;
-    }
 
     private final Properties props;
 
@@ -102,96 +94,84 @@ public class PullHelper {
         return evaluatorFacade;
     }
 
+    public List<RedhatPullRequest> getOpenPullRequests() {
+        List<PullRequest> pullRequests = ghHelper.getPullRequests("open");
+
+        List<RedhatPullRequest> redhatPullRequests = new ArrayList<RedhatPullRequest>();
+
+        for (PullRequest pullRequest : pullRequests) {
+            redhatPullRequests.add(new RedhatPullRequest(pullRequest, bzHelper, ghHelper));
+        }
+
+        return redhatPullRequests;
+    }
+
+    public RedhatPullRequest getPullRequest(String organization, String repository, int id){
+        PullRequest pullRequest = ghHelper.getPullRequest(organization, repository, id);
+        return new RedhatPullRequest(pullRequest, bzHelper, ghHelper);
+    }
+
+    public List<Milestone> getGithubMilestones() {
+        return ghHelper.getMilestones();
+    }
+
+    public Milestone createMilestone(String title) {
+        return ghHelper.createMilestone(title);
+    }
+
     /**
      * Checks the state of the given pull request from the pull-processor perspective.
      *
      * @param pullRequest the pull request
      * @return relevant state
      */
-    public ProcessorPullState checkPullRequestState(final PullRequest pullRequest) {
+    public ProcessorPullState checkPullRequestState(final RedhatPullRequest pullRequest) {
         ProcessorPullState result = ProcessorPullState.NEW;
 
-            final List<Comment> comments = ghHelper.getPullRequestComments(pullRequest);
-            for (Comment comment : comments) {
-                if (ghHelper.getGithubLogin().equals(comment.getUser().getLogin())) {
-                    if (PENDING.matcher(comment.getBody()).matches()) {
-                        result = ProcessorPullState.PENDING;
-                        continue;
-                    }
-
-                    if (RUNNING.matcher(comment.getBody()).matches()) {
-                        result = ProcessorPullState.RUNNING;
-                        continue;
-                    }
-
-                    if (FINISHED.matcher(comment.getBody()).matches()) {
-                        result = ProcessorPullState.FINISHED;
-                        continue;
-                    }
+        final List<Comment> comments = pullRequest.getGithubComments();
+        for (Comment comment : comments) {
+            if (ghHelper.getGithubLogin().equals(comment.getUser().getLogin())) {
+                if (PENDING.matcher(comment.getBody()).matches()) {
+                    result = ProcessorPullState.PENDING;
+                    continue;
                 }
 
-                if (MERGE.matcher(comment.getBody()).matches()) {
-                    result = ProcessorPullState.MERGEABLE;
+                if (RUNNING.matcher(comment.getBody()).matches()) {
+                    result = ProcessorPullState.RUNNING;
+                    continue;
+                }
+
+                if (FINISHED.matcher(comment.getBody()).matches()) {
+                    result = ProcessorPullState.FINISHED;
                     continue;
                 }
             }
 
-            if (result == ProcessorPullState.MERGEABLE || result == ProcessorPullState.NEW) {
-                // check other conditions, i.e. upstream pull request and bugzilla and jira...
-                final PullEvaluator.Result mergeable = evaluatorFacade.isMergeable(pullRequest);
-                if (!mergeable.isMergeable()) {
-                    result = ProcessorPullState.INCOMPLETE;
-                }
-
-                if (result == ProcessorPullState.INCOMPLETE && !comments.isEmpty()) {
-                    Comment lastComment = comments.get(comments.size() - 1);
-                    if (FORCE_MERGE.matcher(lastComment.getBody()).matches() && isAdminUser(lastComment.getUser().getLogin()))
-                        result = ProcessorPullState.MERGEABLE;
-                }
+            if (MERGE.matcher(comment.getBody()).matches()) {
+                result = ProcessorPullState.MERGEABLE;
+                continue;
             }
+        }
+
+        if (result == ProcessorPullState.MERGEABLE || result == ProcessorPullState.NEW) {
+            // check other conditions, i.e. upstream pull request and bugzilla and jira...
+            final PullEvaluator.Result mergeable = evaluatorFacade.isMergeable(pullRequest);
+            if (!mergeable.isMergeable()) {
+                result = ProcessorPullState.INCOMPLETE;
+            }
+
+            if (result == ProcessorPullState.INCOMPLETE && !comments.isEmpty()) {
+                Comment lastComment = comments.get(comments.size() - 1);
+                if (FORCE_MERGE.matcher(lastComment.getBody()).matches() && isAdminUser(lastComment.getUser().getLogin()))
+                    result = ProcessorPullState.MERGEABLE;
+            }
+        }
 
         return result;
     }
 
     public boolean isAdminUser(final String username) {
         return adminList.has(username);
-    }
-
-    public boolean isMerged(final PullRequest pullRequest) {
-        if (pullRequest == null) {
-            return false;
-        }
-
-        if (!pullRequest.getState().equals("closed")) {
-            return false;
-        }
-
-        if (ghHelper.isMerged(pullRequest)) {
-            return true;
-        }
-
-        final List<Comment> comments = ghHelper.getPullRequestComments(pullRequest);
-        for (Comment comment : comments) {
-            if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public BuildResult checkBuildResult(PullRequest pullRequest) {
-        BuildResult buildResult = BuildResult.UNKNOWN;
-        Comment comment = ghHelper.getLastMatchingComment(pullRequest, BUILD_OUTCOME);
-
-        if(comment != null){
-            Matcher matcher = BUILD_OUTCOME.matcher(comment.getBody());
-            while (matcher.find()) {
-                buildResult = BuildResult.valueOf(matcher.group(2));
-            }
-        }
-
-        return buildResult;
     }
 
 }

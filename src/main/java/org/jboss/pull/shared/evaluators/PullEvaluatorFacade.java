@@ -21,9 +21,9 @@
  */
 package org.jboss.pull.shared.evaluators;
 
-import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.common.Issue;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
@@ -73,28 +73,28 @@ public class PullEvaluatorFacade {
         }
     }
 
-    public PullEvaluator.Result isMergeable(final PullRequest pull) {
+    public PullEvaluator.Result isMergeable(final RedhatPullRequest pull) {
         final PullEvaluator evaluator = getPullEvaluator(pull);
         return evaluator.isMergeable(pull);
     }
 
-    public List<? extends Issue> getIssue(final PullRequest pull) {
+    public List<? extends Issue> getIssue(final RedhatPullRequest pull) {
         final PullEvaluator evaluator = getPullEvaluator(pull);
         return evaluator.getIssue(pull);
     }
 
-    public List<PullRequest> getUpstreamPullRequest(final PullRequest pull) {
+    public List<RedhatPullRequest> getUpstreamPullRequest(final RedhatPullRequest pull) {
         final PullEvaluator evaluator = getPullEvaluator(pull);
         return evaluator.getUpstreamPullRequest(pull);
     }
 
-    public boolean updateIssueAsMerged(final PullRequest pull) {
+    public boolean updateIssueAsMerged(final RedhatPullRequest pull) {
         final PullEvaluator evaluator = getPullEvaluator(pull);
         return evaluator.updateIssueAsMerged(pull);
     }
 
-    private PullEvaluator getPullEvaluator(final PullRequest pull) {
-        final String targetBranch = pull.getBase().getRef();
+    private PullEvaluator getPullEvaluator(final RedhatPullRequest pull) {
+        final String targetBranch = pull.getTargetBranchTitle();
         final PullEvaluator evaluator = evaluators.get(targetBranch);
 
         if (evaluator == null)
