@@ -28,7 +28,6 @@ import org.jboss.pull.shared.connectors.github.GithubHelper;
 import org.jboss.pull.shared.evaluators.PullEvaluatorFacade;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -55,7 +54,7 @@ public class PullHelper {
     public static final Pattern FORCE_MERGE = Pattern.compile(".*force\\W+merge\\W+this.*", Pattern.CASE_INSENSITIVE
             | Pattern.DOTALL);
 
-//    private final Properties props;
+    // private final Properties props;
 
     private final PullEvaluatorFacade evaluatorFacade;
 
@@ -63,16 +62,20 @@ public class PullHelper {
 
     // ------- Specific Helpers
     private final GithubHelper ghHelper;
-    public GithubHelper getGHHelper(){
+
+    public GithubHelper getGHHelper() {
         return ghHelper;
     }
+
     private final BZHelper bzHelper;
-    public BZHelper getBZHelper(){
+
+    public BZHelper getBZHelper() {
         return bzHelper;
     }
 
     private final Properties props;
-    public Properties getProperties(){
+
+    public Properties getProperties() {
         return props;
     }
 
@@ -108,8 +111,7 @@ public class PullHelper {
     public ProcessorPullState checkPullRequestState(final PullRequest pullRequest) {
         ProcessorPullState result = ProcessorPullState.NEW;
 
-        try {
-            final List<Comment> comments = ghHelper.getComments(pullRequest);
+            final List<Comment> comments = ghHelper.getPullRequestComments(pullRequest);
             for (Comment comment : comments) {
                 if (ghHelper.getGithubLogin().equals(comment.getUser().getLogin())) {
                     if (PENDING.matcher(comment.getBody()).matches()) {
@@ -148,11 +150,6 @@ public class PullHelper {
                 }
             }
 
-        } catch (IOException e) {
-            System.err.printf("Cannot read comments of PR#%d due to %s\n", pullRequest.getNumber(), e);
-            result = ProcessorPullState.ERROR;
-        }
-
         return result;
     }
 
@@ -169,25 +166,15 @@ public class PullHelper {
             return false;
         }
 
-        try {
-            if (ghHelper.isMerged(pullRequest)) {
-                return true;
-            }
-        } catch (IOException ignore) {
-            System.err.printf("Cannot get Merged information of the pull request %d: %s.\n", pullRequest.getNumber(), ignore);
-            ignore.printStackTrace(System.err);
+        if (ghHelper.isMerged(pullRequest)) {
+            return true;
         }
 
-        try {
-            final List<Comment> comments = ghHelper.getComments(pullRequest);
-            for (Comment comment : comments) {
-                if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
-                    return true;
-                }
+        final List<Comment> comments = ghHelper.getPullRequestComments(pullRequest);
+        for (Comment comment : comments) {
+            if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
+                return true;
             }
-        } catch (IOException ignore) {
-            System.err.printf("Cannot get comments of the pull request %d: %s.\n", pullRequest.getNumber(), ignore);
-            ignore.printStackTrace(System.err);
         }
 
         return false;
@@ -195,20 +182,15 @@ public class PullHelper {
 
     public BuildResult checkBuildResult(PullRequest pullRequest) {
         BuildResult buildResult = BuildResult.UNKNOWN;
-        List<Comment> comments;
-        try {
-            comments = ghHelper.getComments(pullRequest);
-        } catch (IOException e) {
-            System.err.println("Error to get comments for pull request : " + pullRequest.getNumber());
-            e.printStackTrace(System.err);
-            return buildResult;
-        }
-        for (Comment comment : comments) {
+        Comment comment = ghHelper.getLastMatchingComment(pullRequest, BUILD_OUTCOME);
+
+        if(comment != null){
             Matcher matcher = BUILD_OUTCOME.matcher(comment.getBody());
             while (matcher.find()) {
                 buildResult = BuildResult.valueOf(matcher.group(2));
             }
         }
+
         return buildResult;
     }
 

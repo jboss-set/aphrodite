@@ -23,7 +23,6 @@ package org.jboss.pull.shared.evaluators;
 
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
-import org.eclipse.egit.github.core.RepositoryId;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
@@ -44,7 +43,6 @@ import java.util.regex.Pattern;
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
 public abstract class BasePullEvaluator implements PullEvaluator {
-    public static final Pattern BUGZILLA_ID_PATTERN = Pattern.compile("bugzilla\\.redhat\\.com/show_bug\\.cgi\\?id=(\\d+)", Pattern.CASE_INSENSITIVE);
 
     public static final String EVALUATOR_PROPERTY = "evaluator";
     public static final String GITHUB_BRANCH_PROPERTY = "github.branch";
@@ -95,29 +93,26 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     private Result isReviewed(PullRequest pull) {
         final Result result = new Result(false);
 
-        final List<Comment> comments = helper.getGHHelper().getPullRequestComments(pull.getNumber());
-        for (Comment comment : comments) {
-            if (PullHelper.MERGE.matcher(comment.getBody()).matches()) {
-                System.out.printf("issue #%d updated at: %s\n", pull.getNumber(), Util.getTime(pull.getUpdatedAt()));
-                System.out.printf("issue #%d reviewed at: %s\n", pull.getNumber(), Util.getTime(comment.getCreatedAt()));
+        Comment comment = helper.getGHHelper().getLastMatchingComment(pull, PullHelper.MERGE);
 
-                if (pull.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0
-                        && helper.isAdminUser(comment.getUser().getLogin())) {
-                    result.setMergeable(true);
-                    result.addDescription("+ Pull request has been reviewed");
-                    break;
-                }
+        if (comment != null) {
+            System.out.printf("issue #%d updated at: %s\n", pull.getNumber(), Util.getTime(pull.getUpdatedAt()));
+            System.out.printf("issue #%d reviewed at: %s\n", pull.getNumber(), Util.getTime(comment.getCreatedAt()));
+
+            if (pull.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0 && helper.isAdminUser(comment.getUser().getLogin())) {
+                result.setMergeable(true);
+                result.addDescription("+ Pull request has been reviewed");
             }
         }
 
-        if (! result.isMergeable())
+        if (!result.isMergeable())
             result.addDescription("- " + NOT_REVIEWED_TAG);
 
         return result;
     }
 
     public static boolean isReviewed(final Result result) {
-        for (String description: result.getDescription()) {
+        for (String description : result.getDescription()) {
             if (description.indexOf(NOT_REVIEWED_TAG) != -1)
                 return false;
         }
@@ -131,10 +126,13 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         if (issues.isEmpty() || issues.size() > 1) {
             // since we are not sure what we are updating if multiple issues related to a single PR
             // we cannot do anything, it is better to leave it open then to close an issue wrongly
-            System.err.printf("WARNING: Couldn't update the relevant issue as merged since there are more than one or none such issue(-s) related to PR#%d.\n", pull.getNumber());
+            System.err
+                    .printf("WARNING: Couldn't update the relevant issue as merged since there are more than one or none such issue(-s) related to PR#%d.\n",
+                            pull.getNumber());
             System.err.println("WARNING: related issues:");
             for (Issue issue : issues) {
-                System.err.printf("WARNING: Type: %s, Number: %s, Url: %s\n", issue.getClass().getSimpleName(), issue.getNumber(), issue.getUrl());
+                System.err.printf("WARNING: Type: %s, Number: %s, Url: %s\n", issue.getClass().getSimpleName(),
+                        issue.getNumber(), issue.getUrl());
             }
             return false;
         }
@@ -151,7 +149,7 @@ public abstract class BasePullEvaluator implements PullEvaluator {
 
     @Override
     public List<? extends Issue> getIssue(final PullRequest pull) {
-        return getBug(pull);    // default implementation at the moment
+        return getBug(pull); // default implementation at the moment
     }
 
     @Override
@@ -162,13 +160,15 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         while (matcher.find()) {
             final Integer id = Integer.valueOf(matcher.group(2));
             try {
-                final PullRequest upstreamPull = helper.getGHHelper().getPullRequest(RepositoryId.create(upstreamOrganization, upstreamRepository), id);
+                final PullRequest upstreamPull = helper.getGHHelper().getPullRequest(upstreamOrganization, upstreamRepository,
+                        id);
 
                 if (upstreamBranch.equals(upstreamPull.getBase().getRef()))
                     upstreamPulls.add(upstreamPull);
 
             } catch (IOException e) {
-                System.err.printf("Couldn't get a pull request #%d of repository %s/%s due to %s.\n", id, upstreamOrganization, upstreamRepository, e);
+                System.err.printf("Couldn't get a pull request #%d of repository %s/%s due to %s.\n", id, upstreamOrganization,
+                        upstreamRepository, e);
             }
         }
         return upstreamPulls;
@@ -190,11 +190,6 @@ public abstract class BasePullEvaluator implements PullEvaluator {
         return result;
     }
 
-    private boolean updateJiraAsMerged(final JiraIssue issue) {
-        // TODO
-        throw new IllegalStateException("jira has not been implemented yet");
-    }
-
     protected Result isMergeableByUpstream(final PullRequest pull) {
         final Result mergeable = new Result(true);
 
@@ -207,9 +202,10 @@ public abstract class BasePullEvaluator implements PullEvaluator {
             }
 
             for (PullRequest pullRequest : upstreamPulls) {
-                if (! helper.isMerged(pullRequest)) {
+                if (!helper.isMerged(pullRequest)) {
                     mergeable.setMergeable(false);
-                    mergeable.addDescription("- Upstream pull request #" + pullRequest.getNumber() + " has not been merged yet");
+                    mergeable
+                            .addDescription("- Upstream pull request #" + pullRequest.getNumber() + " has not been merged yet");
                 }
             }
 
@@ -222,52 +218,36 @@ public abstract class BasePullEvaluator implements PullEvaluator {
             ignore.printStackTrace(System.err);
 
             mergeable.setMergeable(false);
-            mergeable.addDescription("Cannot get an upstream pull request of the pull request " + pull.getNumber() + ": " + ignore.getMessage());
+            mergeable.addDescription("Cannot get an upstream pull request of the pull request " + pull.getNumber() + ": "
+                    + ignore.getMessage());
         }
 
         return mergeable;
     }
 
-    protected List<JiraIssue> getJiraIssue(PullRequest pull) {
+    protected List<Bug> getBug(PullRequest pull) {
+        final List<Bug> bugs = helper.getBZHelper().getBugFromDescription(pull);
+        final List<Bug> returnBugs = new ArrayList<Bug>();
+        for (Bug bug : bugs) {
+            for (String target : bug.getTargetRelease()) {
+                if (target.equals(issueFixVersion)) {
+                    returnBugs.add(bug);
+                    break;
+                }
+            }
+        }
+
+        return returnBugs;
+    }
+
+    private boolean updateJiraAsMerged(final JiraIssue issue) {
         // TODO
         throw new IllegalStateException("jira has not been implemented yet");
     }
 
-    protected List<Bug> getBug(PullRequest pull) {
-        final List<Integer> ids = checkBugzillaId(pull.getBody());
-        final ArrayList<Bug> bugs = new ArrayList<Bug>();
-
-        for (Integer id : ids) {
-            try {
-                final Bug bug = helper.getBZHelper().getBug(id);
-                if (bug == null)
-                    continue;
-
-                for (String target : bug.getTargetRelease()) {
-                    if (target.equals(issueFixVersion)) {
-                        bugs.add(bug);
-                        break;
-                    }
-                }
-
-            } catch (Exception ignore) {
-                System.err.printf("Cannot get a bug related to the pull request %d: %s.\n", pull.getNumber(), ignore);
-            }
-        }
-        return bugs;
-    }
-
-    private List<Integer> checkBugzillaId(String body) {
-        final ArrayList<Integer> ids = new ArrayList<Integer>();
-        final Matcher matcher = BUGZILLA_ID_PATTERN.matcher(body);
-        while (matcher.find()) {
-            try {
-                ids.add(Integer.valueOf(matcher.group(1)));
-            } catch (NumberFormatException ignore) {
-                System.err.printf("Invalid bug number: %s.\n", ignore);
-            }
-        }
-        return ids;
+    protected List<JiraIssue> getJiraIssue(PullRequest pull) {
+        // TODO
+        throw new IllegalStateException("jira has not been implemented yet");
     }
 
 }

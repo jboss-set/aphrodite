@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
@@ -16,6 +18,7 @@ import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.MilestoneService;
 import org.eclipse.egit.github.core.service.PullRequestService;
+import org.eclipse.egit.github.core.Issue;
 import org.jboss.pull.shared.Util;
 
 public class GithubHelper {
@@ -31,11 +34,9 @@ public class GithubHelper {
     private final PullRequestService pullRequestService;
     private final MilestoneService milestoneService;
 
-    private final Properties props;
-
     public GithubHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
         try {
-            props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
+            Properties props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
 
             GITHUB_ORGANIZATION = Util.require(props, "github.organization");
             GITHUB_REPO = Util.require(props, "github.repo");
@@ -68,7 +69,7 @@ public class GithubHelper {
         return getPullRequest(RepositoryId.create(upstreamOrganization, upstreamRepository), id);
     }
 
-    public PullRequest getPullRequest(IRepositoryIdProvider repository, int id) throws IOException {
+    private PullRequest getPullRequest(IRepositoryIdProvider repository, int id) throws IOException {
         return pullRequestService.getPullRequest(repository, id);
     }
 
@@ -79,17 +80,6 @@ public class GithubHelper {
         } catch (IOException e) {
             System.err.printf("Couldn't get pull requests in state %s of repository %s due to %s.\n", state, repository, e);
             result = new ArrayList<PullRequest>();
-        }
-        return result;
-    }
-
-    public List<Comment> getPullRequestComments(int pullNumber) {
-        List<Comment> result;
-        try {
-            result = issueService.getComments(repository, pullNumber);
-        } catch (IOException e) {
-            System.err.printf("Couldn't get comments of pull request #%d due to %s.\n", pullNumber, e);
-            result = new ArrayList<Comment>();
         }
         return result;
     }
@@ -140,8 +130,8 @@ public class GithubHelper {
         return returnMilestone;
     }
 
-    public org.eclipse.egit.github.core.Issue getIssue(int id) {
-        org.eclipse.egit.github.core.Issue issue = null;
+    public Issue getIssue(int id) {
+        Issue issue = null;
         try {
             issue = issueService.getIssue(repository, id);
         } catch (IOException e) {
@@ -151,8 +141,8 @@ public class GithubHelper {
         return issue;
     }
 
-    public org.eclipse.egit.github.core.Issue editIssue(org.eclipse.egit.github.core.Issue issue) {
-        org.eclipse.egit.github.core.Issue returnIssue = null;
+    public Issue editIssue(Issue issue) {
+        Issue returnIssue = null;
         try {
             returnIssue = issueService.editIssue(repository, issue);
         } catch (IOException e) {
@@ -162,16 +152,44 @@ public class GithubHelper {
         return returnIssue;
     }
 
-    public List<Comment> getComments(PullRequest pull) throws IOException{
-        return issueService.getComments(repository, pull.getNumber());
-    }
-
-    public String getGithubLogin(){
+    public String getGithubLogin() {
         return GITHUB_LOGIN;
     }
 
-    public boolean isMerged(PullRequest pull) throws IOException{
-        return pullRequestService.isMerged(pull.getBase().getRepo(), pull.getNumber());
+    public boolean isMerged(PullRequest pullRequest) {
+        try {
+            return pullRequestService.isMerged(pullRequest.getBase().getRepo(), pullRequest.getNumber());
+        } catch (IOException e) {
+            System.err.println("Error getting merged status of pull request: " + pullRequest.getNumber());
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public Comment getLastMatchingComment(PullRequest pullRequest, Pattern pattern) {
+        Comment lastComment = null;
+        List<Comment> comments = getPullRequestComments(pullRequest);
+
+        for (Comment comment : comments) {
+            Matcher matcher = pattern.matcher(comment.getBody());
+            if(matcher.matches()){
+                lastComment = comment;
+            }
+        }
+
+        return lastComment;
+    }
+
+    public List<Comment> getPullRequestComments(PullRequest pullRequest) {
+        try {
+            return issueService.getComments(repository, pullRequest.getNumber());
+        } catch (IOException e) {
+            System.err.println("Error to get comments for pull request : " + pullRequest.getNumber());
+            e.printStackTrace(System.err);
+        }
+
+        return new ArrayList<Comment>();
     }
 
 }
