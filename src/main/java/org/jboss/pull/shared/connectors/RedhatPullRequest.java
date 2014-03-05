@@ -145,6 +145,10 @@ public class RedhatPullRequest {
         return pullRequest.getState();
     }
 
+    public String getHtmlUrl() {
+        return pullRequest.getHtmlUrl();
+    }
+
     public boolean isMerged() {
         return ghHelper.isMerged(pullRequest);
     }
