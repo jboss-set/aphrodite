@@ -185,7 +185,7 @@ public class GithubHelper {
 
         for (Comment comment : comments) {
             Matcher matcher = pattern.matcher(comment.getBody());
-            if(matcher.matches()){
+            if(matcher.find()){
                 lastComment = comment;
             }
         }
