@@ -42,22 +42,7 @@ public class RedhatPullRequest {
         this.ghHelper = ghHelper;
 
         bugs = getBugsFromDescription(pullRequest);
-        relatedPullRequests = getPRFromDescription();
-
-    }
-
-    private List<RedhatPullRequest> getPRFromDescription() {
-        Matcher matcher = PULLREQUEST_URL_PATTERN.matcher(getGithubDescription());
-
-        List<RedhatPullRequest> relatedPullRequests = new ArrayList<RedhatPullRequest>();
-        while (matcher.find()) {
-            PullRequest relatedPullRequest = ghHelper.getPullRequest(matcher.group(1), matcher.group(2), Integer.valueOf(matcher.group(3)));
-            if( relatedPullRequest != null){
-                relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, ghHelper));
-            }
-        }
-
-        return relatedPullRequests;
+        // Can't call getPRFromDescription here. If two PR's reference each other a loop occurs.
     }
 
     private List<Bug> getBugsFromDescription(PullRequest pull) {
@@ -138,6 +123,25 @@ public class RedhatPullRequest {
     }
 
     public List<RedhatPullRequest> getRelatedPullRequests() {
+        if (relatedPullRequests != null) {
+            return relatedPullRequests;
+        } else {
+            return relatedPullRequests = getPRFromDescription();
+        }
+    }
+
+    private List<RedhatPullRequest> getPRFromDescription() {
+        Matcher matcher = PULLREQUEST_URL_PATTERN.matcher(getGithubDescription());
+
+        List<RedhatPullRequest> relatedPullRequests = new ArrayList<RedhatPullRequest>();
+        while (matcher.find()) {
+            PullRequest relatedPullRequest = ghHelper.getPullRequest(matcher.group(1), matcher.group(2),
+                    Integer.valueOf(matcher.group(3)));
+            if (relatedPullRequest != null) {
+                relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, ghHelper));
+            }
+        }
+
         return relatedPullRequests;
     }
 
@@ -173,7 +177,7 @@ public class RedhatPullRequest {
 
     public String getOrganization() {
         Matcher matcher = PULLREQUEST_URL_PATTERN.matcher(pullRequest.getUrl());
-        if( matcher.matches() ){
+        if (matcher.matches()) {
             return matcher.group(1);
         }
         return null;
@@ -181,13 +185,13 @@ public class RedhatPullRequest {
 
     public String getRepository() {
         Matcher matcher = PULLREQUEST_URL_PATTERN.matcher(pullRequest.getUrl());
-        if( matcher.matches() ){
+        if (matcher.matches()) {
             return matcher.group(2);
         }
         return null;
     }
 
-    public boolean updateBugzillaStatus(Bug bug, Bug.Status status){
+    public boolean updateBugzillaStatus(Bug bug, Bug.Status status) {
         return bzHelper.updateBugzillaStatus(bug.getId(), status);
     }
 
