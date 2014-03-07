@@ -11,7 +11,7 @@
 
     <groupId>org.jboss.jbossset</groupId>
     <artifactId>pull-shared</artifactId>
-    <version>0.2.Final</version>
+    <version>0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Pull Shared</name>
 
@@ -30,7 +30,7 @@
         <connection>scm:git:git://github.com/jboss-set/pull-shared.git</connection>
         <developerConnection>scm:git:git@github.com:jboss-set/pull-shared.git</developerConnection>
         <url>https://github.com/jboss-set/pull-shared</url>
-        <tag>pull-shared-0.2.Final</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <build>
