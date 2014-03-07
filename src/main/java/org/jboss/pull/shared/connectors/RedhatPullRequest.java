@@ -16,25 +16,33 @@ import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
 import org.jboss.pull.shared.connectors.github.GithubHelper;
+import org.jboss.pull.shared.connectors.jira.JiraIssue;
+import org.jboss.pull.shared.connectors.jira.JiraHelper;
 
 public class RedhatPullRequest {
+    private static final Pattern UPSTREAM_NOT_REQUIRED = Pattern.compile(".*no.*upstream.*required.*",
+            Pattern.CASE_INSENSITIVE);
 
     private static final Pattern BUGZILLA_ID_PATTERN = Pattern.compile("bugzilla\\.redhat\\.com/show_bug\\.cgi\\?id=(\\d+)",
+            Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern RELATED_JIRA_PATTERN = Pattern.compile(".*issues\\.jboss\\.org/browse/([a-zA-Z_0-9-]*)",
             Pattern.CASE_INSENSITIVE);
 
     // This has to match two patterns
     // * https://github.com/uselessorg/jboss-eap/pull/4
     // * https://api.github.com/repos/uselessorg/jboss-eap/pulls/4
-    private static final Pattern PULLREQUEST_URL_PATTERN = Pattern.compile(
+    private static final Pattern RELATED_PR_PATTERN = Pattern.compile(
             ".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
 
     private PullRequest pullRequest;
     private List<Bug> bugs = new ArrayList<Bug>();
-    private List<RedhatPullRequest> relatedPullRequests = new ArrayList<RedhatPullRequest>();;
+    private List<RedhatPullRequest> relatedPullRequests = null;
 
     // private PullHelper helper;
     private BZHelper bzHelper;
     private GithubHelper ghHelper;
+    private JiraHelper jiraHelper;
 
     public RedhatPullRequest(PullRequest pullRequest, BZHelper bzHelper, GithubHelper ghHelper) {
         this.pullRequest = pullRequest;
@@ -45,8 +53,34 @@ public class RedhatPullRequest {
         // Can't call getPRFromDescription here. If two PR's reference each other a loop occurs.
     }
 
+    private List<JiraIssue> getJIRAFromDescription(PullRequest pull) {
+        final List<String> ids = extractJiraIds(pull.getBody());
+        final ArrayList<JiraIssue> issues = new ArrayList<JiraIssue>();
+
+        for (String id : ids) {
+            final JiraIssue bug = jiraHelper.getJIRA();
+            if (bug != null) {
+                issues.add(bug);
+            }
+        }
+        return issues;
+    }
+
+    private List<String> extractJiraIds(String body){
+        final ArrayList<String> ids = new ArrayList<String>();
+        final Matcher matcher = RELATED_JIRA_PATTERN.matcher(body);
+        while (matcher.find()) {
+            try {
+                ids.add(matcher.group(1));
+            } catch (NumberFormatException ignore) {
+                System.err.printf("Invalid bug number: %s.\n", ignore);
+            }
+        }
+        return ids;
+    }
+
     private List<Bug> getBugsFromDescription(PullRequest pull) {
-        final List<Integer> ids = checkBugzillaId(pull.getBody());
+        final List<Integer> ids = extractBugzillaIds(pull.getBody());
         final ArrayList<Bug> bugs = new ArrayList<Bug>();
 
         for (Integer id : ids) {
@@ -58,7 +92,7 @@ public class RedhatPullRequest {
         return bugs;
     }
 
-    private List<Integer> checkBugzillaId(String body) {
+    private List<Integer> extractBugzillaIds(String body) {
         final ArrayList<Integer> ids = new ArrayList<Integer>();
         final Matcher matcher = BUGZILLA_ID_PATTERN.matcher(body);
         while (matcher.find()) {
@@ -118,6 +152,11 @@ public class RedhatPullRequest {
         return pullRequest.getUpdatedAt();
     }
 
+    /**
+     * Searches for last github comment that contains the pattern.
+     * @param pattern - REGEX pattern to match against comment body.
+     * @return Last comment that matches the pattern or null if no comments match.
+     */
     public Comment getLastMatchingGithubComment(Pattern pattern) {
         return ghHelper.getLastMatchingComment(pullRequest, pattern);
     }
@@ -131,7 +170,7 @@ public class RedhatPullRequest {
     }
 
     private List<RedhatPullRequest> getPRFromDescription() {
-        Matcher matcher = PULLREQUEST_URL_PATTERN.matcher(getGithubDescription());
+        Matcher matcher = RELATED_PR_PATTERN.matcher(getGithubDescription());
 
         List<RedhatPullRequest> relatedPullRequests = new ArrayList<RedhatPullRequest>();
         while (matcher.find()) {
@@ -161,6 +200,13 @@ public class RedhatPullRequest {
         return bugs;
     }
 
+    public boolean isJiraInDescription(){
+        return extractJiraIds(pullRequest.getBody()).isEmpty();
+    }
+
+    public boolean isUpstreamRequired(){
+        return !UPSTREAM_NOT_REQUIRED.matcher(pullRequest.getBody()).find();
+    }
     public BuildResult getBuildResult() {
         BuildResult buildResult = BuildResult.UNKNOWN;
         Comment comment = ghHelper.getLastMatchingComment(pullRequest, PullHelper.BUILD_OUTCOME);
@@ -176,7 +222,7 @@ public class RedhatPullRequest {
     }
 
     public String getOrganization() {
-        Matcher matcher = PULLREQUEST_URL_PATTERN.matcher(pullRequest.getUrl());
+        Matcher matcher = RELATED_PR_PATTERN.matcher(pullRequest.getUrl());
         if (matcher.matches()) {
             return matcher.group(1);
         }
@@ -184,7 +230,7 @@ public class RedhatPullRequest {
     }
 
     public String getRepository() {
-        Matcher matcher = PULLREQUEST_URL_PATTERN.matcher(pullRequest.getUrl());
+        Matcher matcher = RELATED_PR_PATTERN.matcher(pullRequest.getUrl());
         if (matcher.matches()) {
             return matcher.group(2);
         }
