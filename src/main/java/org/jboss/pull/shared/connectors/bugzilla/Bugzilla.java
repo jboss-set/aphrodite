@@ -76,6 +76,11 @@ public class Bugzilla {
         return params;
     }
 
+    /**
+     * Gets the bugId from bugzilla.
+     * @param bugzillaId
+     * @return - Bug retrieved from Bugzilla, or null if no bug was found.
+     */
     public Bug getBug(Integer bugzillaId) {
         Map<Object, Object> params = getParameterMap();
         params.put("include_fields", Bug.include_fields);
@@ -97,7 +102,7 @@ public class Bugzilla {
                 Bug bug = new Bug(bugMap);
                 return bug;
             } else {
-                throw new RuntimeException("Zero or more than one bug found with id: " + bugzillaId);
+                System.out.println("Zero or more than one bug found with id: " + bugzillaId);
             }
         } catch (XmlRpcException e) {
             System.err.println("Can not get bug with id : " + bugzillaId);
