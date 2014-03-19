@@ -221,8 +221,20 @@ public class RedhatPullRequest {
         return bugs;
     }
 
+    /**
+     * Returns true if BZ link is in the PR description
+     * @return
+     */
+    public boolean isBZInDescription(){
+        return !extractBugzillaIds(pullRequest.getBody()).isEmpty();
+    }
+
+    /**
+     * Returns true if JIRA link is in the PR description
+     * @return
+     */
     public boolean isJiraInDescription(){
-        return extractJiraIds(pullRequest.getBody()).isEmpty();
+        return !extractJiraIds(pullRequest.getBody()).isEmpty();
     }
 
     public boolean isUpstreamRequired(){
