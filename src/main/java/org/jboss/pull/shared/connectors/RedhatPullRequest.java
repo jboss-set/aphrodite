@@ -78,9 +78,8 @@ public class RedhatPullRequest {
     private List<JiraIssue> getJIRAFromDescription(PullRequest pull) {
         final List<String> ids = extractJiraIds(pull.getBody());
         final ArrayList<JiraIssue> issues = new ArrayList<JiraIssue>();
-
         for (String id : ids) {
-            final JiraIssue bug = jiraHelper.getJIRA();
+            final JiraIssue bug = jiraHelper.getJIRA(id);
             if (bug != null) {
                 issues.add(bug);
             }

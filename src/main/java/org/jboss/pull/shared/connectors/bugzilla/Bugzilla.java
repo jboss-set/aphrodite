@@ -30,7 +30,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 
-import org.jboss.pull.shared.connectors.bugzilla.Flag.Status;
+import org.jboss.pull.shared.connectors.common.Flag.Status;
 
 public class Bugzilla {
 

@@ -25,8 +25,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.pull.shared.connectors.bugzilla.Flag;
-
 
 /**
  * Represents a general issue.
