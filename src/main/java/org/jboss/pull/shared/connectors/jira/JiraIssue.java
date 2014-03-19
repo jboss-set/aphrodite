@@ -24,8 +24,12 @@ package org.jboss.pull.shared.connectors.jira;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
-import org.jboss.pull.shared.connectors.bugzilla.Flag;
+import com.atlassian.jira.rest.client.domain.Field;
+import com.atlassian.jira.rest.client.domain.Version;
+import org.jboss.pull.shared.connectors.common.Flag;
 import org.jboss.pull.shared.connectors.common.Issue;
 
 /**
@@ -36,18 +40,54 @@ import org.jboss.pull.shared.connectors.common.Issue;
  */
 public class JiraIssue implements Issue {
 
-    private static final long serialVersionUID = 7228344342017879011L;
+    public enum IssueStatus {
+        NEW, CODING_IN_PROGRESS, OPEN, RESOLVED, READY_FOR_QA, PULL_REQUEST_SENT, QA_IN_PROGRESS, VERIFIED, REOPENED,
+        CLOSED, UNKNOWN
+    }
 
+    private static final long serialVersionUID = 7228344342017879011L;
     private String id;
-    private String status;
+    private IssueStatus status;
+    private String resolution;
+    // Sometimes there will be a target release as well as fix versions.
+    private String targetRelease;
+
+    // Collections - i.e. flags, fixVersions etc.
     private List<Flag> flags;
     private Set<String> fixVersions;
 
-    public JiraIssue(final String id, final String status, final List<Flag> flags, final Set<String> fixVersions) {
-        this.id = id;
-        this.status = status;
-        this.flags = new ArrayList<Flag>(flags);
-        this.fixVersions = fixVersions;
+    // Constructor.
+    public JiraIssue(com.atlassian.jira.rest.client.domain.Issue issue) {
+
+        this.id = issue.getKey();
+        String statusString = issue.getStatus().getName().toUpperCase();
+        statusString = statusString.replace(" ", "_");
+        this.status = IssueStatus.valueOf(statusString);
+        this.resolution = issue.getResolution() != null ? issue.getResolution().getName().toUpperCase() : "UNRESOLVED";
+
+        // The target release part. Quite buggy at the minute.
+        Field releaseField = issue.getFieldByName("Target Release");
+        if (releaseField != null) {
+            if (releaseField.getValue() != null) {
+                this.targetRelease = cutTargetReleaseString(releaseField.getValue().toString());
+            }
+        } else {
+            this.targetRelease = "UNSET";
+        }
+
+        // Build the flags. Set the list to size 6 since that is the typical no. of 'CDW' flags on a given JIRA issue.
+        this.flags = new ArrayList<Flag>(6);
+
+        // The field id's are constant from JIRA.
+        flags.add(buildFlagFromField(issue.getFieldByName("CDW release")));
+        flags.add(buildFlagFromField(issue.getFieldByName("CDW pm_ack")));
+        flags.add(buildFlagFromField(issue.getFieldByName("CDW devel_ack")));
+        flags.add(buildFlagFromField(issue.getFieldByName("CDW qa_ack")));
+        flags.add(buildFlagFromField(issue.getFieldByName("CDW blocker")));
+        flags.add(buildFlagFromField(issue.getFieldByName("CDW exception")));
+
+        // Now something similar for the fix versions. We just have to get the
+        this.fixVersions = findFixVersions(issue.getFixVersions());
     }
 
     @Override
@@ -62,7 +102,7 @@ public class JiraIssue implements Issue {
 
     @Override
     public String getStatus() {
-        return status;
+        return status.toString();
     }
 
     @Override
@@ -73,5 +113,82 @@ public class JiraIssue implements Issue {
     @Override
     public Set<String> getFixVersions() {
         return fixVersions;
+    }
+
+    public String getResolution() {
+        return this.resolution;
+    }
+
+    public String getTargetRelease() {
+        return this.targetRelease;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{");
+        builder.append("\n[id=" + this.id + "]");
+        builder.append("\n[status=" + this.status + "]");
+        builder.append("\n[resolution=" + this.resolution + "]");
+        builder.append("\n[targetRelease=" + this.targetRelease + "]");
+
+        // The flags
+        if (flags != null) {
+            builder.append("\n[flags=");
+            for (Flag f : flags) {
+                // Only print out if the status is known.
+                if (!f.getStatus().equals(Flag.Status.UNKNOWN)){
+                    builder.append(" " + f.toString() + ",");
+                }
+            }
+            builder.deleteCharAt(builder.length() - 1);
+            builder.append("]");
+        }
+
+//        The fix versions
+        builder.append("\n[fixVersions=");
+        for (String s : fixVersions) {
+            builder.append("(" + s + "),");
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append("]");
+        builder.append("\n}");
+        return builder.toString();
+    }
+
+    private Flag buildFlagFromField(Field field) {
+        String name = field.getName();
+        String statusValue = (String) field.getValue();
+        Flag.Status status;
+        if(statusValue == null) {
+            status = Flag.Status.UNKNOWN;
+        } else if (statusValue.equals("+")) {
+            status = Flag.Status.POSITIVE;
+        } else if (statusValue.equals("-")) {
+            status = Flag.Status.NEGATIVE;
+        } else if (statusValue.equals("?")) {
+            status = Flag.Status.UNSET;
+        } else {
+            status = Flag.Status.UNKNOWN;
+        }
+        return new Flag(name, "{UNKNOWN_SETTER}", status);
+    }
+
+
+    private Set<String> findFixVersions(Iterable<Version> fixVersions) {
+        SortedSet<String> toReturn = new TreeSet<String>();
+        for (Version v : fixVersions) {
+            toReturn.add(v.getName());
+        }
+        return toReturn;
+    }
+
+    private String cutTargetReleaseString(String releaseValue) {
+        // Cut the description part out
+        int descriptionStart = releaseValue.indexOf("description");
+        int colonPosition = releaseValue.indexOf(":", descriptionStart);
+        int commaSeparator = releaseValue.indexOf(",", colonPosition);
+        String retVal = releaseValue.substring(colonPosition + 1, commaSeparator);
+        return retVal.substring(1, retVal.length() - 1);
     }
 }

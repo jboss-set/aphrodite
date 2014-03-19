@@ -19,7 +19,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.pull.shared.connectors.bugzilla;
+package org.jboss.pull.shared.connectors.common;
 
 import java.io.Serializable;
 
@@ -53,7 +53,7 @@ public class Flag implements Serializable {
     private String setter;
     private Status status;
 
-    Flag(String name, String setter, Status status) {
+    public Flag(String name, String setter, Status status) {
         this.name = name;
         this.setter = setter;
         this.status = status;
@@ -84,7 +84,7 @@ public class Flag implements Serializable {
     }
 
     public String toString() {
-        return setter + "\t" + " set " + name + "\t" + " to " + status + "\t\n";
+        return setter + " set " + name + " to " + status + "\n";
     }
 
     public String getConvertedFlag() {

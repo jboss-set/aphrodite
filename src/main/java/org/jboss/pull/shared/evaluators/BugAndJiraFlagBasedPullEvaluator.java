@@ -25,7 +25,7 @@ import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
-import org.jboss.pull.shared.connectors.bugzilla.Flag;
+import org.jboss.pull.shared.connectors.common.Flag;
 
 import java.util.HashSet;
 import java.util.List;
