@@ -274,4 +274,11 @@ public class RedhatPullRequest {
         return bzHelper.updateBugzillaStatus(bug.getId(), status);
     }
 
+    public boolean isGithubMilestoneNullOrDefault(){
+        if( pullRequest.getMilestone() == null || pullRequest.getMilestone().getTitle().contains("x")){
+            return true;
+        }
+        return false;
+    }
+
 }

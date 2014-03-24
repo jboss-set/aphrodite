@@ -24,6 +24,7 @@ package org.jboss.pull.shared;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
+import org.eclipse.egit.github.core.RepositoryBranch;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.github.GithubHelper;
@@ -56,7 +57,6 @@ public class PullHelper {
             | Pattern.DOTALL);
 
     // private final Properties props;
-
     private final PullEvaluatorFacade evaluatorFacade;
 
     private final UserList adminList;
@@ -90,6 +90,18 @@ public class PullHelper {
         }
     }
 
+    public List<String> getBranches() {
+        List<RepositoryBranch> branches = ghHelper.getBranches();
+        List<String> branchNames = new ArrayList<String>();
+        for (RepositoryBranch branch : branches) {
+            String branchName = branch.getName();
+            if (!branchName.contains("ignore") && !branchName.contains("proposed")) {
+                branchNames.add(branchName);
+            }
+        }
+        return branchNames;
+    }
+
     public PullEvaluatorFacade getEvaluatorFacade() {
         return evaluatorFacade;
     }
@@ -106,7 +118,7 @@ public class PullHelper {
         return redhatPullRequests;
     }
 
-    public RedhatPullRequest getPullRequest(String organization, String repository, int id){
+    public RedhatPullRequest getPullRequest(String organization, String repository, int id) {
         PullRequest pullRequest = ghHelper.getPullRequest(organization, repository, id);
         return new RedhatPullRequest(pullRequest, bzHelper, ghHelper);
     }

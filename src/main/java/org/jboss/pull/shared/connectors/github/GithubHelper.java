@@ -34,12 +34,14 @@ import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.IRepositoryIdProvider;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
+import org.eclipse.egit.github.core.RepositoryBranch;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.MilestoneService;
 import org.eclipse.egit.github.core.service.PullRequestService;
+import org.eclipse.egit.github.core.service.RepositoryService;
 import org.eclipse.egit.github.core.Issue;
 import org.jboss.pull.shared.Util;
 
@@ -51,10 +53,12 @@ public class GithubHelper {
     private final String GITHUB_TOKEN;
 
     private final IRepositoryIdProvider repository;
+
     private final CommitService commitService;
     private final IssueService issueService;
     private final PullRequestService pullRequestService;
     private final MilestoneService milestoneService;
+    private final RepositoryService repositoryService;
 
     public GithubHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
         try {
@@ -74,13 +78,24 @@ public class GithubHelper {
             issueService = new IssueService(client);
             pullRequestService = new PullRequestService(client);
             milestoneService = new MilestoneService(client);
+            repositoryService = new RepositoryService(client);
 
         } catch (Exception e) {
             System.err.printf("Cannot initialize: %s\n", e);
             e.printStackTrace(System.err);
             throw e;
         }
+    }
 
+    public List<RepositoryBranch> getBranches(){
+        List<RepositoryBranch> branches = new ArrayList<RepositoryBranch>();
+        try {
+            branches = repositoryService.getBranches(repository);
+        } catch (IOException e) {
+            System.err.println("Error retrieving branches from repository");
+            e.printStackTrace();
+        }
+        return branches;
     }
 
     public PullRequest getPullRequest(int id) {
@@ -96,7 +111,8 @@ public class GithubHelper {
         try {
             pullRequest = pullRequestService.getPullRequest(repository, id);
         } catch (IOException e) {
-            System.err.printf("Couldn't retrieve PullRequestId: '" + id + "' from Repository: '" + repository.generateId() + "'");
+            System.err.printf("Couldn't retrieve PullRequestId: '" + id + "' from Repository: '" + repository.generateId()
+                    + "'");
             e.printStackTrace();
         }
         return pullRequest;
@@ -138,6 +154,7 @@ public class GithubHelper {
         List<Milestone> milestones;
         try {
             milestones = milestoneService.getMilestones(repository, "open");
+            milestones.addAll(milestoneService.getMilestones(repository, "closed"));
         } catch (IOException e) {
             System.err.printf("Problem getting milestones");
             e.printStackTrace(System.err);
@@ -207,7 +224,7 @@ public class GithubHelper {
 
         for (Comment comment : comments) {
             Matcher matcher = pattern.matcher(comment.getBody());
-            if(matcher.find()){
+            if (matcher.find()) {
                 lastComment = comment;
             }
         }
