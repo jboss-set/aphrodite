@@ -62,8 +62,8 @@ public class PullHelper {
     private final UserList adminList;
 
     // ------- Specific Helpers
-    private final GithubHelper ghHelper;
-    private final BZHelper bzHelper;
+    protected GithubHelper ghHelper;
+    protected BZHelper bzHelper;
 
     private final Properties props;
 

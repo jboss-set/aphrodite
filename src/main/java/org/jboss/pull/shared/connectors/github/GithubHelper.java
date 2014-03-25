@@ -60,6 +60,23 @@ public class GithubHelper {
     private final MilestoneService milestoneService;
     private final RepositoryService repositoryService;
 
+    /**
+     * Exists to create mock objects for testing
+     */
+    public GithubHelper(){
+        GITHUB_ORGANIZATION = null;
+        GITHUB_REPO = null;
+        GITHUB_LOGIN = null;
+        GITHUB_TOKEN = null;
+
+        repository = null;
+        commitService = null;
+        issueService = null;
+        pullRequestService = null;
+        milestoneService = null;
+        repositoryService = null;
+    }
+
     public GithubHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
         try {
             Properties props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
