@@ -34,6 +34,13 @@ public class BZHelper {
 
     private final Bugzilla bugzillaClient;
 
+    public BZHelper() {
+        BUGZILLA_LOGIN = null;
+        BUGZILLA_PASSWORD = null;
+
+        bugzillaClient = null;
+    }
+
     public BZHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
         try {
             Properties props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
@@ -49,6 +56,7 @@ public class BZHelper {
             throw e;
         }
     }
+
     // -------- Bugzilla related methods
     public Bug getBug(Integer bugzillaId) {
         return bugzillaClient.getBug(bugzillaId);
