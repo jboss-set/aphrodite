@@ -22,7 +22,7 @@
 
 package org.jboss.shared.connectors.jira;
 
-import junit.framework.Assert;
+import org.jboss.pull.shared.connectors.IssueHelper;
 import org.jboss.pull.shared.connectors.common.Flag;
 import org.jboss.pull.shared.connectors.jira.JiraHelper;
 import org.jboss.pull.shared.connectors.jira.JiraIssue;
@@ -30,8 +30,11 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Set;
+
+import static org.testng.Assert.*;
 
 /**
  * @author navssurtani
@@ -39,12 +42,13 @@ import java.util.Set;
  * Simple class to setup and test the methods for the {@link org.jboss.pull.shared.connectors.jira.JiraHelper}
  */
 @Test
-public class JiraHelperTest {
+public class JiraIssueTest {
 
     private static final String BASE_FILE_PROPERTY = "configuration.base.file";
     private static final String BASE_FILE_NAME = "./processor-eap-6.properties.example";
+    private static final String JIRA_URL_BASE = "https://issues.jboss.org/browse/";
 
-    private JiraHelper jiraHelper = null;
+    private IssueHelper jiraHelper = null;
 
 
     @BeforeTest
@@ -62,73 +66,78 @@ public class JiraHelperTest {
     public void testGetNumber() throws Exception {
         // Basic test method to build a Jira issue, and then validate our return from the server.
         String issueNumber = "EAP6-31";
-        JiraIssue issue = jiraHelper.getJIRA(issueNumber);
-        Assert.assertEquals(issueNumber, issue.getNumber());
+        URL issueURL = new URL(JIRA_URL_BASE + issueNumber);
+        JiraIssue issue = (JiraIssue) jiraHelper.findIssue(issueURL);
+        assertEquals(issueNumber, issue.getNumber());
     }
 
     public void testGetStatus() throws Exception {
-        String issueNumber = "EAP5-10";
-        JiraIssue issue = jiraHelper.getJIRA(issueNumber);
-        Assert.assertEquals(issue.getStatus(), JiraIssue.IssueStatus.RESOLVED.toString());
+        String issueNumber = "WFLY-10";
+        URL issueURL = new URL(JIRA_URL_BASE + issueNumber);
+        JiraIssue issue = (JiraIssue) jiraHelper.findIssue(issueURL);
+        assertEquals(issue.getStatus(), JiraIssue.IssueStatus.RESOLVED.toString());
     }
 
     public void testGetFlags() throws Exception {
         // Test the flags on an already resolved JIRA issue, EAP5-55.
         String issueNumber = "EAP5-55";
-        JiraIssue issue = jiraHelper.getJIRA(issueNumber);
+        URL issueURL = new URL(JIRA_URL_BASE + issueNumber);
+        JiraIssue issue = (JiraIssue) jiraHelper.findIssue(issueURL);
         List<Flag> flags = issue.getFlags();
 
         // CDW Release
         Flag release = flags.get(0);
-        Assert.assertEquals(release.getName(), "CDW release");
-        Assert.assertEquals(release.getStatus(), Flag.Status.POSITIVE);
-        Assert.assertEquals(release.getSetter(), "{UNKNOWN_SETTER}");
+        assertEquals(release.getName(), "CDW release");
+        assertEquals(release.getStatus(), Flag.Status.POSITIVE);
+        assertEquals(release.getSetter(), "{UNKNOWN_SETTER}");
 
         // CDW Release
         Flag pm = flags.get(1);
-        Assert.assertEquals(pm.getName(), "CDW pm_ack");
-        Assert.assertEquals(pm.getStatus(), Flag.Status.POSITIVE);
-        Assert.assertEquals(pm.getSetter(), "{UNKNOWN_SETTER}");
+        assertEquals(pm.getName(), "CDW pm_ack");
+        assertEquals(pm.getStatus(), Flag.Status.POSITIVE);
+        assertEquals(pm.getSetter(), "{UNKNOWN_SETTER}");
 
         // CDW Release
         Flag devel = flags.get(2);
-        Assert.assertEquals(devel.getName(), "CDW devel_ack");
-        Assert.assertEquals(devel.getStatus(), Flag.Status.POSITIVE);
-        Assert.assertEquals(devel.getSetter(), "{UNKNOWN_SETTER}");
+        assertEquals(devel.getName(), "CDW devel_ack");
+        assertEquals(devel.getStatus(), Flag.Status.POSITIVE);
+        assertEquals(devel.getSetter(), "{UNKNOWN_SETTER}");
 
         // CDW Release
         Flag qa = flags.get(3);
-        Assert.assertEquals(qa.getName(), "CDW qa_ack");
-        Assert.assertEquals(qa.getStatus(), Flag.Status.POSITIVE);
-        Assert.assertEquals(qa.getSetter(), "{UNKNOWN_SETTER}");
+        assertEquals(qa.getName(), "CDW qa_ack");
+        assertEquals(qa.getStatus(), Flag.Status.POSITIVE);
+        assertEquals(qa.getSetter(), "{UNKNOWN_SETTER}");
 
         // CDW Release
         Flag blocker = flags.get(4);
-        Assert.assertEquals(blocker.getName(), "CDW blocker");
-        Assert.assertEquals(blocker.getStatus(), Flag.Status.UNKNOWN);
-        Assert.assertEquals(blocker.getSetter(), "{UNKNOWN_SETTER}");
+        assertEquals(blocker.getName(), "CDW blocker");
+        assertEquals(blocker.getStatus(), Flag.Status.UNKNOWN);
+        assertEquals(blocker.getSetter(), "{UNKNOWN_SETTER}");
 
         // CDW Release
         Flag exception = flags.get(5);
-        Assert.assertEquals(exception.getName(), "CDW exception");
-        Assert.assertEquals(exception.getStatus(), Flag.Status.UNKNOWN);
-        Assert.assertEquals(exception.getSetter(), "{UNKNOWN_SETTER}");
+        assertEquals(exception.getName(), "CDW exception");
+        assertEquals(exception.getStatus(), Flag.Status.UNKNOWN);
+        assertEquals(exception.getSetter(), "{UNKNOWN_SETTER}");
     }
 
     public void testGetResolution() throws Exception {
         String issueNumber = "EAP5-40";
-        JiraIssue issue = jiraHelper.getJIRA(issueNumber);
-        Assert.assertEquals(issue.getResolution(), "WON'T FIX");
+        URL issueURL = new URL(JIRA_URL_BASE + issueNumber);
+        JiraIssue issue = (JiraIssue) jiraHelper.findIssue(issueURL);
+        assertEquals(issue.getResolution(), "WON'T FIX");
     }
 
     public void testGetFixVersion() throws Exception {
         String issueNumber = "EAP5-54";
-        JiraIssue issue = jiraHelper.getJIRA(issueNumber);
+        URL issueURL = new URL(JIRA_URL_BASE + issueNumber);
+        JiraIssue issue = (JiraIssue) jiraHelper.findIssue(issueURL);
 
         // We know that there will be one fix version for this issue. Which is 5.3.0.GA
         Set<String> fixVersions = issue.getFixVersions();
-        Assert.assertEquals(fixVersions.size(), 1);
-        Assert.assertTrue(fixVersions.contains("5.3.0.GA"));
+        assertEquals(fixVersions.size(), 1);
+        assertTrue(fixVersions.contains("5.3.0.GA"));
     }
 
 }

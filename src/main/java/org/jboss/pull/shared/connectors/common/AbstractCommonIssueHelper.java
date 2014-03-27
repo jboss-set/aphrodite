@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (c) 2014, Red Hat, Inc., and individual contributors
+ * Copyright 2014, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -19,30 +19,35 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+
 package org.jboss.pull.shared.connectors.common;
 
-import java.io.Serializable;
-import java.net.URL;
-import java.util.List;
-import java.util.Set;
+import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.IssueHelper;
 
+import java.util.Properties;
 
 /**
- * Represents a general issue.
- * Typically a JIRA issue or a Bugzilla bug.
- *
- * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
+ * @author navssurtani
  */
-public interface Issue extends Serializable {
-    /** number/id of the issue */
-    String getNumber();
-    /** url of the issue in the issue tracker */
-    URL getUrl();
-    /** status of the issue */
-    String getStatus();
-    /** flags of the issue */
-    List<Flag> getFlags();   // our Flag class will be enough for both Bugzilla and Jira hopefully
 
-    /** Jira Fix Version/s, Bugzilla calls Target Release **/
-    Set<String> getFixVersions();
+public abstract class AbstractCommonIssueHelper implements IssueHelper {
+
+    protected Properties fromUtil;
+
+    public AbstractCommonIssueHelper(final String configurationFileProperty,
+                                     final String configurationFileDefault) throws Exception {
+
+        // We just want to initialise the properties here.
+        try {
+            this.fromUtil = Util.loadProperties(configurationFileProperty, configurationFileDefault);
+        } catch (Exception e) {
+            System.err.printf("Cannot initialize: %s\n", e);
+            e.printStackTrace(System.err);
+            throw e;
+        }
+
+    }
+
+
 }

@@ -22,10 +22,15 @@
 
 package org.jboss.pull.shared.connectors.bugzilla;
 
-import java.util.Properties;
-import org.jboss.pull.shared.Util;
 
-public class BZHelper {
+import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.IssueHelper;
+import org.jboss.pull.shared.connectors.common.AbstractCommonIssueHelper;
+import org.jboss.pull.shared.connectors.common.Issue;
+
+import java.net.URL;
+
+public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
 
     private static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
 
@@ -34,19 +39,11 @@ public class BZHelper {
 
     private final Bugzilla bugzillaClient;
 
-    public BZHelper() {
-        BUGZILLA_LOGIN = null;
-        BUGZILLA_PASSWORD = null;
-
-        bugzillaClient = null;
-    }
-
     public BZHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
+        super(configurationFileProperty, configurationFileDefault);
         try {
-            Properties props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
-
-            BUGZILLA_LOGIN = Util.require(props, "bugzilla.login");
-            BUGZILLA_PASSWORD = Util.require(props, "bugzilla.password");
+            BUGZILLA_LOGIN = Util.require(fromUtil, "bugzilla.login");
+            BUGZILLA_PASSWORD = Util.require(fromUtil, "bugzilla.password");
 
             // initialize bugzilla client
             bugzillaClient = new Bugzilla(BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
@@ -57,13 +54,23 @@ public class BZHelper {
         }
     }
 
-    // -------- Bugzilla related methods
-    public Bug getBug(Integer bugzillaId) {
-        return bugzillaClient.getBug(bugzillaId);
+    @Override
+    public Issue findIssue(URL url) throws IllegalArgumentException {
+        return bugzillaClient.getBug(cutIdFromURL(url));
     }
 
-    public boolean updateBugzillaStatus(Integer bugzillaId, Bug.Status status) {
-        return bugzillaClient.updateBugzillaStatus(bugzillaId, status);
+    @Override
+    public boolean accepts(URL url) {
+        return url.getHost().equals(BUGZILLA_BASE);
     }
 
+    // FIXME: This has to be implemented properly.
+    @Override
+    public boolean updateStatus(URL url, Enum status) {
+        throw new UnsupportedOperationException("This feature is not implemented yet.");
+    }
+
+    private Integer cutIdFromURL(URL url) {
+        return null;
+    }
 }

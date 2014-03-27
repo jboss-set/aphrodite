@@ -25,9 +25,11 @@ import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
+import org.jboss.pull.shared.connectors.IssueHelper;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.github.GithubHelper;
+import org.jboss.pull.shared.connectors.jira.JiraHelper;
 import org.jboss.pull.shared.evaluators.PullEvaluatorFacade;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
@@ -62,8 +64,10 @@ public class PullHelper {
     private final UserList adminList;
 
     // ------- Specific Helpers
-    protected GithubHelper ghHelper;
-    protected BZHelper bzHelper;
+    private GithubHelper ghHelper;
+    private IssueHelper bzHelper;
+    private IssueHelper jiraHelper;
+
 
     private final Properties props;
 
@@ -75,6 +79,7 @@ public class PullHelper {
         try {
             ghHelper = new GithubHelper(configurationFileProperty, configurationFileDefault);
             bzHelper = new BZHelper(configurationFileProperty, configurationFileDefault);
+            jiraHelper = new JiraHelper(configurationFileProperty, configurationFileDefault);
 
             props = Util.loadProperties(configurationFileProperty, configurationFileDefault);
 
@@ -112,7 +117,7 @@ public class PullHelper {
         List<RedhatPullRequest> redhatPullRequests = new ArrayList<RedhatPullRequest>();
 
         for (PullRequest pullRequest : pullRequests) {
-            redhatPullRequests.add(new RedhatPullRequest(pullRequest, bzHelper, ghHelper));
+            redhatPullRequests.add(new RedhatPullRequest(pullRequest, bzHelper, jiraHelper, ghHelper));
         }
 
         return redhatPullRequests;
@@ -120,7 +125,7 @@ public class PullHelper {
 
     public RedhatPullRequest getPullRequest(String organization, String repository, int id) {
         PullRequest pullRequest = ghHelper.getPullRequest(organization, repository, id);
-        return new RedhatPullRequest(pullRequest, bzHelper, ghHelper);
+        return new RedhatPullRequest(pullRequest, bzHelper, jiraHelper, ghHelper);
     }
 
     public List<Milestone> getGithubMilestones() {

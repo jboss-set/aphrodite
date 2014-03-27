@@ -22,6 +22,8 @@
 
 package org.jboss.pull.shared.connectors;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,7 +31,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Comment;
-import org.eclipse.egit.github.core.Issue;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.User;
@@ -37,9 +38,10 @@ import org.jboss.pull.shared.BuildResult;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
+import org.jboss.pull.shared.connectors.common.Issue;
 import org.jboss.pull.shared.connectors.github.GithubHelper;
-import org.jboss.pull.shared.connectors.jira.JiraIssue;
 import org.jboss.pull.shared.connectors.jira.JiraHelper;
+import org.jboss.pull.shared.connectors.jira.JiraIssue;
 
 public class RedhatPullRequest {
     private static final Pattern UPSTREAM_NOT_REQUIRED = Pattern.compile(".*no.*upstream.*required.*",
@@ -57,73 +59,75 @@ public class RedhatPullRequest {
     private static final Pattern RELATED_PR_PATTERN = Pattern.compile(
             ".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
 
+    //FIXME: Issue #62
+    private static final String BZ_BASE = "https://bugzilla.redhat.com/show_bug.cgi?id=";
+    private static final String JIRA_BASE = "https://issues.jboss.org/browse";
     private PullRequest pullRequest;
-    private List<Bug> bugs = new ArrayList<Bug>();
+
+    private List<Issue> bugs = null;
+    private List<Issue> jiraIssues = null;
     private List<RedhatPullRequest> relatedPullRequests = null;
 
-    // private PullHelper helper;
-    private BZHelper bzHelper;
+    private IssueHelper bzHelper;
+    private IssueHelper jiraHelper;
     private GithubHelper ghHelper;
-    private JiraHelper jiraHelper;
 
-    public RedhatPullRequest(PullRequest pullRequest, BZHelper bzHelper, GithubHelper ghHelper) {
+    public RedhatPullRequest(PullRequest pullRequest, IssueHelper bzHelper, IssueHelper jiraHelper,
+                             GithubHelper ghHelper) {
         this.pullRequest = pullRequest;
-        this.bzHelper = bzHelper;
+        if (bzHelper instanceof BZHelper && jiraHelper instanceof JiraHelper) {
+            this.bzHelper = bzHelper;
+            this.jiraHelper = jiraHelper;
+        } else {
+            throw new IllegalArgumentException("The first IssueHelper parameter has to be an instance of BZHelper and" +
+                    " the second IssueHelper parameter must be an instance of JiraHelper.");
+        }
+
         this.ghHelper = ghHelper;
 
-        bugs = getBugsFromDescription(pullRequest);
+        this.bugs = getBugsFromDescription();
+        this.jiraIssues = getJiraIssuesFromDescription();
+
         // Can't call getPRFromDescription here. If two PR's reference each other a loop occurs.
     }
 
-    private List<JiraIssue> getJIRAFromDescription(PullRequest pull) {
-        final List<String> ids = extractJiraIds(pull.getBody());
-        final ArrayList<JiraIssue> issues = new ArrayList<JiraIssue>();
-        for (String id : ids) {
-            final JiraIssue bug = jiraHelper.getJIRA(id);
-            if (bug != null) {
-                issues.add(bug);
-            }
-        }
-        return issues;
-    }
-
-    private List<String> extractJiraIds(String body){
-        final ArrayList<String> ids = new ArrayList<String>();
-        final Matcher matcher = RELATED_JIRA_PATTERN.matcher(body);
-        while (matcher.find()) {
-            try {
-                ids.add(matcher.group(1));
-            } catch (NumberFormatException ignore) {
-                System.err.printf("Invalid bug number: %s.\n", ignore);
-            }
-        }
-        return ids;
-    }
-
-    private List<Bug> getBugsFromDescription(PullRequest pull) {
-        final List<Integer> ids = extractBugzillaIds(pull.getBody());
-        final ArrayList<Bug> bugs = new ArrayList<Bug>();
-
-        for (Integer id : ids) {
-            final Bug bug = bzHelper.getBug(id);
-            if (bug != null) {
+    private List<Issue> getBugsFromDescription() {
+        final List<URL> urls = extractURLs(BZ_BASE, BUGZILLA_ID_PATTERN);
+        final ArrayList<Issue> bugs = new ArrayList<Issue>();
+        for (URL url: urls) {
+            if (bzHelper.accepts(url)) {
+                Bug bug = (Bug) bzHelper.findIssue(url);
                 bugs.add(bug);
             }
         }
         return bugs;
     }
 
-    private List<Integer> extractBugzillaIds(String body) {
-        final ArrayList<Integer> ids = new ArrayList<Integer>();
-        final Matcher matcher = BUGZILLA_ID_PATTERN.matcher(body);
-        while (matcher.find()) {
-            try {
-                ids.add(Integer.valueOf(matcher.group(1)));
-            } catch (NumberFormatException ignore) {
-                System.err.printf("Invalid bug number: %s.\n", ignore);
+    private List<Issue> getJiraIssuesFromDescription() {
+        final List<URL> urls = extractURLs(JIRA_BASE, RELATED_JIRA_PATTERN);
+        final List<Issue> jiraIssues = new ArrayList<Issue>();
+        for (URL url : urls) {
+            if (jiraHelper.accepts(url)) {
+                JiraIssue jiraIssue = (JiraIssue) jiraHelper.findIssue(url);
+                jiraIssues.add(jiraIssue);
             }
         }
-        return ids;
+        return jiraIssues;
+    }
+
+    private List<URL> extractURLs(String urlBase, Pattern toMatch) {
+        final List<URL> urls = new ArrayList<URL>();
+        final Matcher matcher = toMatch.matcher(pullRequest.getBody());
+        while (matcher.find()) {
+            try {
+                urls.add(new URL(urlBase + matcher.group(1)));
+            } catch (NumberFormatException ignore) {
+                System.err.printf("Invalid bug number: %s.\n", ignore);
+            } catch (MalformedURLException malformed) {
+                System.err.printf("Invalid URL formed: %s. \n", malformed);
+            }
+        }
+        return urls;
     }
 
     public int getNumber() {
@@ -139,7 +143,7 @@ public class RedhatPullRequest {
     }
 
     public void setMilestone(Milestone milestone) {
-        Issue issue = ghHelper.getIssue(pullRequest);
+        org.eclipse.egit.github.core.Issue issue = ghHelper.getIssue(pullRequest);
 
         issue.setMilestone(milestone);
         ghHelper.editIssue(issue);
@@ -198,7 +202,7 @@ public class RedhatPullRequest {
             PullRequest relatedPullRequest = ghHelper.getPullRequest(matcher.group(1), matcher.group(2),
                     Integer.valueOf(matcher.group(3)));
             if (relatedPullRequest != null) {
-                relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, ghHelper));
+                relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, jiraHelper, ghHelper));
             }
         }
 
@@ -217,8 +221,16 @@ public class RedhatPullRequest {
         return ghHelper.isMerged(pullRequest);
     }
 
-    public List<Bug> getBugs() {
-        return bugs;
+    /**
+     * Returns a merged list of both Bugzilla and Jira Issues found in the body of a Pull Request.
+     *
+     * @return
+     */
+    public List<Issue> getIssues() {
+        List<Issue> toReturn = new ArrayList<Issue>(bugs.size() + jiraIssues.size());
+        toReturn.addAll(bugs);
+        toReturn.addAll(jiraIssues);
+        return toReturn;
     }
 
     /**
@@ -226,7 +238,7 @@ public class RedhatPullRequest {
      * @return
      */
     public boolean isBZInDescription(){
-        return !extractBugzillaIds(pullRequest.getBody()).isEmpty();
+        return bugs.size() > 0;
     }
 
     /**
@@ -234,7 +246,7 @@ public class RedhatPullRequest {
      * @return
      */
     public boolean isJiraInDescription(){
-        return !extractJiraIds(pullRequest.getBody()).isEmpty();
+        return jiraIssues.size() > 0;
     }
 
     public boolean isUpstreamRequired(){
@@ -270,15 +282,22 @@ public class RedhatPullRequest {
         return null;
     }
 
-    public boolean updateBugzillaStatus(Bug bug, Bug.Status status) {
-        return bzHelper.updateBugzillaStatus(bug.getId(), status);
+    public boolean updateStatus(Issue issue, Enum status) throws IllegalArgumentException {
+        if (issue instanceof Bug) {
+            // Do BZ stuff
+            if (bzHelper.accepts(issue.getUrl())) return bzHelper.updateStatus(issue.getUrl(), status);
+        } else if (issue instanceof JiraIssue) {
+            // Do Jira stuff
+            if (jiraHelper.accepts(issue.getUrl())) return jiraHelper.updateStatus(issue.getUrl(), status);
+        } else {
+            throw new IllegalArgumentException("Your issue implementation has to be an instance of a Bug or " +
+                    "JiraIssue");
+        }
+        return false;
     }
 
     public boolean isGithubMilestoneNullOrDefault(){
-        if( pullRequest.getMilestone() == null || pullRequest.getMilestone().getTitle().contains("x")){
-            return true;
-        }
-        return false;
+        return (pullRequest.getMilestone() == null || pullRequest.getMilestone().getTitle().contains("x"));
     }
 
 }

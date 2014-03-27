@@ -21,6 +21,8 @@
  */
 package org.jboss.pull.shared.connectors.jira;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +41,9 @@ import org.jboss.pull.shared.connectors.common.Issue;
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
 public class JiraIssue implements Issue {
+
+    private static final String JIRA_HOST = "https://issues.jboss.org/browse";
+    private URL url;
 
     public enum IssueStatus {
         NEW, CODING_IN_PROGRESS, OPEN, RESOLVED, READY_FOR_QA, PULL_REQUEST_SENT, QA_IN_PROGRESS, VERIFIED, REOPENED,
@@ -88,6 +93,11 @@ public class JiraIssue implements Issue {
 
         // Now something similar for the fix versions. We just have to get the
         this.fixVersions = findFixVersions(issue.getFixVersions());
+        try {
+            this.url = new URL(JIRA_HOST + id);
+        } catch (MalformedURLException malformed) {
+            System.err.printf("Invalid URL formed: %s. \n", malformed);
+        }
     }
 
     @Override
@@ -96,8 +106,8 @@ public class JiraIssue implements Issue {
     }
 
     @Override
-    public String getUrl() {
-        return "https://issues.jboss.org/browse/" + id;
+    public URL getUrl() {
+        return this.url;
     }
 
     @Override
