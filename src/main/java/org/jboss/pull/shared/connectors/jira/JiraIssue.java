@@ -31,6 +31,8 @@ import java.util.TreeSet;
 
 import com.atlassian.jira.rest.client.domain.Field;
 import com.atlassian.jira.rest.client.domain.Version;
+
+import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.connectors.common.Flag;
 import org.jboss.pull.shared.connectors.common.Issue;
 
@@ -42,7 +44,6 @@ import org.jboss.pull.shared.connectors.common.Issue;
  */
 public class JiraIssue implements Issue {
 
-    private static final String JIRA_HOST = "https://issues.jboss.org/browse";
     private URL url;
 
     public enum IssueStatus {
@@ -94,7 +95,7 @@ public class JiraIssue implements Issue {
         // Now something similar for the fix versions. We just have to get the
         this.fixVersions = findFixVersions(issue.getFixVersions());
         try {
-            this.url = new URL(JIRA_HOST + id);
+            this.url = new URL(Constants.JIRA_BASE_BROWSE + id);
         } catch (MalformedURLException malformed) {
             System.err.printf("Invalid URL formed: %s. \n", malformed);
         }

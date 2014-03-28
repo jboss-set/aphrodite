@@ -23,6 +23,7 @@
 package org.jboss.pull.shared.connectors.bugzilla;
 
 
+import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
 import org.jboss.pull.shared.connectors.common.AbstractCommonIssueHelper;
@@ -31,8 +32,6 @@ import org.jboss.pull.shared.connectors.common.Issue;
 import java.net.URL;
 
 public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
-
-    private static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
 
     private final String BUGZILLA_LOGIN;
     private final String BUGZILLA_PASSWORD;
@@ -46,7 +45,7 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
             BUGZILLA_PASSWORD = Util.require(fromUtil, "bugzilla.password");
 
             // initialize bugzilla client
-            bugzillaClient = new Bugzilla(BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
+            bugzillaClient = new Bugzilla(Constants.BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
         } catch (Exception e) {
             System.err.printf("Cannot initialize: %s\n", e);
             e.printStackTrace(System.err);
@@ -61,7 +60,7 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
 
     @Override
     public boolean accepts(URL url) {
-        return url.getHost().equals(BUGZILLA_BASE);
+        return url.getHost().equalsIgnoreCase(Constants.BUGZILLA_HOST);
     }
 
     // FIXME: This has to be implemented properly.
@@ -70,7 +69,9 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
         throw new UnsupportedOperationException("This feature is not implemented yet.");
     }
 
-    private Integer cutIdFromURL(URL url) {
-        return null;
+    private int cutIdFromURL(URL url) {
+        String urlStr = url.toString().trim().toLowerCase();
+        int index = urlStr.indexOf("id=");
+        return Integer.parseInt(urlStr.substring(index + 3));
     }
 }

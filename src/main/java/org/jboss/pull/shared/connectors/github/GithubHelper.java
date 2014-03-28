@@ -225,11 +225,33 @@ public class GithubHelper {
     }
 
     public boolean isMerged(PullRequest pullRequest) {
+        if (pullRequest == null) {
+            return false;
+        }
+
+        if (!pullRequest.getState().equals("closed")) {
+            return false;
+        }
+
         try {
-            return pullRequestService.isMerged(pullRequest.getBase().getRepo(), pullRequest.getNumber());
-        } catch (IOException e) {
-            System.err.println("Error getting merged status of pull request: " + pullRequest.getNumber());
-            e.printStackTrace();
+            if (pullRequestService.isMerged(pullRequest.getBase().getRepo(), pullRequest.getNumber())) {
+                return true;
+            }
+        } catch (IOException ignore) {
+            System.err.printf("Cannot get Merged information of the pull request %d: %s.\n", pullRequest.getNumber(), ignore);
+            ignore.printStackTrace(System.err);
+        }
+
+        try {
+            final List<Comment> comments = issueService.getComments(pullRequest.getBase().getRepo(), pullRequest.getNumber());
+            for (Comment comment : comments) {
+                if (comment.getBody().toLowerCase().indexOf("merged") != -1) {
+                    return true;
+                }
+            }
+        } catch (IOException ignore) {
+            System.err.printf("Cannot get comments of the pull request %d: %s.\n", pullRequest.getNumber(), ignore);
+            ignore.printStackTrace(System.err);
         }
 
         return false;
@@ -259,5 +281,4 @@ public class GithubHelper {
 
         return new ArrayList<Comment>();
     }
-
 }
