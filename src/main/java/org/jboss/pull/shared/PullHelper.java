@@ -36,7 +36,6 @@ import org.jboss.pull.shared.spi.PullEvaluator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 /**
  * A shared functionality regarding mergeable PRs, Github and Bugzilla.
@@ -45,18 +44,6 @@ import java.util.regex.Pattern;
  * @author wangchao
  */
 public class PullHelper {
-    public static final Pattern BUILD_OUTCOME = Pattern.compile(
-            "outcome was (\\*\\*)?+(SUCCESS|FAILURE|ABORTED)(\\*\\*)?+ using a merge of ([a-z0-9]+)", Pattern.CASE_INSENSITIVE);
-    public static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*",
-            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*",
-            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern FINISHED = Pattern.compile(".*Build.*merging.*has\\W+been\\W+finished.*",
-            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern MERGE = Pattern.compile(".*(re)?merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE
-            | Pattern.DOTALL);
-    public static final Pattern FORCE_MERGE = Pattern.compile(".*force\\W+merge\\W+this.*", Pattern.CASE_INSENSITIVE
-            | Pattern.DOTALL);
 
     // private final Properties props;
     private final PullEvaluatorFacade evaluatorFacade;
@@ -148,23 +135,23 @@ public class PullHelper {
         final List<Comment> comments = pullRequest.getGithubComments();
         for (Comment comment : comments) {
             if (ghHelper.getGithubLogin().equals(comment.getUser().getLogin())) {
-                if (PENDING.matcher(comment.getBody()).matches()) {
+                if (Constants.PENDING.matcher(comment.getBody()).matches()) {
                     result = ProcessorPullState.PENDING;
                     continue;
                 }
 
-                if (RUNNING.matcher(comment.getBody()).matches()) {
+                if (Constants.RUNNING.matcher(comment.getBody()).matches()) {
                     result = ProcessorPullState.RUNNING;
                     continue;
                 }
 
-                if (FINISHED.matcher(comment.getBody()).matches()) {
+                if (Constants.FINISHED.matcher(comment.getBody()).matches()) {
                     result = ProcessorPullState.FINISHED;
                     continue;
                 }
             }
 
-            if (MERGE.matcher(comment.getBody()).matches()) {
+            if (Constants.MERGE.matcher(comment.getBody()).matches()) {
                 result = ProcessorPullState.MERGEABLE;
                 continue;
             }
@@ -179,7 +166,7 @@ public class PullHelper {
 
             if (result == ProcessorPullState.INCOMPLETE && !comments.isEmpty()) {
                 Comment lastComment = comments.get(comments.size() - 1);
-                if (FORCE_MERGE.matcher(lastComment.getBody()).matches() && isAdminUser(lastComment.getUser().getLogin()))
+                if (Constants.FORCE_MERGE.matcher(lastComment.getBody()).matches() && isAdminUser(lastComment.getUser().getLogin()))
                     result = ProcessorPullState.MERGEABLE;
             }
         }

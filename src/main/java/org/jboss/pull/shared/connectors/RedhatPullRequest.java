@@ -35,7 +35,7 @@ import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.User;
 import org.jboss.pull.shared.BuildResult;
-import org.jboss.pull.shared.PullHelper;
+import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
 import org.jboss.pull.shared.connectors.common.Issue;
@@ -44,24 +44,6 @@ import org.jboss.pull.shared.connectors.jira.JiraHelper;
 import org.jboss.pull.shared.connectors.jira.JiraIssue;
 
 public class RedhatPullRequest {
-    private static final Pattern UPSTREAM_NOT_REQUIRED = Pattern.compile(".*no.*upstream.*required.*",
-            Pattern.CASE_INSENSITIVE);
-
-    private static final Pattern BUGZILLA_ID_PATTERN = Pattern.compile("bugzilla\\.redhat\\.com/show_bug\\.cgi\\?id=(\\d+)",
-            Pattern.CASE_INSENSITIVE);
-
-    private static final Pattern RELATED_JIRA_PATTERN = Pattern.compile(".*issues\\.jboss\\.org/browse/([a-zA-Z_0-9-]*)",
-            Pattern.CASE_INSENSITIVE);
-
-    // This has to match two patterns
-    // * https://github.com/uselessorg/jboss-eap/pull/4
-    // * https://api.github.com/repos/uselessorg/jboss-eap/pulls/4
-    private static final Pattern RELATED_PR_PATTERN = Pattern.compile(
-            ".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
-
-    //FIXME: Issue #62
-    private static final String BZ_BASE = "https://bugzilla.redhat.com/show_bug.cgi?id=";
-    private static final String JIRA_BASE = "https://issues.jboss.org/browse";
     private PullRequest pullRequest;
 
     private List<Issue> bugs = null;
@@ -92,7 +74,7 @@ public class RedhatPullRequest {
     }
 
     private List<Issue> getBugsFromDescription() {
-        final List<URL> urls = extractURLs(BZ_BASE, BUGZILLA_ID_PATTERN);
+        final List<URL> urls = extractURLs(Constants.BUGZILLA_BASE_ID, Constants.BUGZILLA_ID_PATTERN);
         final ArrayList<Issue> bugs = new ArrayList<Issue>();
         for (URL url: urls) {
             if (bzHelper.accepts(url)) {
@@ -104,7 +86,7 @@ public class RedhatPullRequest {
     }
 
     private List<Issue> getJiraIssuesFromDescription() {
-        final List<URL> urls = extractURLs(JIRA_BASE, RELATED_JIRA_PATTERN);
+        final List<URL> urls = extractURLs(Constants.JIRA_BASE_BROWSE, Constants.RELATED_JIRA_PATTERN);
         final List<Issue> jiraIssues = new ArrayList<Issue>();
         for (URL url : urls) {
             if (jiraHelper.accepts(url)) {
@@ -195,7 +177,7 @@ public class RedhatPullRequest {
     }
 
     private List<RedhatPullRequest> getPRFromDescription() {
-        Matcher matcher = RELATED_PR_PATTERN.matcher(getGithubDescription());
+        Matcher matcher = Constants.RELATED_PR_PATTERN.matcher(getGithubDescription());
 
         List<RedhatPullRequest> relatedPullRequests = new ArrayList<RedhatPullRequest>();
         while (matcher.find()) {
@@ -250,14 +232,14 @@ public class RedhatPullRequest {
     }
 
     public boolean isUpstreamRequired(){
-        return !UPSTREAM_NOT_REQUIRED.matcher(pullRequest.getBody()).find();
+        return !Constants.UPSTREAM_NOT_REQUIRED.matcher(pullRequest.getBody()).find();
     }
     public BuildResult getBuildResult() {
         BuildResult buildResult = BuildResult.UNKNOWN;
-        Comment comment = ghHelper.getLastMatchingComment(pullRequest, PullHelper.BUILD_OUTCOME);
+        Comment comment = ghHelper.getLastMatchingComment(pullRequest, Constants.BUILD_OUTCOME);
 
         if (comment != null) {
-            Matcher matcher = PullHelper.BUILD_OUTCOME.matcher(comment.getBody());
+            Matcher matcher = Constants.BUILD_OUTCOME.matcher(comment.getBody());
             while (matcher.find()) {
                 buildResult = BuildResult.valueOf(matcher.group(2));
             }
@@ -267,7 +249,7 @@ public class RedhatPullRequest {
     }
 
     public String getOrganization() {
-        Matcher matcher = RELATED_PR_PATTERN.matcher(pullRequest.getUrl());
+        Matcher matcher = Constants.RELATED_PR_PATTERN.matcher(pullRequest.getUrl());
         if (matcher.matches()) {
             return matcher.group(1);
         }
@@ -275,7 +257,7 @@ public class RedhatPullRequest {
     }
 
     public String getRepository() {
-        Matcher matcher = RELATED_PR_PATTERN.matcher(pullRequest.getUrl());
+        Matcher matcher = Constants.RELATED_PR_PATTERN.matcher(pullRequest.getUrl());
         if (matcher.matches()) {
             return matcher.group(2);
         }

@@ -25,6 +25,8 @@ package org.jboss.pull.shared.connectors.jira;
 import com.atlassian.jira.rest.client.JiraRestClient;
 import com.atlassian.jira.rest.client.NullProgressMonitor;
 import com.atlassian.jira.rest.client.internal.jersey.JerseyJiraRestClientFactory;
+
+import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
 import org.jboss.pull.shared.connectors.common.AbstractCommonIssueHelper;
@@ -41,7 +43,6 @@ public class JiraHelper extends AbstractCommonIssueHelper implements IssueHelper
 
     private static String JIRA_LOGIN;
     private static String JIRA_PASSWORD;
-    private static String JIRA_BASE_URL;
 
     private JiraRestClient restClient;
 
@@ -50,7 +51,6 @@ public class JiraHelper extends AbstractCommonIssueHelper implements IssueHelper
         try {
             JIRA_LOGIN = Util.require(fromUtil, "jira.login");
             JIRA_PASSWORD = Util.require(fromUtil, "jira.password");
-            JIRA_BASE_URL = Util.require(fromUtil, "jira.base.url");
             restClient = buildJiraRestClient();
         } catch (Exception e) {
             System.err.printf("Cannot initialize: %s\n", e);
@@ -69,7 +69,7 @@ public class JiraHelper extends AbstractCommonIssueHelper implements IssueHelper
 
     @Override
     public boolean accepts(URL url) {
-        return url.getHost().equals(JIRA_BASE_URL);
+        return url.getHost().equalsIgnoreCase(Constants.JIRA_HOST);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class JiraHelper extends AbstractCommonIssueHelper implements IssueHelper
 
     private JiraRestClient buildJiraRestClient() throws URISyntaxException {
         JerseyJiraRestClientFactory clientFactory = new JerseyJiraRestClientFactory();
-        return clientFactory.createWithBasicHttpAuthentication(new URI(JIRA_BASE_URL), JIRA_LOGIN, JIRA_PASSWORD);
+        return clientFactory.createWithBasicHttpAuthentication(new URI(Constants.JIRA_BASE), JIRA_LOGIN, JIRA_PASSWORD);
     }
 
     private String cutKeyFromURL(URL url) {

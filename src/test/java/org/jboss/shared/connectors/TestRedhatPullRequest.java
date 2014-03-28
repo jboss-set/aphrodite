@@ -1,5 +1,6 @@
 package org.jboss.shared.connectors;
 
+import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.connectors.IssueHelper;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.github.GithubHelper;
@@ -19,9 +20,7 @@ import static org.mockito.Mockito.*;
 @Test
 public class TestRedhatPullRequest {
 
-    private static final String BZ_BASE = "https://bugzilla.redhat.com/show_bug.cgi?id=";
     private static final String BZ_953471 = "953471";
-    private static final String JIRA_BASE = "https://issues.jboss.org/browse/";
     private static final String EAP6_77 = "EAP6-77";
     private static final String GH_ORG = "uselessorg";
     private static final String GH_PROJECT = "jboss-eap";
@@ -34,11 +33,11 @@ public class TestRedhatPullRequest {
     public void setUpMocks() throws Exception {
         // Mocking the helpers, etc.
         this.bzHelper = mock(BZHelper.class);
-        URL bzURL = new URL(BZ_BASE + BZ_953471);
+        URL bzURL = new URL(Constants.BUGZILLA_BASE_ID + BZ_953471);
         when(bzHelper.accepts(bzURL)).thenReturn(true);
 
         this.jiraHelper = mock(JiraHelper.class);
-        URL jiraURL = new URL(JIRA_BASE + EAP6_77);
+        URL jiraURL = new URL(Constants.JIRA_BASE_BROWSE + EAP6_77);
         when(jiraHelper.accepts(jiraURL)).thenReturn(true);
 
         // Now for the GH helper
@@ -58,7 +57,7 @@ public class TestRedhatPullRequest {
     @Test
     public void testFindBZ() {
         PullRequest pr = new PullRequest();
-        String bodyURL = BZ_BASE + BZ_953471;
+        String bodyURL = Constants.BUGZILLA_BASE_ID + BZ_953471;
         pr.setBody("Testing BZ matching.\n BZ: " + bodyURL);
 
         RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
@@ -79,7 +78,7 @@ public class TestRedhatPullRequest {
     @Test
     public void testFindJIRA() {
         PullRequest pr = new PullRequest();
-        String bodyURL = JIRA_BASE + EAP6_77;
+        String bodyURL = Constants.JIRA_BASE_BROWSE + EAP6_77;
         pr.setBody("Testing JIRA matching. JIRA: " + bodyURL);
 
         RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);

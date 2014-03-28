@@ -23,6 +23,7 @@ package org.jboss.pull.shared.evaluators;
 
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
+import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
@@ -87,7 +88,7 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     private Result isMarkedForMerge(RedhatPullRequest pullRequest) {
         final Result result = new Result(false);
 
-        Comment comment = pullRequest.getLastMatchingGithubComment(PullHelper.MERGE);
+        Comment comment = pullRequest.getLastMatchingGithubComment(Constants.MERGE);
 
         if (comment != null) {
             System.out.printf("issue #%d updated at: %s\n", pullRequest.getNumber(),

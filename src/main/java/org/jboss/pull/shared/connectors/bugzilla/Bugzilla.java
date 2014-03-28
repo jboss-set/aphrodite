@@ -81,7 +81,7 @@ public class Bugzilla {
      * @param bugzillaId
      * @return - Bug retrieved from Bugzilla, or null if no bug was found.
      */
-    public Bug getBug(Integer bugzillaId) {
+    public Bug getBug(int bugzillaId) {
         Map<Object, Object> params = getParameterMap();
         params.put("include_fields", Bug.include_fields);
         params.put("ids", bugzillaId);
