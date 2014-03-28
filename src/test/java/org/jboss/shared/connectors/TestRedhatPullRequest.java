@@ -1,24 +1,69 @@
 package org.jboss.shared.connectors;
 
+import org.jboss.pull.shared.connectors.IssueHelper;
+import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
+import org.jboss.pull.shared.connectors.github.GithubHelper;
+import org.jboss.pull.shared.connectors.jira.JiraHelper;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-import org.testng.AssertJUnit;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
-import org.jboss.shared.connectors.bugzilla.MockBZHelper;
-import org.jboss.shared.connectors.github.MockGithubHelper;
+
+import java.net.URL;
+
+import static org.testng.Assert.*;
+import static org.mockito.Mockito.*;
 
 @Test
 public class TestRedhatPullRequest {
 
+    private static final String BZ_BASE = "https://bugzilla.redhat.com/show_bug.cgi?id=";
+    private static final String BZ_953471 = "953471";
+    private static final String JIRA_BASE = "https://issues.jboss.org/browse/";
+    private static final String EAP6_77 = "EAP6-77";
+    private static final String GH_ORG = "uselessorg";
+    private static final String GH_PROJECT = "jboss-eap";
+    private static final int GH_PULL_NUMBER = 2;
+    private IssueHelper bzHelper = null;
+    private IssueHelper jiraHelper = null;
+    private GithubHelper githubHelper = null;
+
+    @BeforeTest
+    public void setUpMocks() throws Exception {
+        // Mocking the helpers, etc.
+        this.bzHelper = mock(BZHelper.class);
+        URL bzURL = new URL(BZ_BASE + BZ_953471);
+        when(bzHelper.accepts(bzURL)).thenReturn(true);
+
+        this.jiraHelper = mock(JiraHelper.class);
+        URL jiraURL = new URL(JIRA_BASE + EAP6_77);
+        when(jiraHelper.accepts(jiraURL)).thenReturn(true);
+
+        // Now for the GH helper
+        this.githubHelper = mock(GithubHelper.class);
+        PullRequest testPull = new PullRequest();
+        testPull.setBody("Testing Upstream matching. Upstream: https://github.com/uselessorg/jboss-eap/pull/2");
+        when(githubHelper.getPullRequest(GH_ORG,  GH_PROJECT, GH_PULL_NUMBER)).thenReturn(testPull);
+    }
+
+    @AfterTest
+    public void killMocks() {
+        this.bzHelper = null;
+        this.jiraHelper = null;
+        this.githubHelper = null;
+    }
+
     @Test
     public void testFindBZ() {
         PullRequest pr = new PullRequest();
-        pr.setBody("Testing BZ macthing.\n BZ: https://bugzilla.redhat.com/show_bug.cgi?id=953471");
+        String bodyURL = BZ_BASE + BZ_953471;
+        pr.setBody("Testing BZ matching.\n BZ: " + bodyURL);
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertTrue(pullRequest.isBZInDescription());
+        assertTrue(pullRequest.isBZInDescription());
     }
 
     @Test
@@ -26,19 +71,20 @@ public class TestRedhatPullRequest {
         PullRequest pr = new PullRequest();
         pr.setBody("Testing BZ matching.\n");
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertFalse(pullRequest.isBZInDescription());
+        assertFalse(pullRequest.isBZInDescription());
     }
 
     @Test
     public void testFindJIRA() {
         PullRequest pr = new PullRequest();
-        pr.setBody("Testing JIRA matching. JIRA: https://issues.jboss.org/browse/EAP6-77");
+        String bodyURL = JIRA_BASE + EAP6_77;
+        pr.setBody("Testing JIRA matching. JIRA: " + bodyURL);
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertTrue(pullRequest.isJiraInDescription());
+        assertTrue(pullRequest.isJiraInDescription());
     }
 
     @Test
@@ -46,9 +92,9 @@ public class TestRedhatPullRequest {
         PullRequest pr = new PullRequest();
         pr.setBody("Testing JIRA matching.");
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertFalse(pullRequest.isJiraInDescription());
+        assertFalse(pullRequest.isJiraInDescription());
     }
 
     @Test
@@ -56,9 +102,9 @@ public class TestRedhatPullRequest {
         PullRequest pr = new PullRequest();
         pr.setBody("Testing Upstream matching. Upstream: https://github.com/uselessorg/jboss-eap/pull/2");
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertFalse(pullRequest.getRelatedPullRequests().isEmpty());
+        assertFalse(pullRequest.getRelatedPullRequests().isEmpty());
     }
 
     @Test
@@ -66,9 +112,9 @@ public class TestRedhatPullRequest {
         PullRequest pr = new PullRequest();
         pr.setBody("Testing Upstream matching.");
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertTrue(pullRequest.getRelatedPullRequests().isEmpty());
+        assertTrue(pullRequest.getRelatedPullRequests().isEmpty());
     }
 
     @Test
@@ -76,9 +122,9 @@ public class TestRedhatPullRequest {
         PullRequest pr = new PullRequest();
         pr.setBody("Testing Upstream matching. Upstream not required.");
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertTrue(pullRequest.isUpstreamRequired());
+        assertTrue(pullRequest.isUpstreamRequired());
     }
 
     @Test
@@ -86,9 +132,9 @@ public class TestRedhatPullRequest {
         PullRequest pr = new PullRequest();
         pr.setBody("Testing Upstream matching. Upstream not required.");
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertTrue(pullRequest.isGithubMilestoneNullOrDefault());
+        assertTrue(pullRequest.isGithubMilestoneNullOrDefault());
     }
 
     @Test
@@ -97,9 +143,9 @@ public class TestRedhatPullRequest {
         pr.setBody("Testing Upstream matching. Upstream not required.");
         pr.setMilestone(new Milestone().setTitle("6.x"));
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertTrue(pullRequest.isGithubMilestoneNullOrDefault());
+        assertTrue(pullRequest.isGithubMilestoneNullOrDefault());
     }
 
     @Test
@@ -108,8 +154,8 @@ public class TestRedhatPullRequest {
         pr.setBody("Testing Upstream matching. Upstream not required.");
         pr.setMilestone(new Milestone().setTitle("6.2.2"));
 
-        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, new MockBZHelper(), new MockGithubHelper());
+        RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        AssertJUnit.assertFalse(pullRequest.isGithubMilestoneNullOrDefault());
+        assertFalse(pullRequest.isGithubMilestoneNullOrDefault());
     }
 }

@@ -127,7 +127,7 @@ public abstract class BasePullEvaluator implements PullEvaluator {
 
         final Issue issue = issues.get(0);
         if (issue instanceof Bug) {
-            return pull.updateBugzillaStatus((Bug) issue, Bug.Status.MODIFIED);
+            return pull.updateStatus(issue, Bug.Status.MODIFIED);
         } else if (issue instanceof JiraIssue) {
             return updateJiraAsMerged((JiraIssue) issue);
         } else {
@@ -192,18 +192,21 @@ public abstract class BasePullEvaluator implements PullEvaluator {
     }
 
     protected List<Bug> getBugsThatMatchFixVersion(RedhatPullRequest pullRequest) {
-        List<Bug> bugs = pullRequest.getBugs();
+        List<Issue> issues = pullRequest.getIssues();
 
         final List<Bug> returnBugs = new ArrayList<Bug>();
-        for (Bug bug : bugs) {
-            for (String target : bug.getTargetRelease()) {
-                if (target.equals(issueFixVersion)) {
-                    returnBugs.add(bug);
-                    break;
+        for (Issue i : issues) {
+            // Check if it is a bug, then make a yucky cast.
+            if (i instanceof Bug) {
+                Bug bug = (Bug) i ;
+                for (String target : bug.getTargetRelease()) {
+                    if (target.equals(issueFixVersion)) {
+                        returnBugs.add(bug);
+                        break;
+                    }
                 }
             }
         }
-
         return returnBugs;
     }
 

@@ -21,6 +21,8 @@
  */
 package org.jboss.pull.shared.connectors.bugzilla;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -66,6 +68,7 @@ public class Bug implements Issue {
     private Set<String> targetRelease;
     private String summary;
     private String description;
+    private URL url;        // The issue URL.
 
     public Bug(Map<String, Object> bugMap) {
         id = (Integer) bugMap.get("id");
@@ -151,6 +154,12 @@ public class Bug implements Issue {
 
         summary = (String) bugMap.get("summary");
         description = (String) bugMap.get("description");
+
+        try {
+            this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
+        } catch (MalformedURLException malformed) {
+            System.err.printf("Invalid URL formed: %s. \n", malformed);
+        }
     }
 
     public int getId() {
@@ -245,8 +254,8 @@ public class Bug implements Issue {
     }
 
     @Override
-    public String getUrl() {
-        return "https://bugzilla.redhat.com/show_bug.cgi?id=" + id;
+    public URL getUrl() {
+        return this.url;
     }
 
     @Override
