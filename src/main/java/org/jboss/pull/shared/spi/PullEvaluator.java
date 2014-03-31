@@ -83,7 +83,6 @@ public interface PullEvaluator {
      */
     boolean updateIssueAsMerged(final RedhatPullRequest pull);
 
-
     /**
      * Result of the evaluation process of a pull request.
      * It holds a simple boolean whether the pull request can be merged
@@ -105,6 +104,12 @@ public interface PullEvaluator {
         public Result(final boolean mergeable, final String... description) {
             this.mergeable = mergeable;
             this.description = new ArrayList<String>(Arrays.asList(description));
+        }
+
+        public Result changeResult(boolean mergeable, String description){
+            setMergeable(mergeable);
+            addDescription(description);
+            return this;
         }
 
         public boolean isMergeable() {
