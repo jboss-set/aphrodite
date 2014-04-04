@@ -79,7 +79,9 @@ public class RedhatPullRequest {
         for (URL url: urls) {
             if (bzHelper.accepts(url)) {
                 Bug bug = (Bug) bzHelper.findIssue(url);
-                bugs.add(bug);
+                if (bug != null) {
+                    bugs.add(bug);
+                }
             }
         }
         return bugs;
@@ -161,11 +163,24 @@ public class RedhatPullRequest {
 
     /**
      * Searches for last github comment that contains the pattern.
+     *
      * @param pattern - REGEX pattern to match against comment body.
      * @return Last comment that matches the pattern or null if no comments match.
      */
     public Comment getLastMatchingGithubComment(Pattern pattern) {
         return ghHelper.getLastMatchingComment(pullRequest, pattern);
+    }
+
+    /**
+     * Returns true if PR link is in the description
+     * @return
+     */
+    public boolean hasRelatedPullRequestInDescription() {
+        if (relatedPullRequests != null) {
+            return relatedPullRequests.size() > 0;
+        }else {
+            return (relatedPullRequests = getPRFromDescription()).size() > 0;
+        }
     }
 
     public List<RedhatPullRequest> getRelatedPullRequests() {
@@ -217,23 +232,26 @@ public class RedhatPullRequest {
 
     /**
      * Returns true if BZ link is in the PR description
+     *
      * @return
      */
-    public boolean isBZInDescription(){
+    public boolean hasBZInDescription() {
         return bugs.size() > 0;
     }
 
     /**
      * Returns true if JIRA link is in the PR description
+     *
      * @return
      */
-    public boolean isJiraInDescription(){
+    public boolean hasJiraInDescription() {
         return jiraIssues.size() > 0;
     }
 
-    public boolean isUpstreamRequired(){
+    public boolean isUpstreamRequired() {
         return !Constants.UPSTREAM_NOT_REQUIRED.matcher(pullRequest.getBody()).find();
     }
+
     public BuildResult getBuildResult() {
         BuildResult buildResult = BuildResult.UNKNOWN;
         Comment comment = ghHelper.getLastMatchingComment(pullRequest, Constants.BUILD_OUTCOME);
