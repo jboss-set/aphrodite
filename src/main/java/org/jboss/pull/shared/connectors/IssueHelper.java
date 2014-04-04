@@ -36,7 +36,7 @@ public interface IssueHelper {
      * {@link #accepts(java.net.URL)} is called first.
      *
      * @param url - the issue URL
-     * @return - the corresponding {@link org.jboss.pull.shared.connectors.common.Issue}
+     * @return - the corresponding {@link org.jboss.pull.shared.connectors.common.Issue} or null if no Issue is found
      * @throws java.lang.IllegalArgumentException - if the String is incorrect. This will be if the remote server
      * rejects the request.
      */
