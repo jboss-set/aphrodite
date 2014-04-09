@@ -54,15 +54,14 @@ public class RedhatPullRequest {
     private IssueHelper jiraHelper;
     private GithubHelper ghHelper;
 
-    public RedhatPullRequest(PullRequest pullRequest, IssueHelper bzHelper, IssueHelper jiraHelper,
-                             GithubHelper ghHelper) {
+    public RedhatPullRequest(PullRequest pullRequest, IssueHelper bzHelper, IssueHelper jiraHelper, GithubHelper ghHelper) {
         this.pullRequest = pullRequest;
         if (bzHelper instanceof BZHelper && jiraHelper instanceof JiraHelper) {
             this.bzHelper = bzHelper;
             this.jiraHelper = jiraHelper;
         } else {
-            throw new IllegalArgumentException("The first IssueHelper parameter has to be an instance of BZHelper and" +
-                    " the second IssueHelper parameter must be an instance of JiraHelper.");
+            throw new IllegalArgumentException("The first IssueHelper parameter has to be an instance of BZHelper and"
+                    + " the second IssueHelper parameter must be an instance of JiraHelper.");
         }
 
         this.ghHelper = ghHelper;
@@ -73,10 +72,19 @@ public class RedhatPullRequest {
         // Can't call getPRFromDescription here. If two PR's reference each other a loop occurs.
     }
 
+    /**
+     * Returns true if BZ link is in the PR description. Does not verify BZ exists.
+     *
+     * @return
+     */
+    public boolean hasBZLinkInDescription() {
+        return extractURLs(Constants.BUGZILLA_BASE_ID, Constants.BUGZILLA_ID_PATTERN).size() > 0;
+    }
+
     private List<Issue> getBugsFromDescription() {
         final List<URL> urls = extractURLs(Constants.BUGZILLA_BASE_ID, Constants.BUGZILLA_ID_PATTERN);
         final ArrayList<Issue> bugs = new ArrayList<Issue>();
-        for (URL url: urls) {
+        for (URL url : urls) {
             if (bzHelper.accepts(url)) {
                 Bug bug = (Bug) bzHelper.findIssue(url);
                 if (bug != null) {
@@ -87,13 +95,24 @@ public class RedhatPullRequest {
         return bugs;
     }
 
+    /**
+     * Returns true if JIRA link is in the PR description. Does not verify JIRA exists.
+     *
+     * @return
+     */
+    public boolean hasJiraLinkInDescription() {
+        return extractURLs(Constants.JIRA_BASE_BROWSE, Constants.RELATED_JIRA_PATTERN).size() > 0;
+    }
+
     private List<Issue> getJiraIssuesFromDescription() {
         final List<URL> urls = extractURLs(Constants.JIRA_BASE_BROWSE, Constants.RELATED_JIRA_PATTERN);
         final List<Issue> jiraIssues = new ArrayList<Issue>();
         for (URL url : urls) {
             if (jiraHelper.accepts(url)) {
                 JiraIssue jiraIssue = (JiraIssue) jiraHelper.findIssue(url);
-                jiraIssues.add(jiraIssue);
+                if (jiraIssue != null) {
+                    jiraIssues.add(jiraIssue);
+                }
             }
         }
         return jiraIssues;
@@ -112,6 +131,91 @@ public class RedhatPullRequest {
             }
         }
         return urls;
+    }
+
+    public boolean hasBugLinkInDescription() {
+        return (hasBZLinkInDescription() || hasJiraLinkInDescription());
+    }
+
+    /**
+     * Returns a merged list of both Bugzilla and Jira Issues found in the body of a Pull Request.
+     *
+     * @return
+     */
+    public List<Issue> getIssues() {
+        List<Issue> toReturn = new ArrayList<Issue>(bugs.size() + jiraIssues.size());
+        toReturn.addAll(bugs);
+        toReturn.addAll(jiraIssues);
+        return toReturn;
+    }
+
+    /**
+     * Returns true if PR link is in the description
+     *
+     * @return
+     */
+    public boolean hasRelatedPullRequestInDescription() {
+        if (relatedPullRequests != null) {
+            return relatedPullRequests.size() > 0;
+        } else {
+            return (relatedPullRequests = getPRFromDescription()).size() > 0;
+        }
+    }
+
+    public List<RedhatPullRequest> getRelatedPullRequests() {
+        if (relatedPullRequests != null) {
+            return relatedPullRequests;
+        } else {
+            return relatedPullRequests = getPRFromDescription();
+        }
+    }
+
+    public boolean isUpstreamRequired() {
+        return !Constants.UPSTREAM_NOT_REQUIRED.matcher(pullRequest.getBody()).find();
+    }
+
+    private List<RedhatPullRequest> getPRFromDescription() {
+        Matcher matcher = Constants.RELATED_PR_PATTERN.matcher(getGithubDescription());
+
+        List<RedhatPullRequest> relatedPullRequests = new ArrayList<RedhatPullRequest>();
+        while (matcher.find()) {
+            PullRequest relatedPullRequest = ghHelper.getPullRequest(matcher.group(1), matcher.group(2),
+                    Integer.valueOf(matcher.group(3)));
+            if (relatedPullRequest != null) {
+                relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, jiraHelper, ghHelper));
+            }
+        }
+
+        Matcher abbreviatedMatcher = Constants.ABBREVIATED_RELATED_PR_PATTERN.matcher(getGithubDescription());
+
+        while (abbreviatedMatcher.find()) {
+            String match = abbreviatedMatcher.group();
+            System.out.println("Match: " + match);
+            Matcher abbreviatedExternalMatcher = Constants.ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO.matcher(match);
+
+            if (abbreviatedExternalMatcher.find()) {
+                System.out.println("Attempting External Match: " + match);
+                PullRequest relatedPullRequest = ghHelper.getPullRequest(abbreviatedExternalMatcher.group(1),
+                        abbreviatedExternalMatcher.group(2), Integer.valueOf(abbreviatedExternalMatcher.group(3)));
+                if (relatedPullRequest != null) {
+                    System.out.println("External Match Found: " + match);
+                    relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, jiraHelper, ghHelper));
+                    continue;
+                }
+
+            }
+
+            System.out.println("Attempting Internal Match: " + match);
+            PullRequest relatedPullRequest = ghHelper.getPullRequest(getOrganization(), getRepository(),
+                    Integer.valueOf(abbreviatedMatcher.group(2)));
+            if (relatedPullRequest != null) {
+                System.out.println("Internal Match Found: " + match);
+                relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, jiraHelper, ghHelper));
+            }
+
+        }
+
+        return relatedPullRequests;
     }
 
     public int getNumber() {
@@ -161,49 +265,8 @@ public class RedhatPullRequest {
         return pullRequest.getUpdatedAt();
     }
 
-    /**
-     * Searches for last github comment that contains the pattern.
-     *
-     * @param pattern - REGEX pattern to match against comment body.
-     * @return Last comment that matches the pattern or null if no comments match.
-     */
     public Comment getLastMatchingGithubComment(Pattern pattern) {
         return ghHelper.getLastMatchingComment(pullRequest, pattern);
-    }
-
-    /**
-     * Returns true if PR link is in the description
-     * @return
-     */
-    public boolean hasRelatedPullRequestInDescription() {
-        if (relatedPullRequests != null) {
-            return relatedPullRequests.size() > 0;
-        }else {
-            return (relatedPullRequests = getPRFromDescription()).size() > 0;
-        }
-    }
-
-    public List<RedhatPullRequest> getRelatedPullRequests() {
-        if (relatedPullRequests != null) {
-            return relatedPullRequests;
-        } else {
-            return relatedPullRequests = getPRFromDescription();
-        }
-    }
-
-    private List<RedhatPullRequest> getPRFromDescription() {
-        Matcher matcher = Constants.RELATED_PR_PATTERN.matcher(getGithubDescription());
-
-        List<RedhatPullRequest> relatedPullRequests = new ArrayList<RedhatPullRequest>();
-        while (matcher.find()) {
-            PullRequest relatedPullRequest = ghHelper.getPullRequest(matcher.group(1), matcher.group(2),
-                    Integer.valueOf(matcher.group(3)));
-            if (relatedPullRequest != null) {
-                relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, jiraHelper, ghHelper));
-            }
-        }
-
-        return relatedPullRequests;
     }
 
     public String getState() {
@@ -216,40 +279,6 @@ public class RedhatPullRequest {
 
     public boolean isMerged() {
         return ghHelper.isMerged(pullRequest);
-    }
-
-    /**
-     * Returns a merged list of both Bugzilla and Jira Issues found in the body of a Pull Request.
-     *
-     * @return
-     */
-    public List<Issue> getIssues() {
-        List<Issue> toReturn = new ArrayList<Issue>(bugs.size() + jiraIssues.size());
-        toReturn.addAll(bugs);
-        toReturn.addAll(jiraIssues);
-        return toReturn;
-    }
-
-    /**
-     * Returns true if BZ link is in the PR description
-     *
-     * @return
-     */
-    public boolean hasBZInDescription() {
-        return bugs.size() > 0;
-    }
-
-    /**
-     * Returns true if JIRA link is in the PR description
-     *
-     * @return
-     */
-    public boolean hasJiraInDescription() {
-        return jiraIssues.size() > 0;
-    }
-
-    public boolean isUpstreamRequired() {
-        return !Constants.UPSTREAM_NOT_REQUIRED.matcher(pullRequest.getBody()).find();
     }
 
     public BuildResult getBuildResult() {
@@ -285,18 +314,19 @@ public class RedhatPullRequest {
     public boolean updateStatus(Issue issue, Enum status) throws IllegalArgumentException {
         if (issue instanceof Bug) {
             // Do BZ stuff
-            if (bzHelper.accepts(issue.getUrl())) return bzHelper.updateStatus(issue.getUrl(), status);
+            if (bzHelper.accepts(issue.getUrl()))
+                return bzHelper.updateStatus(issue.getUrl(), status);
         } else if (issue instanceof JiraIssue) {
             // Do Jira stuff
-            if (jiraHelper.accepts(issue.getUrl())) return jiraHelper.updateStatus(issue.getUrl(), status);
+            if (jiraHelper.accepts(issue.getUrl()))
+                return jiraHelper.updateStatus(issue.getUrl(), status);
         } else {
-            throw new IllegalArgumentException("Your issue implementation has to be an instance of a Bug or " +
-                    "JiraIssue");
+            throw new IllegalArgumentException("Your issue implementation has to be an instance of a Bug or " + "JiraIssue");
         }
         return false;
     }
 
-    public boolean isGithubMilestoneNullOrDefault(){
+    public boolean isGithubMilestoneNullOrDefault() {
         return (pullRequest.getMilestone() == null || pullRequest.getMilestone().getTitle().contains("x"));
     }
 

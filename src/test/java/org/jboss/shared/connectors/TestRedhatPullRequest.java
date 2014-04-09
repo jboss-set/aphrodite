@@ -62,7 +62,7 @@ public class TestRedhatPullRequest {
 
         RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        assertTrue(pullRequest.hasBZInDescription());
+        assertTrue(pullRequest.hasBZLinkInDescription());
     }
 
     @Test
@@ -72,7 +72,7 @@ public class TestRedhatPullRequest {
 
         RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        assertFalse(pullRequest.hasBZInDescription());
+        assertFalse(pullRequest.hasBZLinkInDescription());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class TestRedhatPullRequest {
 
         RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        assertTrue(pullRequest.hasJiraInDescription());
+        assertTrue(pullRequest.hasJiraLinkInDescription());
     }
 
     @Test
@@ -93,7 +93,7 @@ public class TestRedhatPullRequest {
 
         RedhatPullRequest pullRequest = new RedhatPullRequest(pr, bzHelper, jiraHelper, githubHelper);
 
-        assertFalse(pullRequest.hasJiraInDescription());
+        assertFalse(pullRequest.hasJiraLinkInDescription());
     }
 
     @Test
