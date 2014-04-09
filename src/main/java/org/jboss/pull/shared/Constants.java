@@ -31,21 +31,39 @@ import java.util.regex.Pattern;
 public class Constants {
 
     // Regexp patterns
-    public static final Pattern BUILD_OUTCOME = Pattern.compile("outcome was (\\*\\*)?+(SUCCESS|FAILURE|ABORTED)(\\*\\*)?+ using a merge of ([a-z0-9]+)", Pattern.CASE_INSENSITIVE);
-    public static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern FINISHED = Pattern.compile(".*Build.*merging.*has\\W+been\\W+finished.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern MERGE = Pattern.compile(".*(re)?merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static final Pattern FORCE_MERGE = Pattern.compile(".*force\\W+merge\\W+this.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static final Pattern BUILD_OUTCOME = Pattern.compile(
+            "outcome was (\\*\\*)?+(SUCCESS|FAILURE|ABORTED)(\\*\\*)?+ using a merge of ([a-z0-9]+)", Pattern.CASE_INSENSITIVE);
+    public static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static final Pattern FINISHED = Pattern.compile(".*Build.*merging.*has\\W+been\\W+finished.*",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static final Pattern MERGE = Pattern.compile(".*(re)?merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE
+            | Pattern.DOTALL);
+    public static final Pattern FORCE_MERGE = Pattern.compile(".*force\\W+merge\\W+this.*", Pattern.CASE_INSENSITIVE
+            | Pattern.DOTALL);
 
     public static final Pattern UPSTREAM_NOT_REQUIRED = Pattern.compile(".*no.*upstream.*required.*", Pattern.CASE_INSENSITIVE);
-    public static final Pattern BUGZILLA_ID_PATTERN = Pattern.compile("bugzilla\\.redhat\\.com/show_bug\\.cgi\\?id=(\\d+)", Pattern.CASE_INSENSITIVE);
-    public static final Pattern RELATED_JIRA_PATTERN = Pattern.compile(".*issues\\.jboss\\.org/browse/([a-zA-Z_0-9-]*)", Pattern.CASE_INSENSITIVE);
+    public static final Pattern BUGZILLA_ID_PATTERN = Pattern.compile("bugzilla\\.redhat\\.com/show_bug\\.cgi\\?id=(\\d+)",
+            Pattern.CASE_INSENSITIVE);
+    public static final Pattern RELATED_JIRA_PATTERN = Pattern.compile(".*issues\\.jboss\\.org/browse/([a-zA-Z_0-9-]*)",
+            Pattern.CASE_INSENSITIVE);
 
     // This has to match two patterns
     // * https://github.com/uselessorg/jboss-eap/pull/4
     // * https://api.github.com/repos/uselessorg/jboss-eap/pulls/4
-    public static final Pattern RELATED_PR_PATTERN = Pattern.compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
+    public static final Pattern RELATED_PR_PATTERN = Pattern.compile(
+            ".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
+    public static final Pattern ABBREVIATED_RELATED_PR_PATTERN = Pattern.compile("([a-zA-Z_0-9-//]*)#(\\d+)",
+            Pattern.CASE_INSENSITIVE);
+    public static final Pattern ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO = Pattern.compile(
+            "([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
+
+    // 'Related PR' should also match on commit link
+    // * https://github.com/jbossas/jboss-eap/commit/4c7b374e3960791ed4cd4f0cf9a02c38b0bf7d62
+//    public static final Pattern COMMIT_RELATED_PR_PATTERN = Pattern.compile(
+//            ".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/commit/([a-zA-Z_0-9-]*)", Pattern.CASE_INSENSITIVE);
 
     // URL bases
     public static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";

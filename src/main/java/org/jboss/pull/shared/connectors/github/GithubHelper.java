@@ -63,7 +63,7 @@ public class GithubHelper {
     /**
      * Exists to create mock objects for testing
      */
-    public GithubHelper(){
+    public GithubHelper() {
         GITHUB_ORGANIZATION = null;
         GITHUB_REPO = null;
         GITHUB_LOGIN = null;
@@ -104,13 +104,17 @@ public class GithubHelper {
         }
     }
 
-    public List<RepositoryBranch> getBranches(){
-        List<RepositoryBranch> branches = new ArrayList<RepositoryBranch>();
-        try {
-            branches = repositoryService.getBranches(repository);
-        } catch (IOException e) {
-            System.err.println("Error retrieving branches from repository");
-            e.printStackTrace();
+    List<RepositoryBranch> branches = null;
+
+    public List<RepositoryBranch> getBranches() {
+        if (branches == null) {
+            branches = new ArrayList<RepositoryBranch>();
+            try {
+                branches = repositoryService.getBranches(repository);
+            } catch (IOException e) {
+                System.err.println("Error retrieving branches from repository");
+                e.printStackTrace();
+            }
         }
         return branches;
     }
