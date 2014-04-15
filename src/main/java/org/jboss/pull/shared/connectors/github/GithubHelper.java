@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.IRepositoryIdProvider;
+import org.eclipse.egit.github.core.Label;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
@@ -39,6 +40,7 @@ import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
+import org.eclipse.egit.github.core.service.LabelService;
 import org.eclipse.egit.github.core.service.MilestoneService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
@@ -59,23 +61,7 @@ public class GithubHelper {
     private final PullRequestService pullRequestService;
     private final MilestoneService milestoneService;
     private final RepositoryService repositoryService;
-
-    /**
-     * Exists to create mock objects for testing
-     */
-    public GithubHelper() {
-        GITHUB_ORGANIZATION = null;
-        GITHUB_REPO = null;
-        GITHUB_LOGIN = null;
-        GITHUB_TOKEN = null;
-
-        repository = null;
-        commitService = null;
-        issueService = null;
-        pullRequestService = null;
-        milestoneService = null;
-        repositoryService = null;
-    }
+    private final LabelService labelService;
 
     public GithubHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
         try {
@@ -96,6 +82,7 @@ public class GithubHelper {
             pullRequestService = new PullRequestService(client);
             milestoneService = new MilestoneService(client);
             repositoryService = new RepositoryService(client);
+            labelService = new LabelService(client);
 
         } catch (Exception e) {
             System.err.printf("Cannot initialize: %s\n", e);
@@ -171,15 +158,18 @@ public class GithubHelper {
         }
     }
 
+    private List<Milestone> milestones = null;
+
     public List<Milestone> getMilestones() {
-        List<Milestone> milestones;
-        try {
-            milestones = milestoneService.getMilestones(repository, "open");
-            milestones.addAll(milestoneService.getMilestones(repository, "closed"));
-        } catch (IOException e) {
-            System.err.printf("Problem getting milestones");
-            e.printStackTrace(System.err);
+        if (milestones == null) {
             milestones = new ArrayList<Milestone>();
+            try {
+                milestones = milestoneService.getMilestones(repository, "open");
+                milestones.addAll(milestoneService.getMilestones(repository, "closed"));
+            } catch (IOException e) {
+                System.err.printf("Problem getting milestones");
+                e.printStackTrace(System.err);
+            }
         }
         return milestones;
     }
@@ -284,5 +274,51 @@ public class GithubHelper {
         }
 
         return new ArrayList<Comment>();
+    }
+
+    public List<Label> getLabels(PullRequest pullRequest) {
+        Issue issue = getIssue(pullRequest);
+        if (issue != null) {
+            return issue.getLabels();
+        }
+        return new ArrayList<Label>();
+    }
+
+    public Label getLabel(String title) {
+        try {
+            return labelService.getLabel(repository, title);
+        } catch (IOException e) {
+            System.err.println("Error trying to get label '" + title + "'");
+        }
+        return null;
+    }
+
+    public void addLabel(PullRequest pullRequest, Label label) {
+
+        Issue issue = getIssue(pullRequest);
+
+        List<Label> labels = issue.getLabels();
+        labels.add(label);
+        issue.setLabels(labels);
+
+        editIssue(issue);
+
+    }
+
+    public void removeLabel(PullRequest pullRequest, Label newLabel) {
+
+        Issue issue = getIssue(pullRequest);
+
+        List<Label> labels = issue.getLabels();
+        for( Label label : issue.getLabels() ){
+            if( label.getName().equals(newLabel.getName())){
+                labels.remove(label);
+                break;
+            }
+        }
+        issue.setLabels(labels);
+
+        editIssue(issue);
+
     }
 }
