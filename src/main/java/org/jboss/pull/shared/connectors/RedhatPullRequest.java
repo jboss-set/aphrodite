@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Comment;
+import org.eclipse.egit.github.core.Label;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.User;
@@ -155,11 +156,16 @@ public class RedhatPullRequest {
      * @return
      */
     public boolean hasRelatedPullRequestInDescription() {
-        if (relatedPullRequests != null) {
-            return relatedPullRequests.size() > 0;
-        } else {
-            return (relatedPullRequests = getPRFromDescription()).size() > 0;
+        boolean retVal = false;
+        if (Constants.RELATED_PR_PATTERN.matcher(getGithubDescription()).find()) {
+            retVal = true;
         }
+
+        if (Constants.ABBREVIATED_RELATED_PR_PATTERN.matcher(getGithubDescription()).find()) {
+            retVal = true;
+        }
+
+        return retVal;
     }
 
     public List<RedhatPullRequest> getRelatedPullRequests() {
@@ -330,4 +336,14 @@ public class RedhatPullRequest {
         return (pullRequest.getMilestone() == null || pullRequest.getMilestone().getTitle().contains("x"));
     }
 
+    public List<Label> getGithubLabels() {
+        return ghHelper.getLabels(pullRequest);
+    }
+
+    public void addLabel(Label newLabel) {
+        ghHelper.addLabel(pullRequest, newLabel);
+    }
+    public void removeLabel(Label newLabel) {
+        ghHelper.removeLabel(pullRequest, newLabel);
+    }
 }

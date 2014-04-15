@@ -39,6 +39,7 @@ public interface PullEvaluator {
 
     /**
      * Initializes the evaluator.
+     *
      * @param helper {@code PullHelper} instance
      * @param configuration configuration properties
      * @param version issueFixVersion name related to this evaluator in the configuration properties
@@ -47,22 +48,23 @@ public interface PullEvaluator {
 
     /**
      * Returns the github branch this evaluator is dedicated to.
+     *
      * @return the target branch this evaluator is dedicated to.
      */
     String getTargetBranch();
 
     /**
-     * Evaluates if the given pull request is mergeable according to
-     * the rules of the relevant EAP issueFixVersion.
+     * Evaluates if the given pull request is mergeable according to the rules of the relevant EAP issueFixVersion.
+     *
      * @param pull a pull request to be evaluated
      * @return {@code Result} result of the evaluation
      */
     Result isMergeable(final RedhatPullRequest pull);
 
     /**
-     * Returns the issue(-s) related to the given pull request.
-     * It can either be a {@code JiraIssue} if the pull request is tracked in Jira
-     * or a {@code Bug} if it is tracked by Bugzilla or a list of both.
+     * Returns the issue(-s) related to the given pull request. It can either be a {@code JiraIssue} if the pull request is
+     * tracked in Jira or a {@code Bug} if it is tracked by Bugzilla or a list of both.
+     *
      * @param pull a pull request
      * @return the issue(-s) related to the pull request.
      */
@@ -70,23 +72,24 @@ public interface PullEvaluator {
 
     /**
      * Returns the upstream pull request(-s) related to the given pull request.
+     *
      * @param pull a pull request
      * @return the upstream pull request(-s) related to the pull request.
      */
     List<RedhatPullRequest> getUpstreamPullRequest(final RedhatPullRequest pull);
 
     /**
-     * Marks the issue related to the given pull request merged.
-     * Typically in Bugzilla to state MODIFIED, in JIRA to state Resolved.
+     * Marks the issue related to the given pull request merged. Typically in Bugzilla to state MODIFIED, in JIRA to state
+     * Resolved.
+     *
      * @param pull a pull request
      * @return true if the issue has been updated, false otherwise
      */
     boolean updateIssueAsMerged(final RedhatPullRequest pull);
 
     /**
-     * Result of the evaluation process of a pull request.
-     * It holds a simple boolean whether the pull request can be merged
-     * and a list of descriptions why it can/can't be done so.
+     * Result of the evaluation process of a pull request. It holds a simple boolean whether the pull request can be merged and
+     * a list of descriptions why it can/can't be done so.
      */
     public class Result {
         private boolean mergeable;
@@ -106,7 +109,7 @@ public interface PullEvaluator {
             this.description = new ArrayList<String>(Arrays.asList(description));
         }
 
-        public Result changeResult(boolean mergeable, String description){
+        public Result changeResult(boolean mergeable, String description) {
             setMergeable(mergeable);
             addDescription(description);
             return this;
@@ -134,6 +137,7 @@ public interface PullEvaluator {
 
         /**
          * Logical conjunction with another {@code Result} instance.
+         *
          * @param other
          * @return
          */

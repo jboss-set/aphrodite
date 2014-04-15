@@ -22,6 +22,7 @@
 package org.jboss.pull.shared;
 
 import org.eclipse.egit.github.core.Comment;
+import org.eclipse.egit.github.core.Label;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
@@ -54,7 +55,6 @@ public class PullHelper {
     private GithubHelper ghHelper;
     private IssueHelper bzHelper;
     private IssueHelper jiraHelper;
-
 
     private final Properties props;
 
@@ -166,7 +166,8 @@ public class PullHelper {
 
             if (result == ProcessorPullState.INCOMPLETE && !comments.isEmpty()) {
                 Comment lastComment = comments.get(comments.size() - 1);
-                if (Constants.FORCE_MERGE.matcher(lastComment.getBody()).matches() && isAdminUser(lastComment.getUser().getLogin()))
+                if (Constants.FORCE_MERGE.matcher(lastComment.getBody()).matches()
+                        && isAdminUser(lastComment.getUser().getLogin()))
                     result = ProcessorPullState.MERGEABLE;
             }
         }
@@ -176,6 +177,10 @@ public class PullHelper {
 
     public boolean isAdminUser(final String username) {
         return adminList.has(username);
+    }
+
+    public Label getLabel(String title) {
+        return ghHelper.getLabel(title);
     }
 
 }
