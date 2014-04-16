@@ -48,7 +48,7 @@ public class PullEvaluatorFacade {
     private final Map<String, PullEvaluator> evaluators = new HashMap<String, PullEvaluator>();
 
     public PullEvaluatorFacade(final PullHelper helper, final Properties configuration) {
-        final String versions = Util.require(configuration, "versions");
+        final String versions = Util.get(configuration, "versions");
 
         final StringTokenizer tokenizer = new StringTokenizer(versions, ", ");
         while (tokenizer.hasMoreTokens()) {
