@@ -41,7 +41,7 @@ import static org.testng.Assert.*;
  *
  * Simple class to setup and test the methods for the {@link org.jboss.pull.shared.connectors.jira.JiraHelper}
  */
-@Test
+@Test(groups="connection")
 public class JiraIssueTest {
 
     private static final String BASE_FILE_PROPERTY = "configuration.base.file";
