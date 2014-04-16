@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -12,7 +11,7 @@
 
 	<groupId>org.jboss.jbossset</groupId>
 	<artifactId>pull-shared</artifactId>
-	<version>0.3-SNAPSHOT</version>
+	<version>0.3.Final</version>
 	<packaging>jar</packaging>
 	<name>Pull Shared</name>
 
@@ -37,7 +36,7 @@
 		<connection>scm:git:git://github.com/jboss-set/pull-shared.git</connection>
 		<developerConnection>scm:git:git@github.com:jboss-set/pull-shared.git</developerConnection>
 		<url>https://github.com/jboss-set/pull-shared</url>
-		<tag>HEAD</tag>
+		<tag>pull-shared-0.3.Final</tag>
 	</scm>
 
 	<build>
