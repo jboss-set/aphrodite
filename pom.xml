@@ -86,9 +86,6 @@
 								<excludedGroups>connection</excludedGroups>
 							</configuration>
 						</execution>
-						<execution>
-							<id>all-tests</id>
-						</execution>
 					</executions>
 				</plugin>
 			</plugins>
