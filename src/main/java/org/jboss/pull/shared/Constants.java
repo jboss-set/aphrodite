@@ -62,8 +62,8 @@ public class Constants {
 
     // 'Related PR' should also match on commit link
     // * https://github.com/jbossas/jboss-eap/commit/4c7b374e3960791ed4cd4f0cf9a02c38b0bf7d62
-//    public static final Pattern COMMIT_RELATED_PR_PATTERN = Pattern.compile(
-//            ".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/commit/([a-zA-Z_0-9-]*)", Pattern.CASE_INSENSITIVE);
+    public static final Pattern COMMIT_RELATED_PR_PATTERN = Pattern.compile(
+            ".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/commit/([a-zA-Z_0-9-]*)", Pattern.CASE_INSENSITIVE);
 
     // URL bases
     public static final String BUGZILLA_BASE = "https://bugzilla.redhat.com/";
