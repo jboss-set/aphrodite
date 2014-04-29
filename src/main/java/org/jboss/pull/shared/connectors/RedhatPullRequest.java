@@ -165,6 +165,10 @@ public class RedhatPullRequest {
             retVal = true;
         }
 
+        if (Constants.COMMIT_RELATED_PR_PATTERN.matcher(getGithubDescription()).find()) {
+            retVal = true;
+        }
+
         return retVal;
     }
 
@@ -343,6 +347,7 @@ public class RedhatPullRequest {
     public void addLabel(Label newLabel) {
         ghHelper.addLabel(pullRequest, newLabel);
     }
+
     public void removeLabel(Label newLabel) {
         ghHelper.removeLabel(pullRequest, newLabel);
     }
