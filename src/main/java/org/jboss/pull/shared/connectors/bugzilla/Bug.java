@@ -73,7 +73,7 @@ public class Bug implements Issue {
     // includes attributes for Bug.get execution
     public static final Object[] include_fields = { "id", "alias", "product", "component", "version", "priority", "severity",
             "target_milestone", "creator", "assigned_to", "qa_contact", "docs_contact", "status", "resolution", "flags",
-            "groups", "depends_on", "blocks", "target_release", "summary", "description" };
+            "groups", "depends_on", "blocks", "target_release", "summary", "description", "cf_type" };
 
     private int id;
     private List<String> alias;
@@ -97,6 +97,7 @@ public class Bug implements Issue {
     private String summary;
     private String description;
     private URL url;        // The issue URL.
+    private String type;
 
     public Bug(Map<String, Object> bugMap) {
         id = (Integer) bugMap.get("id");
@@ -182,6 +183,8 @@ public class Bug implements Issue {
 
         summary = (String) bugMap.get("summary");
         description = (String) bugMap.get("description");
+
+        type = (String) bugMap.get("cf_type");
 
         try {
             this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
@@ -279,6 +282,10 @@ public class Bug implements Issue {
     @Override
     public String getNumber() {
         return Integer.toString(id);
+    }
+
+    public String getType() {
+        return type;
     }
 
     @Override
