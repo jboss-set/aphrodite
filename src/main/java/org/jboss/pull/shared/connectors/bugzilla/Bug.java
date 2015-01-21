@@ -298,4 +298,14 @@ public class Bug implements Issue {
         return targetRelease;
     }
 
+
+    @Override
+    public String toString() {
+        return "Bug [id=" + id + ", alias=" + alias + ", product=" + product + ", component=" + component + ", version="
+                + version + ", priority=" + priority + ", severity=" + severity + ", targetMilestone=" + targetMilestone
+                + ", creator=" + creator + ", assignedTo=" + assignedTo + ", qaContact=" + qaContact + ", docsContact="
+                + docsContact + ", status=" + status + ", resolution=" + resolution + ", flags=" + flags + ", groups=" + groups
+                + ", dependsOn=" + dependsOn + ", blocks=" + blocks + ", targetRelease=" + targetRelease + ", summary="
+                + summary + ", description=" + description + ", url=" + url + ", type=" + type + "]";
+    }
 }
