@@ -23,13 +23,14 @@
 package org.jboss.pull.shared.connectors.bugzilla;
 
 
+import java.net.URL;
+import java.util.SortedSet;
+
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
 import org.jboss.pull.shared.connectors.common.AbstractCommonIssueHelper;
 import org.jboss.pull.shared.connectors.common.Issue;
-
-import java.net.URL;
 
 public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
 
@@ -73,5 +74,9 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
         String urlStr = url.toString().trim().toLowerCase();
         int index = urlStr.indexOf("id=");
         return Integer.parseInt(urlStr.substring(index + 3));
+    }
+
+    public SortedSet<Comment> loadCommentsFor(Bug bug) throws IllegalArgumentException {
+        return bugzillaClient.commentsFor(bug);
     }
 }

@@ -25,11 +25,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
-
 import org.jboss.pull.shared.connectors.common.Flag.Status;
 
 public class Bugzilla {
@@ -78,6 +79,7 @@ public class Bugzilla {
 
     /**
      * Gets the bugId from bugzilla.
+     *
      * @param bugzillaId
      * @return - Bug retrieved from Bugzilla, or null if no bug was found.
      */
@@ -246,5 +248,60 @@ public class Bugzilla {
             rpcClient = null;
         }
         return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<Object, Object> fetchData(String method, Object[] params) {
+        try {
+            return (Map<Object, Object>) getClient().execute(method, params);
+        } catch (XmlRpcException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unused")
+    private boolean runCommand(String method, Object[] params) {
+        try {
+            getClient().execute(method, params);
+            return true;
+        } catch (XmlRpcException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private Object[] turnMapIntoObjectArray(Map<Object, Object> params) {
+        Object[] objs = { params };
+        return objs;
+    }
+
+    private Integer[] turnIdIntoAnArray(Integer id) {
+        Integer[] ids = new Integer[1];
+        ids[0] = id;
+        return ids;
+    }
+
+    @SuppressWarnings("unchecked")
+    public SortedSet<Comment> commentsFor(Bug bug) {
+        if (bug == null)
+            throw new IllegalArgumentException("Provided bug instance can't be null.");
+
+        Map<Object, Object> params = getParameterMap();
+        params.put("ids", turnIdIntoAnArray(bug.getId()));
+        Map<Object, Object> results = fetchData("Bug.comments", turnMapIntoObjectArray(params));
+
+        if (results != null && ! results.isEmpty() && results.containsKey("bugs")) {
+            Map<String,Object> bugs = (Map<String, Object>) results.get("bugs");
+            Map<String, Object[]> comments = (Map<String, Object[]>) bugs.get(String.valueOf(bug.getId()));
+            SortedSet<Comment> bugComments = new TreeSet<Comment>();
+            for ( Object[] allComments : comments.values() ) {
+                for ( Object comment: allComments ) {
+                    bugComments.add(new Comment( (Map<String,Object>) comment));
+                }
+            }
+            return bugComments;
+        }
+        return new TreeSet<Comment>();
     }
 }
