@@ -23,8 +23,11 @@ package org.jboss.pull.shared.connectors.bugzilla;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -291,17 +294,81 @@ public class Bugzilla {
         params.put("ids", turnIdIntoAnArray(bug.getId()));
         Map<Object, Object> results = fetchData("Bug.comments", turnMapIntoObjectArray(params));
 
-        if (results != null && ! results.isEmpty() && results.containsKey("bugs")) {
-            Map<String,Object> bugs = (Map<String, Object>) results.get("bugs");
+        if (results != null && !results.isEmpty() && results.containsKey("bugs")) {
+            Map<String, Object> bugs = (Map<String, Object>) results.get("bugs");
             Map<String, Object[]> comments = (Map<String, Object[]>) bugs.get(String.valueOf(bug.getId()));
             SortedSet<Comment> bugComments = new TreeSet<Comment>();
-            for ( Object[] allComments : comments.values() ) {
-                for ( Object comment: allComments ) {
-                    bugComments.add(new Comment( (Map<String,Object>) comment));
+            for (Object[] allComments : comments.values()) {
+                for (Object comment : allComments) {
+                    bugComments.add(new Comment((Map<String, Object>) comment));
                 }
             }
             return bugComments;
         }
         return new TreeSet<Comment>();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, SortedSet<Comment>> commentsFor(Collection<String> bugIds) {
+        if (bugIds == null || bugIds.isEmpty())
+            throw new IllegalArgumentException("Provided bug instance can't be null or empty");
+
+        Map<Object, Object> params = getParameterMap();
+        params.put("ids", bugIds.toArray());
+        Map<Object, Object> results = fetchData("Bug.comments", turnMapIntoObjectArray(params));
+
+        Map<String, SortedSet<Comment>> commentsByBugId = new HashMap<String, SortedSet<Comment>>();
+        if (results != null && !results.isEmpty() && results.containsKey("bugs"))
+            for (Entry<String, Map<String,Object[]>> bug : ((Map<String, Map<String,Object[]>>) results.get("bugs")).entrySet())
+                commentsByBugId.put(bug.getKey(), createComments(bug.getValue().get("comments")));
+        return commentsByBugId;
+    }
+
+    @SuppressWarnings("unchecked")
+    private SortedSet<Comment> createComments(Object[] objects) {
+        SortedSet<Comment> comments = new TreeSet<Comment>();
+        for ( Object comment : objects ) {
+           comments.add(new Comment( (Map<String, Object>) comment));
+        }
+        return comments;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String,Bug> getBugs(Set<String> keySet) {
+        Map<Object, Object> params = getParameterMap();
+        params.put("include_fields", Bug.include_fields);
+        params.put("ids", turnToStringArray(keySet));
+        params.put("permissive", true);
+        Object[] objs = { params };
+
+        Map<String,Bug> results = new HashMap<String, Bug>(keySet.size());
+
+        XmlRpcClient rpcClient = getClient();
+
+        try {
+            Object resultObj = rpcClient.execute("Bug.get", objs);
+            Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
+            Object[] bugs = (Object[]) resultMap.get("bugs");
+            for (int i = 0; i < bugs.length; i++) {
+                Bug bug = new Bug((Map<String, Object>) bugs[i]);
+                results.put(String.valueOf(bug.getId()), bug);
+            }
+        } catch (XmlRpcException e) {
+            System.err.println("Can not get bug with ids : " + keySet);
+            e.printStackTrace(System.err);
+        } finally {
+            rpcClient = null;
+        }
+        return results;
+
+    }
+
+    private String[] turnToStringArray(Set<String> set) {
+        String[] strings = new String[set.size()];
+        int i = 0;
+        for ( String string : set ) {
+            strings[i++] = string;
+        }
+        return strings;
     }
 }

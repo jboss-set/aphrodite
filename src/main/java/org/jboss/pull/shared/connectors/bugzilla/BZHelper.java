@@ -24,6 +24,9 @@ package org.jboss.pull.shared.connectors.bugzilla;
 
 
 import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 import org.jboss.pull.shared.Constants;
@@ -78,5 +81,13 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
 
     public SortedSet<Comment> loadCommentsFor(Bug bug) throws IllegalArgumentException {
         return bugzillaClient.commentsFor(bug);
+    }
+
+    public Map<String, SortedSet<Comment>> loadCommentsFor(Collection<String> bugIds) throws IllegalArgumentException {
+        return bugzillaClient.commentsFor(bugIds);
+    }
+
+    public Map<String, Bug> loadIssues(Set<String> bugIds) throws IllegalArgumentException {
+        return bugzillaClient.getBugs(bugIds);
     }
 }
