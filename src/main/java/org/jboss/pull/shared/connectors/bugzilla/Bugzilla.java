@@ -87,7 +87,6 @@ public class Bugzilla {
         return params;
     }
 
-
     private URL createURL(String url) {
         try {
             return new URL(url);
