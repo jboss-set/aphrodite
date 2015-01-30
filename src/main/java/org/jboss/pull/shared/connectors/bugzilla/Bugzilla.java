@@ -82,6 +82,15 @@ public class Bugzilla {
         return params;
     }
 
+
+    private URL createURL(String url) {
+        try {
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Can not get XmlRpcClient from " + baseURL, e);
+        }
+    }
+
     /**
      * Gets the bugId from bugzilla.
      *
