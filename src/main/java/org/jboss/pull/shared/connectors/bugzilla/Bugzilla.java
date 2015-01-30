@@ -33,6 +33,7 @@ import java.util.TreeSet;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.client.XmlRpcClientConfig;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import org.jboss.pull.shared.connectors.common.Flag.Status;
 
@@ -54,19 +55,20 @@ public class Bugzilla {
      * @return XmlRpcClient
      */
     private XmlRpcClient getClient() {
-        try {
-            String apiURL = baseURL + "xmlrpc.cgi";
-            XmlRpcClient rpcClient;
-            XmlRpcClientConfigImpl config;
-            config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL(apiURL));
-            rpcClient = new XmlRpcClient();
-            rpcClient.setConfig(config);
-            return rpcClient;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Can not get XmlRpcClient from " + baseURL);
-        }
+        String apiURL = baseURL + "xmlrpc.cgi";
+        XmlRpcClient rpcClient;
+        rpcClient = new XmlRpcClient();
+        rpcClient.setConfig(getClientConfig(createURL(apiURL)));
+        return rpcClient;
     }
+
+    private XmlRpcClientConfig getClientConfig(URL apiURL) {
+        XmlRpcClientConfigImpl config;
+        config = new XmlRpcClientConfigImpl();
+        config.setServerURL(apiURL);
+        return config;
+    }
+
 
     /**
      * Get an initialized parameter map with login and password
