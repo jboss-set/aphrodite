@@ -303,20 +303,25 @@ public class Bugzilla {
 
         Map<Object, Object> params = getParameterMap();
         params.put("ids", turnIdIntoAnArray(bug.getId()));
-        Map<Object, Object> results = fetchData("Bug.comments", turnMapIntoObjectArray(params));
+        Map<Object, Object> results = fetchData(METHOD_BUG_COMMENTS, turnMapIntoObjectArray(params));
 
         if (results != null && !results.isEmpty() && results.containsKey("bugs")) {
             Map<String, Object> bugs = (Map<String, Object>) results.get("bugs");
-            Map<String, Object[]> comments = (Map<String, Object[]>) bugs.get(String.valueOf(bug.getId()));
-            SortedSet<Comment> bugComments = new TreeSet<Comment>();
-            for (Object[] allComments : comments.values()) {
-                for (Object comment : allComments) {
-                    bugComments.add(new Comment((Map<String, Object>) comment));
-                }
-            }
-            return bugComments;
+            return buildComments((Map<String, Object[]>) bugs.get(String.valueOf(bug.getId())));
         }
         return new TreeSet<Comment>();
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private SortedSet<Comment> buildComments(Map<String, Object[]> comments) {
+        SortedSet<Comment> bugComments = new TreeSet<Comment>();
+        for (Object[] allComments : comments.values()) {
+            for (Object comment : allComments) {
+                bugComments.add(new Comment((Map<String, Object>) comment));
+            }
+        }
+        return bugComments;
     }
 
     @SuppressWarnings("unchecked")
@@ -377,7 +382,7 @@ public class Bugzilla {
     private String[] turnToStringArray(Set<String> set) {
         String[] strings = new String[set.size()];
         int i = 0;
-        for ( String string : set ) {
+        for (String string : set) {
             strings[i++] = string;
         }
         return strings;
