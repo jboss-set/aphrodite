@@ -43,6 +43,11 @@ public class Bugzilla {
     private String login;
     private String password;
 
+    private static final String METHOD_BUG_UPDATE = "Bug.update";
+    private static final String METHOD_FLAG_UPDATE = "Flag.update";
+    private static final String METHOD_BUG_GET = "Bug.get";
+    private static final String METHOD_BUG_COMMENTS = "Bug.comments";
+
     public Bugzilla(String serverUrl, String login, String password) {
         this.baseURL = serverUrl;
         this.login = login;
@@ -104,29 +109,18 @@ public class Bugzilla {
         params.put("permissive", true);
         Object[] objs = { params };
 
-        XmlRpcClient rpcClient = getClient();
+        Map<Object, Object> resultMap = fetchData(METHOD_BUG_GET, objs);
 
-        try {
-            Object resultObj = rpcClient.execute("Bug.get", objs);
+        Object[] bugs = (Object[]) resultMap.get("bugs");
+        if (bugs.length == 1) {
             @SuppressWarnings("unchecked")
-            Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
-
-            Object[] bugs = (Object[]) resultMap.get("bugs");
-            if (bugs.length == 1) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> bugMap = (Map<String, Object>) bugs[0];
-                Bug bug = new Bug(bugMap);
-                return bug;
-            } else {
-                System.out.println("Zero or more than one bug found with id: " + bugzillaId);
-            }
-        } catch (XmlRpcException e) {
-            System.err.println("Can not get bug with id : " + bugzillaId);
-            e.printStackTrace(System.err);
-        } finally {
-            rpcClient = null;
+            Map<String, Object> bugMap = (Map<String, Object>) bugs[0];
+            Bug bug = new Bug(bugMap);
+            return bug;
+        } else {
+            System.out.println("Zero or more than one bug found with id: " + bugzillaId);
+            return null;
         }
-        return null;
     }
 
     /**
@@ -142,19 +136,7 @@ public class Bugzilla {
         params.put("comment", comment);
         Object[] objs = { params };
 
-        XmlRpcClient rpcClient = getClient();
-
-        if (rpcClient != null) {
-            try {
-                rpcClient.execute("Bug.add_comment", objs);
-                return true;
-            } catch (XmlRpcException e) {
-                e.printStackTrace();
-            } finally {
-                rpcClient = null;
-            }
-        }
-        return false;
+        return runCommand("Bug.update", objs);
     }
 
     /**
@@ -171,16 +153,7 @@ public class Bugzilla {
         params.put("status", status);
         Object[] objParams = { params };
 
-        XmlRpcClient rpcClient = getClient();
-        try {
-            rpcClient.execute("Bug.update", objParams);
-            return true;
-        } catch (XmlRpcException e) {
-            e.printStackTrace();
-        } finally {
-            rpcClient = null;
-        }
-        return false;
+        return runCommand(METHOD_BUG_UPDATE, objParams);
     }
 
     public boolean updateBugzillaTargetMilestone(final int ids, final String taregtMilestone) {
@@ -190,16 +163,7 @@ public class Bugzilla {
         params.put("target_milestone", taregtMilestone);
         Object[] objParams = { params };
 
-        XmlRpcClient rpcClient = getClient();
-        try {
-            rpcClient.execute("Bug.update", objParams);
-            return true;
-        } catch (XmlRpcException e) {
-            e.printStackTrace();
-        } finally {
-            rpcClient = null;
-        }
-        return false;
+        return runCommand(METHOD_BUG_UPDATE, objParams);
     }
 
     public boolean updateBugzillaTargetRelease(final int ids, final String... targetRelease) {
@@ -209,16 +173,20 @@ public class Bugzilla {
         params.put("target_release", targetRelease);
         Object[] objParams = { params };
 
-        XmlRpcClient rpcClient = getClient();
-        try {
-            rpcClient.execute("Bug.update", objParams);
-            return true;
-        } catch (XmlRpcException e) {
-            e.printStackTrace();
-        } finally {
-            rpcClient = null;
-        }
-        return false;
+        return runCommand(METHOD_BUG_UPDATE, objParams);
+    }
+
+    private String getFlagStatusFrom(Status status) {
+        String flagStatus;
+        if (status.equals(Status.POSITIVE))
+            flagStatus = "+";
+        else if (status.equals(Status.NEGATIVE))
+            flagStatus = "-";
+        else if (status.equals(Status.UNKNOWN))
+            flagStatus = "?";
+        else
+            flagStatus = " ";
+        return flagStatus;
     }
 
     /**
@@ -231,15 +199,7 @@ public class Bugzilla {
      */
     public boolean updateBugzillaFlag(Integer[] ids, String name, Status status) {
 
-        String flagStatus;
-        if (status.equals(Status.POSITIVE))
-            flagStatus = "+";
-        else if (status.equals(Status.NEGATIVE))
-            flagStatus = "-";
-        else if (status.equals(Status.UNKNOWN))
-            flagStatus = "?";
-        else
-            flagStatus = " ";
+        String flagStatus = getFlagStatusFrom(status);
 
         Map<Object, Object> params = getParameterMap();
         Map<String, String> updates = new HashMap<String, String>();
@@ -251,17 +211,7 @@ public class Bugzilla {
         params.put("permissive", true);
         Object[] objs = { params };
 
-        XmlRpcClient rpcClient = getClient();
-
-        try {
-            rpcClient.execute("Flag.update", objs);
-            return true;
-        } catch (XmlRpcException e) {
-            e.printStackTrace();
-        } finally {
-            rpcClient = null;
-        }
-        return false;
+        return runCommand(METHOD_FLAG_UPDATE, objs);
     }
 
     @SuppressWarnings("unchecked")
@@ -269,20 +219,17 @@ public class Bugzilla {
         try {
             return (Map<Object, Object>) getClient().execute(method, params);
         } catch (XmlRpcException e) {
-            e.printStackTrace();
+            throw new IllegalStateException(e);
         }
-        return null;
     }
 
-    @SuppressWarnings("unused")
     private boolean runCommand(String method, Object[] params) {
         try {
             getClient().execute(method, params);
             return true;
         } catch (XmlRpcException e) {
-            e.printStackTrace();
+            throw new IllegalStateException(e);
         }
-        return false;
     }
 
     private Object[] turnMapIntoObjectArray(Map<Object, Object> params) {
@@ -331,11 +278,12 @@ public class Bugzilla {
 
         Map<Object, Object> params = getParameterMap();
         params.put("ids", bugIds.toArray());
-        Map<Object, Object> results = fetchData("Bug.comments", turnMapIntoObjectArray(params));
+        Map<Object, Object> results = fetchData(METHOD_BUG_COMMENTS, turnMapIntoObjectArray(params));
 
         Map<String, SortedSet<Comment>> commentsByBugId = new HashMap<String, SortedSet<Comment>>();
         if (results != null && !results.isEmpty() && results.containsKey("bugs"))
-            for (Entry<String, Map<String,Object[]>> bug : ((Map<String, Map<String,Object[]>>) results.get("bugs")).entrySet())
+            for (Entry<String, Map<String, Object[]>> bug : ((Map<String, Map<String, Object[]>>) results.get("bugs"))
+                    .entrySet())
                 commentsByBugId.put(bug.getKey(), createComments(bug.getValue().get("comments")));
         return commentsByBugId;
     }
@@ -343,37 +291,32 @@ public class Bugzilla {
     @SuppressWarnings("unchecked")
     private SortedSet<Comment> createComments(Object[] objects) {
         SortedSet<Comment> comments = new TreeSet<Comment>();
-        for ( Object comment : objects ) {
-           comments.add(new Comment( (Map<String, Object>) comment));
+        for (Object comment : objects) {
+            comments.add(new Comment((Map<String, Object>) comment));
         }
         return comments;
     }
 
     @SuppressWarnings("unchecked")
-    public Map<String,Bug> getBugs(Set<String> keySet) {
+    public Map<String, Bug> getBugs(Set<String> keySet) {
+        if (keySet == null || keySet.isEmpty())
+            throw new IllegalArgumentException("Provided bug instance can't be null or empty");
+
         Map<Object, Object> params = getParameterMap();
         params.put("include_fields", Bug.include_fields);
         params.put("ids", turnToStringArray(keySet));
         params.put("permissive", true);
         Object[] objs = { params };
 
-        Map<String,Bug> results = new HashMap<String, Bug>(keySet.size());
+        Map<String, Bug> results = new HashMap<String, Bug>(keySet.size());
 
-        XmlRpcClient rpcClient = getClient();
-
-        try {
-            Object resultObj = rpcClient.execute("Bug.get", objs);
-            Map<Object, Object> resultMap = (Map<Object, Object>) resultObj;
+        Map<Object, Object> resultMap = fetchData(METHOD_BUG_GET, objs);
+        if (resultMap != null && !resultMap.isEmpty()) {
             Object[] bugs = (Object[]) resultMap.get("bugs");
             for (int i = 0; i < bugs.length; i++) {
                 Bug bug = new Bug((Map<String, Object>) bugs[i]);
                 results.put(String.valueOf(bug.getId()), bug);
             }
-        } catch (XmlRpcException e) {
-            System.err.println("Can not get bug with ids : " + keySet);
-            e.printStackTrace(System.err);
-        } finally {
-            rpcClient = null;
         }
         return results;
 
