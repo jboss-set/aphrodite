@@ -32,6 +32,7 @@ import java.util.SortedSet;
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
+import org.jboss.pull.shared.connectors.bugzilla.Bugzilla.CommentVisibility;
 import org.jboss.pull.shared.connectors.common.AbstractCommonIssueHelper;
 import org.jboss.pull.shared.connectors.common.Issue;
 
@@ -89,5 +90,9 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
 
     public Map<String, Bug> loadIssues(Set<String> bugIds) throws IllegalArgumentException {
         return bugzillaClient.getBugs(bugIds);
+    }
+
+    public boolean addComment(final int id, final String text, CommentVisibility visibility, double worktime) {
+        return bugzillaClient.addComment(id, text, visibility, worktime);
     }
 }

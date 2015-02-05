@@ -47,6 +47,7 @@ public class Bugzilla {
     private static final String METHOD_FLAG_UPDATE = "Flag.update";
     private static final String METHOD_BUG_GET = "Bug.get";
     private static final String METHOD_BUG_COMMENTS = "Bug.comments";
+    private static final String METHOD_BUG_ADD_COMMENT = "Bug.add_comment";
 
     public Bugzilla(String serverUrl, String login, String password) {
         this.baseURL = serverUrl;
@@ -318,7 +319,32 @@ public class Bugzilla {
             }
         }
         return results;
+    }
 
+    public enum CommentVisibility {
+
+        PUBLIC(false), PRIVATE(true);
+
+        private boolean visibility;
+
+        CommentVisibility(final boolean visibility){
+            this.visibility = visibility;
+        }
+
+        public boolean isPrivate() { return visibility; }
+
+    }
+
+    public boolean addComment(final int id, final String text, final CommentVisibility visibility, final double worktime) {
+
+        Map<Object, Object> params = getParameterMap();
+        params.put("id", id);
+        params.put("comment", text);
+        params.put("private", visibility.isPrivate());
+        params.put("work_time", worktime);
+        Object[] objs = { params };
+
+        return runCommand(METHOD_BUG_ADD_COMMENT, objs);
     }
 
     private String[] turnToStringArray(Set<String> set) {
