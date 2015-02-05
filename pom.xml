@@ -11,7 +11,7 @@
 
 	<groupId>org.jboss.jbossset</groupId>
 	<artifactId>pull-shared</artifactId>
-	<version>0.4-SNAPSHOT</version>
+    <version>0.4.0.Final</version>
 	<packaging>jar</packaging>
 	<name>Pull Shared</name>
 

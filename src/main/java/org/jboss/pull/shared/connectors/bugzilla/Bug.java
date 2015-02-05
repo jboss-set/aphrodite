@@ -37,7 +37,35 @@ public class Bug implements Issue {
 
     // Bug Status
     public enum Status {
-        NEW, ASSIGNED, POST, MODIFIED, ON_DEV, ON_QA, VERIFIED, RELEASE_PENDING, CLOSED
+        NEW(0,"NEW"), ASSIGNED(1,"ASSIGNED"), POST(2,"POST"), MODIFIED(3,"MODIFIED"), ON_DEV(4,"ON_DEV"), ON_QA(5,"ON_QA"), VERIFIED(6,"VERIFIED"), RELEASE_PENDING(7,"RELEASE_PENDING"), CLOSED(8,"CLOSED");
+
+        private final int step;
+        private final String label;
+
+        private Status(final int step, final String label) {
+            this.step = step;
+            this.label = label.toUpperCase();
+        }
+
+        public boolean hasPullRequest() {
+            return ( step >= POST.step );
+        }
+
+        public boolean isAbove(Status status) {
+            return ( step > status.step );
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+        public Status fromLabel(String label) {
+            for ( Status status : Status.values() ) {
+                if ( status.label.equalsIgnoreCase(label))
+                    return status;
+            }
+            throw new IllegalArgumentException("No instance of " + Status.class + " associated with label:" + label);
+        }
     }
 
     private static final long serialVersionUID = 6967220126171894474L;
@@ -45,7 +73,7 @@ public class Bug implements Issue {
     // includes attributes for Bug.get execution
     public static final Object[] include_fields = { "id", "alias", "product", "component", "version", "priority", "severity",
             "target_milestone", "creator", "assigned_to", "qa_contact", "docs_contact", "status", "resolution", "flags",
-            "groups", "depends_on", "blocks", "target_release", "summary", "description" };
+            "groups", "depends_on", "blocks", "target_release", "summary", "description", "cf_type" };
 
     private int id;
     private List<String> alias;
@@ -69,6 +97,7 @@ public class Bug implements Issue {
     private String summary;
     private String description;
     private URL url;        // The issue URL.
+    private String type;
 
     public Bug(Map<String, Object> bugMap) {
         id = (Integer) bugMap.get("id");
@@ -154,6 +183,8 @@ public class Bug implements Issue {
 
         summary = (String) bugMap.get("summary");
         description = (String) bugMap.get("description");
+
+        type = (String) bugMap.get("cf_type");
 
         try {
             this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
@@ -253,6 +284,10 @@ public class Bug implements Issue {
         return Integer.toString(id);
     }
 
+    public String getType() {
+        return type;
+    }
+
     @Override
     public URL getUrl() {
         return this.url;
@@ -263,4 +298,14 @@ public class Bug implements Issue {
         return targetRelease;
     }
 
+
+    @Override
+    public String toString() {
+        return "Bug [id=" + id + ", alias=" + alias + ", product=" + product + ", component=" + component + ", version="
+                + version + ", priority=" + priority + ", severity=" + severity + ", targetMilestone=" + targetMilestone
+                + ", creator=" + creator + ", assignedTo=" + assignedTo + ", qaContact=" + qaContact + ", docsContact="
+                + docsContact + ", status=" + status + ", resolution=" + resolution + ", flags=" + flags + ", groups=" + groups
+                + ", dependsOn=" + dependsOn + ", blocks=" + blocks + ", targetRelease=" + targetRelease + ", summary="
+                + summary + ", description=" + description + ", url=" + url + ", type=" + type + "]";
+    }
 }
