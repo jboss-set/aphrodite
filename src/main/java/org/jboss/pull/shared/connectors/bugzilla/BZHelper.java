@@ -32,7 +32,6 @@ import java.util.SortedSet;
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
-import org.jboss.pull.shared.connectors.bugzilla.Bugzilla.CommentVisibility;
 import org.jboss.pull.shared.connectors.common.AbstractCommonIssueHelper;
 import org.jboss.pull.shared.connectors.common.Issue;
 
