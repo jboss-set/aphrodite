@@ -21,17 +21,21 @@
  */
 package org.jboss.pull.shared.connectors.bugzilla;
 
+import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoIntegerSet;
+import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoStringList;
+import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoStringSet;
+import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertToDate;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.pull.shared.connectors.common.Flag;
 import org.jboss.pull.shared.connectors.common.Issue;
-
 
 public class Bug implements Issue {
 
@@ -73,7 +77,7 @@ public class Bug implements Issue {
     // includes attributes for Bug.get execution
     public static final Object[] include_fields = { "id", "alias", "product", "component", "version", "priority", "severity",
             "target_milestone", "creator", "assigned_to", "qa_contact", "docs_contact", "status", "resolution", "flags",
-            "groups", "depends_on", "blocks", "target_release", "summary", "description", "cf_type" };
+            "groups", "depends_on", "blocks", "target_release", "summary", "description", "cf_type", "creation_time" };
 
     private int id;
     private List<String> alias;
@@ -98,29 +102,18 @@ public class Bug implements Issue {
     private String description;
     private URL url;        // The issue URL.
     private String type;
+    private Date creationTime;
 
     public Bug(Map<String, Object> bugMap) {
         id = (Integer) bugMap.get("id");
 
-        Object[] aliasObjs = (Object[]) bugMap.get("alias");
-        alias = new ArrayList<String>(aliasObjs.length);
-        for (Object obj : aliasObjs) {
-            alias.add((String) obj);
-        }
+        alias = convertIntoStringList((Object[]) bugMap.get("alias"));
 
         product = (String) bugMap.get("product");
 
-        Object[] componentObjs = (Object[]) bugMap.get("component");
-        component = new ArrayList<String>(componentObjs.length);
-        for (Object obj : componentObjs) {
-            component.add((String) obj);
-        }
+        component = convertIntoStringList((Object[]) bugMap.get("component"));
 
-        Object[] versionObjs = (Object[]) bugMap.get("version");
-        version = new HashSet<String>(versionObjs.length);
-        for (Object obj : versionObjs) {
-            version.add((String) obj);
-        }
+        version = convertIntoStringSet((Object[]) bugMap.get("version"));
 
         priority = (String) bugMap.get("priority");
         severity = (String) bugMap.get("severity");
@@ -132,8 +125,34 @@ public class Bug implements Issue {
         status = Status.valueOf((String) bugMap.get("status"));
         resolution = (String) bugMap.get("resolution");
 
-        flags = new ArrayList<Flag>();
-        Object[] flagObjs = (Object[]) bugMap.get("flags");
+        flags = constructFlagsFromObjectsArray((Object[]) bugMap.get("flags"));
+
+        groups = convertIntoStringList((Object[]) bugMap.get("groups"));
+
+        dependsOn = convertIntoIntegerSet((Object[]) bugMap.get("depends_on"));
+
+        blocks = convertIntoIntegerSet((Object[]) bugMap.get("blocks"));
+
+        targetRelease = convertIntoStringSet((Object[]) bugMap.get("target_release"));
+
+        summary = (String) bugMap.get("summary");
+        description = (String) bugMap.get("description");
+
+        type = (String) bugMap.get("cf_type");
+
+        String dateAsTime = (String) bugMap.get("creation_time");
+        if ( ! "".equals(dateAsTime) )
+            creationTime = convertToDate((String) bugMap.get("creation_time"));
+
+        try {
+            this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
+        } catch (MalformedURLException malformed) {
+            System.err.printf("Invalid URL formed: %s. \n", malformed);
+        }
+    }
+
+    private static List<Flag> constructFlagsFromObjectsArray(Object[] flagObjs) {
+        List<Flag> flags = new ArrayList<Flag>();
         for (Object obj : flagObjs) {
             @SuppressWarnings("unchecked")
             Map<String, Object> flag = (Map<String, Object>) obj;
@@ -156,41 +175,7 @@ public class Bug implements Issue {
 
             flags.add(new Flag(name, setter, status));
         }
-
-        Object[] groupsObjs = (Object[]) bugMap.get("groups");
-        groups = new ArrayList<String>(groupsObjs.length);
-        for (Object obj : groupsObjs) {
-            groups.add((String) obj);
-        }
-
-        Object[] dependsOnObjs = (Object[]) bugMap.get("depends_on");
-        dependsOn = new HashSet<Integer>(dependsOnObjs.length);
-        for (Object obj : dependsOnObjs) {
-            dependsOn.add((Integer) obj);
-        }
-
-        Object[] blockObjs = (Object[]) bugMap.get("blocks");
-        blocks = new HashSet<Integer>(blockObjs.length);
-        for (Object obj : blockObjs) {
-            blocks.add((Integer) obj);
-        }
-
-        Object[] targetReleaseObjs = (Object[]) bugMap.get("target_release");
-        targetRelease = new HashSet<String>(targetReleaseObjs.length);
-        for (Object obj : targetReleaseObjs) {
-            targetRelease.add((String) obj);
-        }
-
-        summary = (String) bugMap.get("summary");
-        description = (String) bugMap.get("description");
-
-        type = (String) bugMap.get("cf_type");
-
-        try {
-            this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
-        } catch (MalformedURLException malformed) {
-            System.err.printf("Invalid URL formed: %s. \n", malformed);
-        }
+        return flags;
     }
 
     public int getId() {
@@ -298,6 +283,9 @@ public class Bug implements Issue {
         return targetRelease;
     }
 
+    public Date getCreationTime() {
+        return creationTime;
+    }
 
     @Override
     public String toString() {
@@ -306,6 +294,8 @@ public class Bug implements Issue {
                 + ", creator=" + creator + ", assignedTo=" + assignedTo + ", qaContact=" + qaContact + ", docsContact="
                 + docsContact + ", status=" + status + ", resolution=" + resolution + ", flags=" + flags + ", groups=" + groups
                 + ", dependsOn=" + dependsOn + ", blocks=" + blocks + ", targetRelease=" + targetRelease + ", summary="
-                + summary + ", description=" + description + ", url=" + url + ", type=" + type + "]";
+                + summary + ", description=" + description + ", url=" + url + ", type=" + type + ", creationTime="
+                + creationTime + "]";
     }
+
 }
