@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>jboss-parent</artifactId>
 		<groupId>org.jboss</groupId>
-		<version>11-redhat-1</version>
+		<version>16</version>
 		<relativePath />
 	</parent>
 
@@ -14,6 +14,7 @@
     <version>0.5.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Pull Shared</name>
+    <description>A simple Java API to Bugzilla, wrapped around the XML-RPC API</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -32,20 +33,73 @@
 		<org.wildfly.wildfly.build.config.version>8.0.0.Final</org.wildfly.wildfly.build.config.version>
 	</properties>
 
-	<scm>
-		<connection>scm:git:git://github.com/jboss-set/pull-shared.git</connection>
-		<developerConnection>scm:git:git@github.com:jboss-set/pull-shared.git</developerConnection>
-		<url>https://github.com/jboss-set/pull-shared</url>
-		<tag>HEAD</tag>
-	</scm>
+  <scm>
+    <connection>scm:git:git://github.com/jboss-set/pull-shared.git</connection>
+	<developerConnection>scm:git:git@github.com:jboss-set/pull-shared.git</developerConnection>
+	<url>https://github.com/jboss-set/pull-shared</url>
+	<tag>HEAD</tag>
+  </scm>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-			</plugin>
-		</plugins>
+ <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+
+  <build>
+      <plugins>
+	    <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+    </plugin>
+
+    </plugins>
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -86,8 +140,8 @@
 							</configuration>
 						</execution>
 					</executions>
-				</plugin>
-			</plugins>
+                </plugin>
+              </plugins>
 		</pluginManagement>
 	</build>
 
