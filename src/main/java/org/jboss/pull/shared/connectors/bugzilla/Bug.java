@@ -24,7 +24,6 @@ package org.jboss.pull.shared.connectors.bugzilla;
 import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoIntegerSet;
 import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoStringList;
 import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoStringSet;
-import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertToDate;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -140,9 +139,7 @@ public class Bug implements Issue {
 
         type = (String) bugMap.get("cf_type");
 
-        String dateAsTime = (String) bugMap.get("creation_time");
-        if ( ! "".equals(dateAsTime) )
-            creationTime = convertToDate((String) bugMap.get("creation_time"));
+        creationTime = (Date) bugMap.get("creation_time");
 
         try {
             this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
