@@ -70,23 +70,25 @@ public abstract class AbstractBugzillaClient {
      *
      * @return
      */
-    protected Map<Object, Object> getParameterMap() {
-        Map<Object, Object> params = new HashMap<Object, Object>();
-        params.put("Bugzilla_login", login);
-        params.put("Bugzilla_password", password);
+    protected Map<String, Object> getParameterMap() {
+        Map<String, Object> params = new HashMap<String, Object>();
+        if (login != null)
+            params.put("Bugzilla_login", login);
+        if (password != null)
+            params.put("Bugzilla_password", password);
         return params;
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<Object, Object> fetchData(String method, Object[] params) {
+    protected Map<String, ?> fetchData(String method, Object... params) {
         try {
-            return (Map<Object, Object>) getClient().execute(method, params);
+            return (Map<String, ?>) getClient().execute(method, params);
         } catch (XmlRpcException e) {
             throw new IllegalStateException(e);
         }
     }
 
-    protected boolean runCommand(String method, Object[] params) {
+    protected boolean runCommand(String method, Object... params) {
         try {
             getClient().execute(method, params);
             return true;

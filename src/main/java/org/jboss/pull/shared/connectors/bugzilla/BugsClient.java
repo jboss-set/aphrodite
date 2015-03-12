@@ -20,13 +20,12 @@ public class BugsClient extends AbstractBugzillaClient {
      * @return - Bug retrieved from Bugzilla, or null if no bug was found.
      */
     public Bug getBug(int bugzillaId) {
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
         params.put("include_fields", Bug.include_fields);
         params.put("ids", bugzillaId);
         params.put("permissive", true);
-        Object[] objs = { params };
 
-        Map<Object, Object> resultMap = fetchData(METHOD_BUG_GET, objs);
+        Map<String, ?> resultMap = fetchData(METHOD_BUG_GET, params);
 
         Object[] bugs = (Object[]) resultMap.get("bugs");
         if (bugs.length == 1) {
@@ -41,13 +40,12 @@ public class BugsClient extends AbstractBugzillaClient {
     }
 
     public boolean updateBugzillaTargetRelease(final int ids, final String... targetRelease) {
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
 
         params.put("ids", ids);
         params.put("target_release", targetRelease);
-        Object[] objParams = { params };
 
-        return runCommand(METHOD_BUG_UPDATE, objParams);
+        return runCommand(METHOD_BUG_UPDATE, params);
     }
 
     /**
@@ -58,23 +56,21 @@ public class BugsClient extends AbstractBugzillaClient {
      * @return true if status changed otherwise false
      */
     public boolean updateBugzillaStatus(Integer bugzillaId, Bug.Status status) {
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
 
         params.put("ids", bugzillaId);
         params.put("status", status);
-        Object[] objParams = { params };
 
-        return runCommand(METHOD_BUG_UPDATE, objParams);
+        return runCommand(METHOD_BUG_UPDATE, params);
     }
 
     public boolean updateBugzillaTargetMilestone(final int ids, final String taregtMilestone) {
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
 
         params.put("ids", ids);
         params.put("target_milestone", taregtMilestone);
-        Object[] objParams = { params };
 
-        return runCommand(METHOD_BUG_UPDATE, objParams);
+        return runCommand(METHOD_BUG_UPDATE, params);
     }
 
     @SuppressWarnings("unchecked")
@@ -82,20 +78,19 @@ public class BugsClient extends AbstractBugzillaClient {
         if (keySet == null || keySet.isEmpty())
             throw new IllegalArgumentException("Provided bug instance can't be null or empty");
 
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
         params.put("include_fields", Bug.include_fields);
-        params.put("ids", ArrayUtils.turnToStringArray(keySet));
+        params.put("ids", keySet.toArray(new String[keySet.size()]));
         params.put("permissive", true);
-        Object[] objs = { params };
 
         Map<String, Bug> results = new HashMap<String, Bug>(keySet.size());
 
-        Map<Object, Object> resultMap = fetchData(METHOD_BUG_GET, objs);
+        Map<String, ?> resultMap = fetchData(METHOD_BUG_GET, params);
         if (resultMap != null && !resultMap.isEmpty()) {
-            Object[] bugs = (Object[]) resultMap.get("bugs");
+            Map<String, Object>[] bugs = (Map<String, Object>[]) resultMap.get("bugs");
             for (int i = 0; i < bugs.length; i++) {
-                Bug bug = new Bug((Map<String, Object>) bugs[i]);
-                results.put(String.valueOf(bug.getId()), bug);
+                Bug bug = new Bug(bugs[i]);
+                results.put(Integer.toString(bug.getId()), bug);
             }
         }
         return results;

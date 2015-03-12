@@ -31,7 +31,7 @@ public class CommentsClient extends BugsClient {
 
         String flagStatus = getFlagStatusFrom(status);
 
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
         Map<String, String> updates = new HashMap<String, String>();
         updates.put("name", name);
         updates.put("status", flagStatus);
@@ -39,9 +39,8 @@ public class CommentsClient extends BugsClient {
         params.put("ids", ids);
         params.put("updates", updateArray);
         params.put("permissive", true);
-        Object[] objs = { params };
 
-        return runCommand(METHOD_FLAG_UPDATE, objs);
+        return runCommand(METHOD_FLAG_UPDATE, params);
     }
 
     @SuppressWarnings("unchecked")
@@ -49,33 +48,33 @@ public class CommentsClient extends BugsClient {
         if (bug == null)
             throw new IllegalArgumentException("Provided bug instance can't be null.");
 
-        Map<Object, Object> params = getParameterMap();
-        params.put("ids", ArrayUtils.turnIdIntoAnArray(bug.getId()));
-        Map<Object, Object> results = fetchData(METHOD_BUG_COMMENTS, ArrayUtils.turnMapIntoObjectArray(params));
+        Map<String, Object> params = getParameterMap();
+        params.put("ids", new Integer[] { bug.getId() });
+        Map<String, ?> results = fetchData(METHOD_BUG_COMMENTS, params);
 
         if (results != null && !results.isEmpty() && results.containsKey("bugs")) {
-            Map<String, Object> bugs = (Map<String, Object>) results.get("bugs");
-            return buildComments((Map<String, Object[]>) bugs.get(String.valueOf(bug.getId())));
+            final Map<String, Map<String, Object[]>> bugs = (Map<String, Map<String, Object[]>>) results.get("bugs");
+            return buildComments(bugs.get(Integer.toString(bug.getId())));
         }
         return new TreeSet<Comment>();
     }
 
     @SuppressWarnings("unchecked")
-    private SortedSet<Comment> buildComments(Map<String, Object[]> comments) {
+    private SortedSet<Comment> buildComments(Map<String, Object[]> bug) {
         SortedSet<Comment> bugComments = new TreeSet<Comment>();
-        for (Object[] allComments : comments.values()) {
-            for (Object comment : allComments) {
-                bugComments.add(new Comment((Map<String, Object>) comment));
+        for (Object[] comments : bug.values()) {
+            for (Object comment : comments) {
+                bugComments.add(new Comment((Map<String, ?>) comment));
             }
         }
         return bugComments;
     }
 
     @SuppressWarnings("unchecked")
-    private SortedSet<Comment> createComments(Object[] objects) {
+    private SortedSet<Comment> createComments(Map<String, ?>[] objects) {
         SortedSet<Comment> comments = new TreeSet<Comment>();
-        for (Object comment : objects) {
-            comments.add(new Comment((Map<String, Object>) comment));
+        for (Map<String, ?> comment : objects) {
+            comments.add(new Comment(comment));
         }
         return comments;
     }
@@ -85,28 +84,26 @@ public class CommentsClient extends BugsClient {
         if (bugIds == null || bugIds.isEmpty())
             throw new IllegalArgumentException("Provided bug instance can't be null or empty");
 
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
         params.put("ids", bugIds.toArray());
-        Map<Object, Object> results = fetchData(METHOD_BUG_COMMENTS, ArrayUtils.turnMapIntoObjectArray(params));
+        Map<String, ?> results = fetchData(METHOD_BUG_COMMENTS, params);
 
         Map<String, SortedSet<Comment>> commentsByBugId = new HashMap<String, SortedSet<Comment>>();
         if (results != null && !results.isEmpty() && results.containsKey("bugs"))
-            for (Entry<String, Map<String, Object[]>> bug : ((Map<String, Map<String, Object[]>>) results.get("bugs"))
-                    .entrySet())
+            for (Entry<String, Map<String, Map<String, ?>[]>> bug : ((Map<String, Map<String, Map<String, ?>[]>>) results.get("bugs")).entrySet())
                 commentsByBugId.put(bug.getKey(), createComments(bug.getValue().get("comments")));
         return commentsByBugId;
     }
 
     public boolean addComment(final int id, final String text, final CommentVisibility visibility, final double worktime) {
 
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
         params.put("id", id);
         params.put("comment", text);
         params.put("private", visibility.isPrivate());
         params.put("work_time", worktime);
-        Object[] objs = { params };
 
-        return runCommand(METHOD_BUG_ADD_COMMENT, objs);
+        return runCommand(METHOD_BUG_ADD_COMMENT, params);
     }
 
     private String getFlagStatusFrom(Status status) {
@@ -130,12 +127,11 @@ public class CommentsClient extends BugsClient {
      * @return true if post successes
      */
     public boolean postBugzillaComment(Integer bugzillaId, String comment) {
-        Map<Object, Object> params = getParameterMap();
+        Map<String, Object> params = getParameterMap();
         params.put("id", bugzillaId);
         params.put("comment", comment);
-        Object[] objs = { params };
 
-        return runCommand("Bug.update", objs);
+        return runCommand("Bug.update", params);
     }
 
 
