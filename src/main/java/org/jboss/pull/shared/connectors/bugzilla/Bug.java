@@ -38,37 +38,13 @@ import org.jboss.pull.shared.connectors.common.Issue;
 
 public class Bug implements Issue {
 
+    public static void main(String[] args) {
+        System.out.println(Status.POST.compareTo(Status.POST));
+
+    }
     // Bug Status
     public enum Status {
-        NEW(0,"NEW"), ASSIGNED(1,"ASSIGNED"), POST(2,"POST"), MODIFIED(3,"MODIFIED"), ON_DEV(4,"ON_DEV"), ON_QA(5,"ON_QA"), VERIFIED(6,"VERIFIED"), RELEASE_PENDING(7,"RELEASE_PENDING"), CLOSED(8,"CLOSED");
-
-        private final int step;
-        private final String label;
-
-        private Status(final int step, final String label) {
-            this.step = step;
-            this.label = label.toUpperCase();
-        }
-
-        public boolean hasPullRequest() {
-            return ( step >= POST.step );
-        }
-
-        public boolean isAbove(Status status) {
-            return ( step > status.step );
-        }
-
-        @Override
-        public String toString() {
-            return label;
-        }
-        public Status fromLabel(String label) {
-            for ( Status status : Status.values() ) {
-                if ( status.label.equalsIgnoreCase(label))
-                    return status;
-            }
-            throw new IllegalArgumentException("No instance of " + Status.class + " associated with label:" + label);
-        }
+        NEW, ASSIGNED, POST, MODIFIED, ON_DEV, ON_QA, VERIFIED, RELEASE_PENDING, CLOSED;
     }
 
     private static final long serialVersionUID = 6967220126171894474L;
