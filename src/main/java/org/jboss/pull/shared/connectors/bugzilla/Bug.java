@@ -141,6 +141,10 @@ public class Bug implements Issue {
 
         creationTime = (Date) bugMap.get("creation_time");
 
+        setUrl(id);
+    }
+
+    private void setUrl(int id) {
         try {
             this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
         } catch (MalformedURLException malformed) {
