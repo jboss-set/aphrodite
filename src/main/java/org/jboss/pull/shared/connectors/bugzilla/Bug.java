@@ -38,13 +38,9 @@ import org.jboss.pull.shared.connectors.common.Issue;
 
 public class Bug implements Issue {
 
-    public static void main(String[] args) {
-        System.out.println(Status.POST.compareTo(Status.POST));
-
-    }
     // Bug Status
     public enum Status {
-        NEW, ASSIGNED, POST, MODIFIED, ON_DEV, ON_QA, VERIFIED, RELEASE_PENDING, CLOSED;
+        NEW, ASSIGNED, POST, MODIFIED, ON_DEV, ON_QA, VERIFIED, RELEASE_PENDING, CLOSED
     }
 
     private static final long serialVersionUID = 6967220126171894474L;
