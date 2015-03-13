@@ -61,10 +61,15 @@ public class JiraHelper extends AbstractCommonIssueHelper implements IssueHelper
 
     @Override
     public Issue findIssue(URL url) throws IllegalArgumentException {
-        String key = cutKeyFromURL(url);
-        com.atlassian.jira.rest.client.domain.Issue fromServer = restClient.getIssueClient()
-                .getIssue(key, new NullProgressMonitor());
-        return new JiraIssue(fromServer);
+        try {
+            String key = cutKeyFromURL(url);
+            com.atlassian.jira.rest.client.domain.Issue fromServer = restClient.getIssueClient()
+                    .getIssue(key, new NullProgressMonitor());
+            return new JiraIssue(fromServer);
+        } catch (RuntimeException e) {
+            // Atlassian is very poor in reporting proper context
+            throw new RuntimeException("Failed to find issue " + url, e);
+        }
     }
 
     @Override

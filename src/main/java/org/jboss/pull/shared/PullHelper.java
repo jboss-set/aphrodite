@@ -37,6 +37,8 @@ import org.jboss.pull.shared.spi.PullEvaluator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A shared functionality regarding mergeable PRs, Github and Bugzilla.
@@ -45,6 +47,7 @@ import java.util.Properties;
  * @author wangchao
  */
 public class PullHelper {
+    private Logger LOG = Logger.getLogger(PullHelper.class.getName());
 
     // private final Properties props;
     private final PullEvaluatorFacade evaluatorFacade;
@@ -104,6 +107,7 @@ public class PullHelper {
         List<RedhatPullRequest> redhatPullRequests = new ArrayList<RedhatPullRequest>();
 
         for (PullRequest pullRequest : pullRequests) {
+            LOG.log(Level.INFO, "Found PR #{0,number,#}", pullRequest.getNumber());
             redhatPullRequests.add(new RedhatPullRequest(pullRequest, bzHelper, jiraHelper, ghHelper));
         }
 
