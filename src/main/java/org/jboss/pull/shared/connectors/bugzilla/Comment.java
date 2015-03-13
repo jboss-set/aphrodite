@@ -30,7 +30,7 @@ public class Comment implements Comparable<Comment> {
     private int creatorId;
     private String creator;
 
-    public Comment(Map<String, Object> commentMap) {
+    public Comment(Map<String, ?> commentMap) {
         id = (Integer) commentMap.get(include_fields[ID]);
         author = (String) commentMap.get(include_fields[AUTHOR]);
         text = (String) commentMap.get(include_fields[TEXT]);
@@ -125,7 +125,7 @@ public class Comment implements Comparable<Comment> {
 
     @Override
     public String toString() {
-        return "Comment [id=" + id + ", author=" + author + ", text=" + text + ", time=" + time + ", count=" + count
+        return "Comment [id=" + id + ", author=" + author + ", time=" + time + ", count=" + count
                 + ", creationTime=" + creationTime + ", visibility=" + visibility + ", bugId=" + bugId + ", creatorId="
                 + creatorId + ", creator=" + creator + "]";
     }
