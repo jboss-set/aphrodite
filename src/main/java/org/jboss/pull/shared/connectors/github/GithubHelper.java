@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,6 +50,7 @@ import org.eclipse.egit.github.core.Issue;
 import org.jboss.pull.shared.Util;
 
 public class GithubHelper {
+    private static final Logger LOG = Logger.getLogger(GithubHelper.class.getName());
 
     private final String GITHUB_ORGANIZATION;
     private final String GITHUB_REPO;
@@ -284,10 +287,12 @@ public class GithubHelper {
         return new ArrayList<Label>();
     }
 
-    public Label getLabel(String title) {
+    public Label getLabel(final String title) {
         try {
-            return labelService.getLabel(repository, title);
+            final String label = title.replace(" ", "%20");
+            return labelService.getLabel(repository, label);
         } catch (IOException e) {
+            LOG.log(Level.WARNING, "Error trying to get label '" + title + "'", e);
             System.err.println("Error trying to get label '" + title + "'");
         }
         return null;
