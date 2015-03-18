@@ -11,7 +11,7 @@
 
 	<groupId>org.jboss.jbossset</groupId>
 	<artifactId>pull-shared</artifactId>
-    <version>0.5.1.Final</version>
+    <version>0.5.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Pull Shared</name>
     <description>A simple Java API to Bugzilla, wrapped around the XML-RPC API</description>
@@ -37,7 +37,7 @@
     <connection>scm:git:git://github.com/jboss-set/pull-shared.git</connection>
 	<developerConnection>scm:git:git@github.com:jboss-set/pull-shared.git</developerConnection>
 	<url>https://github.com/jboss-set/pull-shared</url>
-	<tag>pull-shared-0.5.1.Final</tag>
+	<tag>HEAD</tag>
   </scm>
 
   <build>
