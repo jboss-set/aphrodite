@@ -30,6 +30,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfig;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.jboss.pull.shared.internal.XMLRPC;
 
 public abstract class AbstractBugzillaClient {
 
@@ -42,6 +43,14 @@ public abstract class AbstractBugzillaClient {
         this.baseURL = serverUrl;
         this.login = login;
         this.password = password;
+    }
+
+    protected <T> T fetch(final XMLRPC<T> type, String method, Object... params) {
+        try {
+            return type.cast(getClient().execute(method, params));
+        } catch (XmlRpcException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -77,15 +86,6 @@ public abstract class AbstractBugzillaClient {
         if (password != null)
             params.put("Bugzilla_password", password);
         return params;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected Map<String, ?> fetchData(String method, Object... params) {
-        try {
-            return (Map<String, ?>) getClient().execute(method, params);
-        } catch (XmlRpcException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     protected boolean runCommand(String method, Object... params) {

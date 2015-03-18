@@ -1,8 +1,15 @@
 package org.jboss.pull.shared.connectors.bugzilla;
 
+import static org.jboss.pull.shared.internal.XMLRPC.Array;
+import static org.jboss.pull.shared.internal.XMLRPC.Struct;
+import static org.jboss.pull.shared.internal.XMLRPC.cast;
+import static org.jboss.pull.shared.internal.XMLRPC.iterable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.pull.shared.internal.XMLRPC;
 
 public class BugsClient extends AbstractBugzillaClient {
 
@@ -25,7 +32,7 @@ public class BugsClient extends AbstractBugzillaClient {
         params.put("ids", bugzillaId);
         params.put("permissive", true);
 
-        Map<String, ?> resultMap = fetchData(METHOD_BUG_GET, params);
+        Map<String, ?> resultMap = fetch(Struct, METHOD_BUG_GET, params);
 
         Object[] bugs = (Object[]) resultMap.get("bugs");
         if (bugs.length == 1) {
@@ -85,11 +92,11 @@ public class BugsClient extends AbstractBugzillaClient {
 
         Map<String, Bug> results = new HashMap<String, Bug>(keySet.size());
 
-        Map<String, ?> resultMap = fetchData(METHOD_BUG_GET, params);
+        Map<String, ?> resultMap = fetch(Struct, METHOD_BUG_GET, params);
         if (resultMap != null && !resultMap.isEmpty()) {
-            Map<String, Object>[] bugs = (Map<String, Object>[]) resultMap.get("bugs");
-            for (int i = 0; i < bugs.length; i++) {
-                Bug bug = new Bug(bugs[i]);
+            final Object[] bugs = cast(Array, resultMap.get("bugs"));
+            for (Map<String, Object> struct : iterable(Struct, bugs)) {
+                Bug bug = new Bug(struct);
                 results.put(Integer.toString(bug.getId()), bug);
             }
         }

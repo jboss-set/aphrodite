@@ -1,5 +1,10 @@
 package org.jboss.pull.shared.connectors.bugzilla;
 
+import static org.jboss.pull.shared.internal.XMLRPC.Array;
+import static org.jboss.pull.shared.internal.XMLRPC.Struct;
+import static org.jboss.pull.shared.internal.XMLRPC.cast;
+import static org.jboss.pull.shared.internal.XMLRPC.iterable;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,30 +55,30 @@ public class CommentsClient extends BugsClient {
 
         Map<String, Object> params = getParameterMap();
         params.put("ids", new Integer[] { bug.getId() });
-        Map<String, ?> results = fetchData(METHOD_BUG_COMMENTS, params);
+        Map<String, ?> results = fetch(Struct, METHOD_BUG_COMMENTS, params);
 
         if (results != null && !results.isEmpty() && results.containsKey("bugs")) {
-            final Map<String, Map<String, Object[]>> bugs = (Map<String, Map<String, Object[]>>) results.get("bugs");
-            return buildComments(bugs.get(Integer.toString(bug.getId())));
+            final Map<String, Object> bugs = cast(Struct, results.get("bugs"));
+            return buildComments(cast(Struct, bugs.get(Integer.toString(bug.getId()))));
         }
         return new TreeSet<Comment>();
     }
 
     @SuppressWarnings("unchecked")
-    private SortedSet<Comment> buildComments(Map<String, Object[]> bug) {
+    private SortedSet<Comment> buildComments(Map<String, Object> bug) {
         SortedSet<Comment> bugComments = new TreeSet<Comment>();
-        for (Object[] comments : bug.values()) {
-            for (Object comment : comments) {
-                bugComments.add(new Comment((Map<String, ?>) comment));
+        for (Object[] comments : iterable(Array, bug.values())) {
+            for (Map<String, Object> comment : iterable(Struct, comments)) {
+                bugComments.add(new Comment(comment));
             }
         }
         return bugComments;
     }
 
     @SuppressWarnings("unchecked")
-    private SortedSet<Comment> createComments(Map<String, ?>[] objects) {
+    private SortedSet<Comment> createComments(final Object[] objects) {
         SortedSet<Comment> comments = new TreeSet<Comment>();
-        for (Map<String, ?> comment : objects) {
+        for (Map<String, ?> comment : iterable(Struct, objects)) {
             comments.add(new Comment(comment));
         }
         return comments;
@@ -86,12 +91,12 @@ public class CommentsClient extends BugsClient {
 
         Map<String, Object> params = getParameterMap();
         params.put("ids", bugIds.toArray());
-        Map<String, ?> results = fetchData(METHOD_BUG_COMMENTS, params);
+        Map<String, ?> results = fetch(Struct, METHOD_BUG_COMMENTS, params);
 
         Map<String, SortedSet<Comment>> commentsByBugId = new HashMap<String, SortedSet<Comment>>();
         if (results != null && !results.isEmpty() && results.containsKey("bugs"))
-            for (Entry<String, Map<String, Map<String, ?>[]>> bug : ((Map<String, Map<String, Map<String, ?>[]>>) results.get("bugs")).entrySet())
-                commentsByBugId.put(bug.getKey(), createComments(bug.getValue().get("comments")));
+            for (Entry<String, Object> bug : cast(Struct, results.get("bugs")).entrySet())
+                commentsByBugId.put(bug.getKey(), createComments(cast(Array, cast(Struct, bug.getValue()).get("comments"))));
         return commentsByBugId;
     }
 
