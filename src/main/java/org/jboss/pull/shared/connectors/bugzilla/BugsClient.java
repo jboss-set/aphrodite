@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.pull.shared.internal.XMLRPC;
-
 public class BugsClient extends AbstractBugzillaClient {
 
     private static final String METHOD_BUG_UPDATE = "Bug.update";
