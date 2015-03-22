@@ -33,12 +33,39 @@
 		<org.wildfly.wildfly.build.config.version>8.0.0.Final</org.wildfly.wildfly.build.config.version>
 	</properties>
 
+
+  <licenses>
+    <license>
+      <name>GNU General Lesser Public License (LGPL) version 3.0</name>
+      <url>http://www.gnu.org/licenses/lgpl-3.0.html</url>
+      <distribution>repo</distribution>
+      <comments>Source's header state LGPL but no version, hence v3 is assumed here.</comments>
+    </license>
+  </licenses>
+
   <scm>
     <connection>scm:git:git://github.com/jboss-set/pull-shared.git</connection>
 	<developerConnection>scm:git:git@github.com:jboss-set/pull-shared.git</developerConnection>
 	<url>https://github.com/jboss-set/pull-shared</url>
 	<tag>HEAD</tag>
   </scm>
+
+  <developers>
+    <developer>
+      <id>rpelisse</id>
+      <name>Romain Pelisse</name>
+      <organization>Red Hat</organization>
+      <email>belaran@redhat.com</email>
+      <timezone>Germany/Berlin</timezone>
+    </developer>
+    <developer>
+      <id>ewertz</id>
+      <name>Joe Wertz</name>
+      <organization>Red Hat</organization>
+      <email>ewertz@redhat.com</email>
+      <timezone>China/Shanghai</timezone>
+    </developer>
+  </developers>
 
   <build>
       <plugins>
