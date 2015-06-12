@@ -46,12 +46,14 @@ public class Bug implements Issue {
     private static final long serialVersionUID = 6967220126171894474L;
 
     // includes attributes for Bug.get execution
-    public static final Object[] include_fields = { "id", "alias", "product", "component", "version", "priority", "severity",
-            "target_milestone", "creator", "assigned_to", "qa_contact", "docs_contact", "status", "resolution", "flags",
-            "groups", "depends_on", "blocks", "target_release", "summary", "description", "cf_type", "creation_time" };
+    public static final Object[] include_fields = { "id", "alias", "last_change_time" , "product", "component", "version", "priority",
+            "severity", "target_milestone", "creator", "assigned_to", "qa_contact", "docs_contact", "status", "resolution",
+            "flags", "groups", "depends_on", "blocks", "target_release", "summary", "description", "cf_type", "creation_time",
+            "estimated_time", "actual_time", "remaining_time" };
 
     private int id;
     private List<String> alias;
+    private Date last_change_time;
     private String product;
     private List<String> component;
     private Set<String> version;
@@ -71,14 +73,19 @@ public class Bug implements Issue {
     private Set<String> targetRelease;
     private String summary;
     private String description;
-    private URL url;        // The issue URL.
+    private URL url; // The issue URL.
     private String type;
     private Date creationTime;
+    private Double estimated_time;
+    private Double actual_time;
+    private Double remaining_time;
 
     public Bug(Map<String, Object> bugMap) {
         id = (Integer) bugMap.get("id");
 
         alias = convertIntoStringList((Object[]) bugMap.get("alias"));
+
+        last_change_time = (Date) bugMap.get("last_change_time");
 
         product = (String) bugMap.get("product");
 
@@ -112,6 +119,10 @@ public class Bug implements Issue {
         type = (String) bugMap.get("cf_type");
 
         creationTime = (Date) bugMap.get("creation_time");
+
+        estimated_time = (Double) bugMap.get("estimated_time");
+        actual_time = (Double) bugMap.get("actual_time");
+        remaining_time = (Double) bugMap.get("remaining_time");
 
         setUrl(id);
     }
@@ -157,6 +168,14 @@ public class Bug implements Issue {
 
     public List<String> getAlias() {
         return alias;
+    }
+
+    public Date getLastModified() {
+        return last_change_time;
+    }
+
+    public void setLastModified(Date timestamp) {
+        this.last_change_time = timestamp;
     }
 
     public String getProduct() {
@@ -260,15 +279,40 @@ public class Bug implements Issue {
         return creationTime;
     }
 
+    public Double getEstimatedTime() {
+        return estimated_time;
+    }
+
+    public void setEstimatedTime(Double estimated_time) {
+        this.estimated_time = estimated_time;
+    }
+
+    public Double getActualTime() {
+        return actual_time;
+    }
+
+    public void setActualTime(Double actual_time) {
+        this.actual_time = actual_time;
+    }
+
+    public Double getRemainingTime() {
+        return remaining_time;
+    }
+
+    public void setRemainingTime(Double remaining_time) {
+        this.remaining_time = remaining_time;
+    }
+
     @Override
     public String toString() {
-        return "Bug [id=" + id + ", alias=" + alias + ", product=" + product + ", component=" + component + ", version="
+        return "Bug [id=" + id + ", last_change_time=" + last_change_time + ", alias=" + alias + ", product=" + product + ", component=" + component + ", version="
                 + version + ", priority=" + priority + ", severity=" + severity + ", targetMilestone=" + targetMilestone
                 + ", creator=" + creator + ", assignedTo=" + assignedTo + ", qaContact=" + qaContact + ", docsContact="
                 + docsContact + ", status=" + status + ", resolution=" + resolution + ", flags=" + flags + ", groups=" + groups
                 + ", dependsOn=" + dependsOn + ", blocks=" + blocks + ", targetRelease=" + targetRelease + ", summary="
                 + summary + ", description=" + description + ", url=" + url + ", type=" + type + ", creationTime="
-                + creationTime + "]";
+                + creationTime + ", estimated_time" + estimated_time + "]" + ", actual_time" + actual_time + "]"
+                + ", remaining_time" + remaining_time + "]";
     }
 
 }
