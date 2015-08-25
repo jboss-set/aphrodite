@@ -29,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,10 +47,10 @@ public class Bug implements Issue {
     private static final long serialVersionUID = 6967220126171894474L;
 
     // includes attributes for Bug.get execution
-    public static final Object[] include_fields = { "id", "alias", "last_change_time" , "product", "component", "version", "priority",
-            "severity", "target_milestone", "creator", "assigned_to", "qa_contact", "docs_contact", "status", "resolution",
-            "flags", "groups", "depends_on", "blocks", "target_release", "summary", "description", "cf_type", "creation_time",
-            "estimated_time", "actual_time", "remaining_time" };
+    public static final Object[] include_fields = { "id", "alias", "last_change_time", "product", "component", "version",
+            "priority", "severity", "target_milestone", "creator", "assigned_to", "qa_contact", "docs_contact", "status",
+            "resolution", "flags", "groups", "depends_on", "blocks", "target_release", "summary", "description", "cf_type",
+            "creation_time", "estimated_time", "actual_time", "remaining_time", "external_bugs" };
 
     private int id;
     private List<String> alias;
@@ -80,11 +81,13 @@ public class Bug implements Issue {
     private Double actual_time;
     private Double remaining_time;
 
+    private Set<ExternalTrackerReference> externalTrackerRefs = new HashSet<ExternalTrackerReference>(0);
+
+    @SuppressWarnings("unchecked")
     public Bug(Map<String, Object> bugMap) {
         id = (Integer) bugMap.get("id");
 
         alias = convertIntoStringList((Object[]) bugMap.get("alias"));
-
         last_change_time = (Date) bugMap.get("last_change_time");
 
         product = (String) bugMap.get("product");
@@ -123,6 +126,11 @@ public class Bug implements Issue {
         estimated_time = (Double) bugMap.get("estimated_time");
         actual_time = (Double) bugMap.get("actual_time");
         remaining_time = (Double) bugMap.get("remaining_time");
+
+        Object[] external_bugs = (Object[]) bugMap.get("external_bugs");
+        if (external_bugs != null && external_bugs.length > 0)
+            for (Object o : external_bugs)
+                externalTrackerRefs.add(new ExternalTrackerReference((Map<String, Object>) o));
 
         setUrl(id);
     }
@@ -305,14 +313,13 @@ public class Bug implements Issue {
 
     @Override
     public String toString() {
-        return "Bug [id=" + id + ", last_change_time=" + last_change_time + ", alias=" + alias + ", product=" + product + ", component=" + component + ", version="
-                + version + ", priority=" + priority + ", severity=" + severity + ", targetMilestone=" + targetMilestone
-                + ", creator=" + creator + ", assignedTo=" + assignedTo + ", qaContact=" + qaContact + ", docsContact="
-                + docsContact + ", status=" + status + ", resolution=" + resolution + ", flags=" + flags + ", groups=" + groups
-                + ", dependsOn=" + dependsOn + ", blocks=" + blocks + ", targetRelease=" + targetRelease + ", summary="
-                + summary + ", description=" + description + ", url=" + url + ", type=" + type + ", creationTime="
-                + creationTime + ", estimated_time" + estimated_time + "]" + ", actual_time" + actual_time + "]"
-                + ", remaining_time" + remaining_time + "]";
+        return "Bug [id=" + id + ", alias=" + alias + ", last_change_time=" + last_change_time + ", product=" + product
+                + ", component=" + component + ", version=" + version + ", priority=" + priority + ", severity=" + severity
+                + ", targetMilestone=" + targetMilestone + ", creator=" + creator + ", assignedTo=" + assignedTo
+                + ", qaContact=" + qaContact + ", docsContact=" + docsContact + ", status=" + status + ", resolution="
+                + resolution + ", flags=" + flags + ", groups=" + groups + ", dependsOn=" + dependsOn + ", blocks=" + blocks
+                + ", targetRelease=" + targetRelease + ", summary=" + summary + ", description=" + description + ", url=" + url
+                + ", type=" + type + ", creationTime=" + creationTime + ", estimated_time=" + estimated_time + ", actual_time="
+                + actual_time + ", remaining_time=" + remaining_time + ", externalTrackerRefs=" + externalTrackerRefs + "]";
     }
-
 }
