@@ -94,4 +94,8 @@ public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
     public boolean addComment(final int id, final String text, CommentVisibility visibility, double worktime) {
         return bugzillaClient.addComment(id, text, visibility, worktime);
     }
+
+    public boolean updateEstimate(final int id, final double worktime) {
+        return bugzillaClient.updateEstimate(id, worktime);
+    }
 }

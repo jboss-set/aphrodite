@@ -78,6 +78,16 @@ public class BugsClient extends AbstractBugzillaClient {
         return runCommand(METHOD_BUG_UPDATE, params);
     }
 
+
+    public boolean updateEstimate(int id, double worktime) {
+        Map<String, Object> params = getParameterMap();
+        params.put("ids", id);
+        params.put("estimated_time", worktime);
+
+        return runCommand("Bug.update", params);
+    }
+
+
     @SuppressWarnings("unchecked")
     public Map<String, Bug> getBugs(Set<String> keySet) {
         if (keySet == null || keySet.isEmpty())
