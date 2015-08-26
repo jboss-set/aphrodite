@@ -111,4 +111,8 @@ public class BugsClient extends AbstractBugzillaClient {
         return results;
     }
 
+    public boolean customOperation(String methodname, Map<String,Object> params) {
+        params.putAll(getParameterMap());
+        return runCommand(methodname, params);
+    }
 }
