@@ -311,6 +311,14 @@ public class Bug implements Issue {
         this.remaining_time = remaining_time;
     }
 
+    public Set<ExternalTrackerReference> getExternalTrackerRefs() {
+        return externalTrackerRefs;
+    }
+
+    public void setExternalTrackerRefs(Set<ExternalTrackerReference> externalTrackerRefs) {
+        this.externalTrackerRefs = externalTrackerRefs;
+    }
+
     @Override
     public String toString() {
         return "Bug [id=" + id + ", alias=" + alias + ", last_change_time=" + last_change_time + ", product=" + product
