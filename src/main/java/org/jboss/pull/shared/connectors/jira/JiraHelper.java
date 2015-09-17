@@ -26,6 +26,8 @@ import com.atlassian.jira.rest.client.JiraRestClient;
 import com.atlassian.jira.rest.client.NullProgressMonitor;
 import com.atlassian.jira.rest.client.internal.jersey.JerseyJiraRestClientFactory;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
@@ -41,6 +43,8 @@ import java.util.Properties;
  */
 public class JiraHelper implements IssueHelper {
 
+    private static Log LOG = LogFactory.getLog(JiraHelper.class);
+
     private static String JIRA_LOGIN;
     private static String JIRA_PASSWORD;
 
@@ -54,7 +58,7 @@ public class JiraHelper implements IssueHelper {
             JIRA_PASSWORD = Util.require(properties, "jira.password");
             restClient = buildJiraRestClient();
         } catch (Exception e) {
-            throw Util.logErrorAndGetException(System.err, e);
+            throw Util.logExceptionAndGet(LOG, e);
         }
     }
 

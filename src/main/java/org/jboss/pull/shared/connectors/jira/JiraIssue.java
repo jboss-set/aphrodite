@@ -32,7 +32,10 @@ import java.util.TreeSet;
 import com.atlassian.jira.rest.client.domain.Field;
 import com.atlassian.jira.rest.client.domain.Version;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jboss.pull.shared.Constants;
+import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.common.Flag;
 import org.jboss.pull.shared.connectors.common.Issue;
 
@@ -43,6 +46,8 @@ import org.jboss.pull.shared.connectors.common.Issue;
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
 public class JiraIssue implements Issue {
+
+    private static Log LOG = LogFactory.getLog(JiraIssue.class);
 
     private URL url;
 
@@ -96,8 +101,8 @@ public class JiraIssue implements Issue {
         this.fixVersions = findFixVersions(issue.getFixVersions());
         try {
             this.url = new URL(Constants.JIRA_BASE_BROWSE + id);
-        } catch (MalformedURLException malformed) {
-            System.err.printf("Invalid URL formed: %s. \n", malformed);
+        } catch (MalformedURLException e) {
+            Util.logException(LOG, "Invalid url: " + Constants.JIRA_BASE_BROWSE + id, e);
         }
     }
 

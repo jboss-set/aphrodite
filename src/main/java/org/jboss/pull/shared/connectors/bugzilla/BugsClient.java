@@ -1,5 +1,9 @@
 package org.jboss.pull.shared.connectors.bugzilla;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.pull.shared.Util;
+
 import static org.jboss.pull.shared.internal.XMLRPC.Array;
 import static org.jboss.pull.shared.internal.XMLRPC.Struct;
 import static org.jboss.pull.shared.internal.XMLRPC.cast;
@@ -10,6 +14,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class BugsClient extends AbstractBugzillaClient {
+
+    private static final Log LOG = LogFactory.getLog(BugsClient.class);
 
     private static final String METHOD_BUG_UPDATE = "Bug.update";
     private static final String METHOD_BUG_GET = "Bug.get";
@@ -39,7 +45,7 @@ public class BugsClient extends AbstractBugzillaClient {
             Bug bug = new Bug(bugMap);
             return bug;
         } else {
-            System.out.println("Zero or more than one bug found with id: " + bugzillaId);
+            Util.logWarnMessage(LOG, "Zero or more than one bug found with id: " + bugzillaId);
             return null;
         }
     }

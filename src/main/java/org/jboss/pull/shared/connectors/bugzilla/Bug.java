@@ -21,9 +21,11 @@
  */
 package org.jboss.pull.shared.connectors.bugzilla;
 
-import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoIntegerSet;
-import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoStringList;
-import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoStringSet;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.common.Flag;
+import org.jboss.pull.shared.connectors.common.Issue;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -34,10 +36,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.pull.shared.connectors.common.Flag;
-import org.jboss.pull.shared.connectors.common.Issue;
+import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoIntegerSet;
+import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoStringList;
+import static org.jboss.pull.shared.connectors.bugzilla.ConversionUtils.convertIntoStringSet;
 
 public class Bug implements Issue {
+
+    private static Log LOG = LogFactory.getLog(Bug.class);
 
     // Bug Status
     public enum Status {
@@ -138,8 +143,8 @@ public class Bug implements Issue {
     private void setUrl(int id) {
         try {
             this.url = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=" + id);
-        } catch (MalformedURLException malformed) {
-            System.err.printf("Invalid URL formed: %s. \n", malformed);
+        } catch (MalformedURLException e) {
+            Util.logException(LOG, "Invalid URL formed: ", e);
         }
     }
 

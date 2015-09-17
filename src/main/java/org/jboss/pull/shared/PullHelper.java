@@ -21,14 +21,16 @@
  */
 package org.jboss.pull.shared;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Label;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.jboss.pull.shared.connectors.IssueHelper;
-import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
+import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.github.GithubHelper;
 import org.jboss.pull.shared.connectors.jira.JiraHelper;
 import org.jboss.pull.shared.evaluators.PullEvaluatorFacade;
@@ -37,8 +39,6 @@ import org.jboss.pull.shared.spi.PullEvaluator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A shared functionality regarding mergeable PRs, Github and Bugzilla.
@@ -47,7 +47,7 @@ import java.util.logging.Logger;
  * @author wangchao
  */
 public class PullHelper {
-    private Logger LOG = Logger.getLogger(PullHelper.class.getName());
+    private static Log LOG = LogFactory.getLog(PullHelper.class);
 
     // private final Properties props;
     private final PullEvaluatorFacade evaluatorFacade;
@@ -79,9 +79,7 @@ public class PullHelper {
             adminList = UserSet.loadUserList(Util.require(props, "admin.list.file"));
 
         } catch (Exception e) {
-            System.err.printf("Cannot initialize: %s\n", e);
-            e.printStackTrace(System.err);
-            throw e;
+            throw Util.logExceptionAndGet(LOG, e);
         }
     }
 
@@ -107,7 +105,9 @@ public class PullHelper {
         List<RedhatPullRequest> redhatPullRequests = new ArrayList<RedhatPullRequest>();
 
         for (PullRequest pullRequest : pullRequests) {
-            LOG.log(Level.INFO, "Found PR #{0,number,#}", pullRequest.getNumber());
+            if (LOG.isDebugEnabled())
+                LOG.debug("Found PR: " + pullRequest.getNumber());
+
             redhatPullRequests.add(new RedhatPullRequest(pullRequest, bzHelper, jiraHelper, ghHelper));
         }
 

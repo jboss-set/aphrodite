@@ -23,6 +23,8 @@
 package org.jboss.pull.shared.connectors.bugzilla;
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
@@ -36,6 +38,8 @@ import java.util.Set;
 import java.util.SortedSet;
 
 public class BZHelper implements IssueHelper {
+
+    private static Log LOG = LogFactory.getLog(BZHelper.class);
 
     private final String BUGZILLA_LOGIN;
     private final String BUGZILLA_PASSWORD;
@@ -52,7 +56,7 @@ public class BZHelper implements IssueHelper {
             // initialize bugzilla client
             bugzillaClient = new Bugzilla(Constants.BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
         } catch (Exception e) {
-            throw Util.logErrorAndGetException(System.err, e);
+            throw Util.logExceptionAndGet(LOG, e);
         }
     }
 

@@ -22,18 +22,12 @@
 
 package org.jboss.pull.shared.connectors.github;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.IRepositoryIdProvider;
+import org.eclipse.egit.github.core.Issue;
 import org.eclipse.egit.github.core.Label;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
@@ -46,11 +40,17 @@ import org.eclipse.egit.github.core.service.LabelService;
 import org.eclipse.egit.github.core.service.MilestoneService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
-import org.eclipse.egit.github.core.Issue;
 import org.jboss.pull.shared.Util;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class GithubHelper {
-    private static final Logger LOG = Logger.getLogger(GithubHelper.class.getName());
+    private static Log LOG = LogFactory.getLog(GithubHelper.class);
 
     private final String GITHUB_ORGANIZATION;
     private final String GITHUB_REPO;
@@ -88,9 +88,7 @@ public class GithubHelper {
             labelService = new LabelService(client);
 
         } catch (Exception e) {
-            System.err.printf("Cannot initialize: %s\n", e);
-            e.printStackTrace(System.err);
-            throw e;
+            throw Util.logExceptionAndGet(LOG, e);
         }
     }
 
@@ -102,8 +100,7 @@ public class GithubHelper {
             try {
                 branches = repositoryService.getBranches(repository);
             } catch (IOException e) {
-                System.err.println("Error retrieving branches from repository");
-                e.printStackTrace();
+                Util.logException(LOG, "Error retrieving branches from repository: ", e);
             }
         }
         return branches;
@@ -122,20 +119,18 @@ public class GithubHelper {
         try {
             pullRequest = pullRequestService.getPullRequest(repository, id);
         } catch (IOException e) {
-            System.err.printf("Couldn't retrieve PullRequestId: '" + id + "' from Repository: '" + repository.generateId()
-                    + "'");
-            e.printStackTrace();
+            Util.logException(LOG, "Coouldn't retrieve Pull Request with id: " + id + " from repsoitory " + repository.generateId(), e);
         }
         return pullRequest;
     }
 
     public List<PullRequest> getPullRequests(String state) {
-        List<PullRequest> result;
+        List<PullRequest> result = new ArrayList<>();
         try {
             result = pullRequestService.getPullRequests(repository, state);
         } catch (IOException e) {
-            System.err.printf("Couldn't get pull requests in state %s of repository %s due to %s.\n", state, repository, e);
-            result = new ArrayList<PullRequest>();
+            String message = String.format("Couldn't get pull requests in state %s of repository %s.", state, repository);
+            Util.logException(LOG, message, e);
         }
         return result;
     }
@@ -147,8 +142,7 @@ public class GithubHelper {
             commitStatus.setState(status);
             commitService.createStatus(repository, pull.getHead().getSha(), commitStatus);
         } catch (Exception e) {
-            System.err.printf("Problem posting a status build for sha: %s\n", pull.getHead().getSha());
-            e.printStackTrace(System.err);
+            Util.logException(LOG, "Error posting a status for sha: " + pull.getHead().getSha(), e);
         }
     }
 
@@ -156,8 +150,7 @@ public class GithubHelper {
         try {
             issueService.createComment(repository, pull.getNumber(), comment);
         } catch (IOException e) {
-            System.err.printf("Problem posting a comment build for pull: %d\n", pull.getNumber());
-            e.printStackTrace(System.err);
+            Util.logException(LOG, "Error posting a comment to pull request: " + pull.getNumber(), e);
         }
     }
 
@@ -165,13 +158,12 @@ public class GithubHelper {
 
     public List<Milestone> getMilestones() {
         if (milestones == null) {
-            milestones = new ArrayList<Milestone>();
+            milestones = new ArrayList<>();
             try {
                 milestones = milestoneService.getMilestones(repository, "open");
                 milestones.addAll(milestoneService.getMilestones(repository, "closed"));
             } catch (IOException e) {
-                System.err.printf("Problem getting milestones");
-                e.printStackTrace(System.err);
+                Util.logException(LOG, "Error retrieving milestones", e);
             }
         }
         return milestones;
@@ -184,8 +176,7 @@ public class GithubHelper {
         try {
             returnMilestone = milestoneService.createMilestone(repository, newMilestone);
         } catch (IOException e) {
-            System.err.printf("Problem creating new milestone. title: " + title);
-            e.printStackTrace(System.err);
+            Util.logException(LOG, "Problem creating new milestone with title: " + title, e);
         }
         return returnMilestone;
     }
@@ -196,8 +187,7 @@ public class GithubHelper {
         try {
             issue = issueService.getIssue(repository, id);
         } catch (IOException e) {
-            System.err.printf("Problem getting issue. id: " + id);
-            e.printStackTrace(System.err);
+            Util.logException(LOG, "Problem getting issue with id: " + id, e);
         }
         return issue;
     }
@@ -211,8 +201,7 @@ public class GithubHelper {
         try {
             returnIssue = issueService.editIssue(repository, issue);
         } catch (IOException e) {
-            System.err.printf("Problem editing issue. id: " + issue.getId());
-            e.printStackTrace(System.err);
+            Util.logException(LOG, "Problem editing issue with id: " + issue.getId(), e);
         }
         return returnIssue;
     }
@@ -234,9 +223,8 @@ public class GithubHelper {
             if (pullRequestService.isMerged(pullRequest.getBase().getRepo(), pullRequest.getNumber())) {
                 return true;
             }
-        } catch (IOException ignore) {
-            System.err.printf("Cannot get Merged information of the pull request %d: %s.\n", pullRequest.getNumber(), ignore);
-            ignore.printStackTrace(System.err);
+        } catch (IOException e) {
+            Util.logException(LOG, "Cannot get Merged information of the pull request with id: " + pullRequest.getNumber(), e);
         }
 
         try {
@@ -246,9 +234,8 @@ public class GithubHelper {
                     return true;
                 }
             }
-        } catch (IOException ignore) {
-            System.err.printf("Cannot get comments of the pull request %d: %s.\n", pullRequest.getNumber(), ignore);
-            ignore.printStackTrace(System.err);
+        } catch (IOException e) {
+            Util.logException(LOG, "Cannot get comments of the pull request with id: " + pullRequest.getNumber(), e);
         }
 
         return false;
@@ -272,10 +259,8 @@ public class GithubHelper {
         try {
             return issueService.getComments(repository, pullRequest.getNumber());
         } catch (IOException e) {
-            System.err.println("Error to get comments for pull request : " + pullRequest.getNumber());
-            e.printStackTrace(System.err);
+            Util.logException(LOG, "Error to get comments for pull request: " + pullRequest.getNumber(), e);
         }
-
         return new ArrayList<Comment>();
     }
 
@@ -292,8 +277,7 @@ public class GithubHelper {
             final String label = title.replace(" ", "%20");
             return labelService.getLabel(repository, label);
         } catch (IOException e) {
-            LOG.log(Level.WARNING, "Error trying to get label '" + title + "'", e);
-            System.err.println("Error trying to get label '" + title + "'");
+            Util.logException(LOG, "Error trying to get lavel: " + title, e);
         }
         return null;
     }

@@ -21,11 +21,12 @@
  */
 package org.jboss.pull.shared;
 
+import org.apache.commons.logging.Log;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -92,8 +93,27 @@ public class Util {
         return dateFormat.format(date);
     }
 
-    public static Exception logErrorAndGetException(PrintStream stream, Exception e) {
-        stream.println(e);
+    public static void logWarnMessage(Log log, String message) {
+        if (log.isWarnEnabled())
+            log.warn(message);
+    }
+
+    public static void logException(Log log, String message, Exception e) {
+        if (log.isErrorEnabled()) {
+            if (message == null)
+                log.error(e);
+            else
+                log.error(message, e);
+        }
+    }
+
+    public static Exception logExceptionAndGet(Log log, Exception e) {
+        logException(log, null, e);
+        return e;
+    }
+
+    public static Exception logExceptionAndGet(Log log, String message, Exception e) {
+        logException(log, message, e);
         return e;
     }
 }

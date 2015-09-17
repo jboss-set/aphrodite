@@ -22,6 +22,23 @@
 
 package org.jboss.pull.shared.connectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.eclipse.egit.github.core.Comment;
+import org.eclipse.egit.github.core.Label;
+import org.eclipse.egit.github.core.Milestone;
+import org.eclipse.egit.github.core.PullRequest;
+import org.eclipse.egit.github.core.User;
+import org.jboss.pull.shared.BuildResult;
+import org.jboss.pull.shared.Constants;
+import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
+import org.jboss.pull.shared.connectors.bugzilla.Bug;
+import org.jboss.pull.shared.connectors.common.Issue;
+import org.jboss.pull.shared.connectors.github.GithubHelper;
+import org.jboss.pull.shared.connectors.jira.JiraHelper;
+import org.jboss.pull.shared.connectors.jira.JiraIssue;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,21 +47,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.egit.github.core.Comment;
-import org.eclipse.egit.github.core.Label;
-import org.eclipse.egit.github.core.Milestone;
-import org.eclipse.egit.github.core.PullRequest;
-import org.eclipse.egit.github.core.User;
-import org.jboss.pull.shared.BuildResult;
-import org.jboss.pull.shared.Constants;
-import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
-import org.jboss.pull.shared.connectors.bugzilla.Bug;
-import org.jboss.pull.shared.connectors.common.Issue;
-import org.jboss.pull.shared.connectors.github.GithubHelper;
-import org.jboss.pull.shared.connectors.jira.JiraHelper;
-import org.jboss.pull.shared.connectors.jira.JiraIssue;
-
 public class RedhatPullRequest {
+
+    private static Log LOG = LogFactory.getLog(RedhatPullRequest.class);
+
     private PullRequest pullRequest;
 
     private List<Issue> bugs = null;
@@ -120,15 +126,15 @@ public class RedhatPullRequest {
     }
 
     private List<URL> extractURLs(String urlBase, Pattern toMatch) {
-        final List<URL> urls = new ArrayList<URL>();
+        final List<URL> urls = new ArrayList<>();
         final Matcher matcher = toMatch.matcher(pullRequest.getBody());
         while (matcher.find()) {
             try {
                 urls.add(new URL(urlBase + matcher.group(1)));
-            } catch (NumberFormatException ignore) {
-                System.err.printf("Invalid bug number: %s.\n", ignore);
-            } catch (MalformedURLException malformed) {
-                System.err.printf("Invalid URL formed: %s. \n", malformed);
+            } catch (NumberFormatException e) {
+                Util.logException(LOG, "Invalid bug number: ", e);
+            } catch (MalformedURLException e) {
+                Util.logException(LOG, "Invalid URL formed: ", e);
             }
         }
         return urls;
@@ -200,26 +206,20 @@ public class RedhatPullRequest {
 
         while (abbreviatedMatcher.find()) {
             String match = abbreviatedMatcher.group();
-            System.out.println("Match: " + match);
             Matcher abbreviatedExternalMatcher = Constants.ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO.matcher(match);
 
             if (abbreviatedExternalMatcher.find()) {
-                System.out.println("Attempting External Match: " + match);
                 PullRequest relatedPullRequest = ghHelper.getPullRequest(abbreviatedExternalMatcher.group(1),
                         abbreviatedExternalMatcher.group(2), Integer.valueOf(abbreviatedExternalMatcher.group(3)));
                 if (relatedPullRequest != null) {
-                    System.out.println("External Match Found: " + match);
                     relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, jiraHelper, ghHelper));
                     continue;
                 }
-
             }
 
-            System.out.println("Attempting Internal Match: " + match);
             PullRequest relatedPullRequest = ghHelper.getPullRequest(getOrganization(), getRepository(),
                     Integer.valueOf(abbreviatedMatcher.group(2)));
             if (relatedPullRequest != null) {
-                System.out.println("Internal Match Found: " + match);
                 relatedPullRequests.add(new RedhatPullRequest(relatedPullRequest, bzHelper, jiraHelper, ghHelper));
             }
 
