@@ -12,7 +12,7 @@
     </parent>
 
     <groupId>org.jboss.jbossset</groupId>
-    <artifactId>pull-shared</artifactId>
+    <artifactId>aphrodite</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Aphrodite</name>
@@ -47,13 +47,6 @@
             </comments>
         </license>
     </licenses>
-
-    <scm>
-        <connection>scm:git:git://github.com/jboss-set/pull-shared.git</connection>
-        <developerConnection>scm:git:git@github.com:jboss-set/pull-shared.git</developerConnection>
-        <url>https://github.com/jboss-set/pull-shared</url>
-        <tag>HEAD</tag>
-    </scm>
 
     <developers>
         <developer>
