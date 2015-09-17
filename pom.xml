@@ -4,14 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <artifactId>jboss-parent</artifactId>
-        <groupId>org.jboss</groupId>
-        <version>16</version>
-        <relativePath/>
-    </parent>
-
-    <groupId>org.jboss.jbossset</groupId>
+    <groupId>org.jboss.set</groupId>
     <artifactId>aphrodite</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -55,6 +48,13 @@
 
     <developers>
         <developer>
+            <id>egongzle</id>
+            <name>Enrique González Martínez</name>
+            <organization>Red Hat</organization>
+            <email>egonzale@redhat.com</email>
+            <timezone>Spain</timezone>
+        </developer>
+        <developer>
             <id>remerson</id>
             <name>Ryan Emerson</name>
             <organization>Red Hat</organization>
@@ -67,13 +67,6 @@
             <organization>Red Hat</organization>
             <email>belaran@redhat.com</email>
             <timezone>Germany/Berlin</timezone>
-        </developer>
-        <developer>
-            <id>ewertz</id>
-            <name>Joe Wertz</name>
-            <organization>Red Hat</organization>
-            <email>ewertz@redhat.com</email>
-            <timezone>China/Shanghai</timezone>
         </developer>
     </developers>
 
