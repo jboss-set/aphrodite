@@ -52,7 +52,7 @@ public class PullHelper {
     // private final Properties props;
     private final PullEvaluatorFacade evaluatorFacade;
 
-    private final UserList adminList;
+    private final UserSet adminList;
 
     // ------- Specific Helpers
     private GithubHelper ghHelper;
@@ -76,7 +76,7 @@ public class PullHelper {
             // initialize evaluators
             evaluatorFacade = new PullEvaluatorFacade(this, props);
 
-            adminList = UserList.loadUserList(Util.require(props, "admin.list.file"));
+            adminList = UserSet.loadUserList(Util.require(props, "admin.list.file"));
 
         } catch (Exception e) {
             System.err.printf("Cannot initialize: %s\n", e);
