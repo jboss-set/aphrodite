@@ -25,6 +25,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -65,9 +67,9 @@ public class Util {
     }
 
     public static String require(Properties props, String name) {
-        String ret = (String) props.get(name);
+        String ret = props.getProperty(name);
         if (ret == null)
-            throw new RuntimeException(name + " must be specified in processor.properties");
+            throw new IllegalArgumentException(name + " must be specified in processor.properties");
 
         return ret.trim();
     }
@@ -91,4 +93,8 @@ public class Util {
         return dateFormat.format(date);
     }
 
+    public static Exception logErrorAndGetException(PrintStream stream, Exception e) {
+        stream.println(e);
+        return e;
+    }
 }

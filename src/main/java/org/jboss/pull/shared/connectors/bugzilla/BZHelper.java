@@ -23,37 +23,36 @@
 package org.jboss.pull.shared.connectors.bugzilla;
 
 
-import java.net.URL;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
-import org.jboss.pull.shared.connectors.common.AbstractCommonIssueHelper;
 import org.jboss.pull.shared.connectors.common.Issue;
 
-public class BZHelper extends AbstractCommonIssueHelper implements IssueHelper {
+import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+
+public class BZHelper implements IssueHelper {
 
     private final String BUGZILLA_LOGIN;
     private final String BUGZILLA_PASSWORD;
 
     private final Bugzilla bugzillaClient;
+    private final Properties properties;
 
     public BZHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
-        super(configurationFileProperty, configurationFileDefault);
         try {
-            BUGZILLA_LOGIN = Util.require(fromUtil, "bugzilla.login");
-            BUGZILLA_PASSWORD = Util.require(fromUtil, "bugzilla.password");
+            properties = Util.loadProperties(configurationFileProperty, configurationFileDefault);
+            BUGZILLA_LOGIN = Util.require(properties, "bugzilla.login");
+            BUGZILLA_PASSWORD = Util.require(properties, "bugzilla.password");
 
             // initialize bugzilla client
             bugzillaClient = new Bugzilla(Constants.BUGZILLA_BASE, BUGZILLA_LOGIN, BUGZILLA_PASSWORD);
         } catch (Exception e) {
-            System.err.printf("Cannot initialize: %s\n", e);
-            e.printStackTrace(System.err);
-            throw e;
+            throw Util.logErrorAndGetException(System.err, e);
         }
     }
 

@@ -29,33 +29,32 @@ import com.atlassian.jira.rest.client.internal.jersey.JerseyJiraRestClientFactor
 import org.jboss.pull.shared.Constants;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.IssueHelper;
-import org.jboss.pull.shared.connectors.common.AbstractCommonIssueHelper;
 import org.jboss.pull.shared.connectors.common.Issue;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Properties;
 
 /**
  * @author navssurtani
  */
-public class JiraHelper extends AbstractCommonIssueHelper implements IssueHelper{
+public class JiraHelper implements IssueHelper {
 
     private static String JIRA_LOGIN;
     private static String JIRA_PASSWORD;
 
-    private JiraRestClient restClient;
+    private final JiraRestClient restClient;
+    private final Properties properties;
 
     public JiraHelper(final String configurationFileProperty, final String configurationFileDefault) throws Exception {
-        super(configurationFileProperty, configurationFileDefault);
         try {
-            JIRA_LOGIN = Util.require(fromUtil, "jira.login");
-            JIRA_PASSWORD = Util.require(fromUtil, "jira.password");
+            properties = Util.loadProperties(configurationFileProperty, configurationFileDefault);
+            JIRA_LOGIN = Util.require(properties, "jira.login");
+            JIRA_PASSWORD = Util.require(properties, "jira.password");
             restClient = buildJiraRestClient();
         } catch (Exception e) {
-            System.err.printf("Cannot initialize: %s\n", e);
-            e.printStackTrace(System.err);
-            throw e;
+            throw Util.logErrorAndGetException(System.err, e);
         }
     }
 
