@@ -27,9 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * representes a isuse in a issue tracker (bugzilla, jira...)
- * @author egonzalez
+ * Represents an issue in a issue tracker (bugzilla, jira...)
  *
+ * @author egonzalez
  */
 public class Issue {
 
@@ -53,6 +53,8 @@ public class Issue {
 
     private List<URL> blocks;
 
+    private IssueTracking tracking;
+
     public Issue(URL url) {
         this.url = url;
         this.stage = new Stage();
@@ -60,16 +62,13 @@ public class Issue {
         this.type = IssueType.UNDEFINED;
         this.release = new Release();
         this.streams = new ArrayList<Stream>();
-        this.dependsOn = new ArrayList<URL>();
-        this.blocks = new ArrayList<URL>();
+        this.dependsOn = new ArrayList<>();
+        this.blocks = new ArrayList<>();
+        this.tracking = new IssueTracking();
     }
 
     public URL getURL() {
         return url;
-    }
-
-    public Stage getStage() {
-        return stage;
     }
 
     public String getDescription() {
@@ -78,6 +77,22 @@ public class Issue {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getAssignee() {
+        return assignee;
+    }
+
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
     }
 
     public IssueStatus getStatus() {
@@ -96,16 +111,20 @@ public class Issue {
         this.type = type;
     }
 
-    public void setRelease(Release release) {
-        this.release = release;
-    }
-
     public Release getRelease() {
         return release;
     }
 
+    public void setRelease(Release release) {
+        this.release = release;
+    }
+
     public List<Stream> getStreams() {
         return streams;
+    }
+
+    public void setStreams(List<Stream> streams) {
+        this.streams = streams;
     }
 
     public List<URL> getDependsOn() {
@@ -124,11 +143,11 @@ public class Issue {
         this.blocks = blocks;
     }
 
-    public String getAssignee() {
-        return assignee;
+    public IssueTracking getTracking() {
+        return tracking;
     }
 
-    public void setAssignee(String assignee) {
-        this.assignee = assignee;
+    public void setTracking(IssueTracking tracking) {
+        this.tracking = tracking;
     }
 }
