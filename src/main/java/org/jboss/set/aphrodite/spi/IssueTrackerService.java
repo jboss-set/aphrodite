@@ -64,6 +64,14 @@ public interface IssueTrackerService {
      */
     Issue getIssue(URL url) throws NotFoundException;
 
+    /**
+     * Return all issues which match the passed <code>SearchCriteria</code>.
+     *
+     * @param searchCriteria all set fields will be search for.
+     * @return a list of all <code>Issue</code> objects which match the specified searchCriteria,
+     *         or an empty list if no issues match the searched criteria.
+     */
+    List<Issue> searchIssues(SearchCriteria searchCriteria);
 
     /**
      * Update an <code>Issue</code> at the remote issue tracker service.
