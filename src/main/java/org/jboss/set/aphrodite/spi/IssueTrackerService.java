@@ -26,23 +26,51 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
-import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.spi.NotFoundException;
 
 public interface IssueTrackerService {
 
+    /**
+     * Initiate this <code>IssueTrackerService</code> using the supplied properties object.
+     *
+     * @param properties A properties object containing all configuration information required by
+     *                   the IssueTrackerService.
+     */
     void init(Properties properties);
 
-    boolean accepts(URL url);
+    /**
+     * Sets the base url of this <code>IssueTrackerService</code>.
+     *
+     * @param url the base url of the <code>IssueTrackerService</code>
+     * @return <code>true</code> if this URL exists and has not previously been set.
+     */
+    boolean setBaseUrl(URL url);
 
-    List<URL> findIssuesIn(Patch patch);
+    /**
+     * Retrieve all Issues associated with the provided patch object.
+     *
+     * @param patch the <code>Patch</code> object whoms associated Issues should be returned.
+     * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
+     */
+    List<Issue> getIssuesAssociatedWith(Patch patch);
 
-    Issue find(URL url) throws NotFoundException;
+    /**
+     * Retrieve an issue object associated with the given <code>URL</code>.
+     *
+     * @param url the <code>URL</code> of the issue to be retrieved.
+     * @return the <code>Issue</code> associated with the provided <code>URK</code>.
+     * @throws NotFoundException if the provided <code>URL</code> is not associated with an issue.
+     */
+    Issue getIssue(URL url) throws NotFoundException;
 
-    List<Comment> findAll(Issue issue);
 
-    void update(Issue issue);
+    /**
+     * Update an <code>Issue</code> at the remote issue tracker service.
+     *
+     * @param issue the issue to be updated at the <code>IssueTrackerService</code>
+     * @throws NotFoundException if the provided <code>Issue</code> cannot be found at the IssueTracker.
+     */
+    void updateIssue(Issue issue) throws NotFoundException;
 
 }

@@ -30,19 +30,59 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
-import org.jboss.set.aphrodite.spi.NotFoundException;
 
 public interface RepositoryService {
 
+    /**
+     * Initiate this <code>IssueTrackerService</code> using the supplied properties object.
+     *
+     * @param properties A properties object containing all configuration information required by
+     *                   the IssueTrackerService.
+     */
     void init(Properties properties);
 
-    boolean accepts(URL url);
+    /**
+     * Sets the base url of this <code>IssueTrackerService</code>.
+     *
+     * @param url the base url of the <code>IssueTrackerService</code>
+     * @return <code>true</code> if this URL exists and has not previously been set.
+     */
+    boolean setBaseUrl(URL url);
 
-    Repository find(URL url) throws NotFoundException;
+    /**
+     * Get the repository located at the provided <code>URL</code>.
+     *
+     * @param url the <code>URL</code> of the repository to be retrieved.
+     * @return the <code>Repository</code> object.
+     * @throws NotFoundException if a <code>Repository</code> cannot be found at the provided base url.
+     */
+    Repository getRepository(URL url) throws NotFoundException;
 
-    List<URL> findPatchesIn(Issue issue);
+    /**
+     * Retrieve all Patches associated with the provided <code>Issue</code> object
+     *
+     * @param issue the <code>Issue</code> object whose associated Patches should be returned.
+     * @return a list of all <code>Patch</code> objects, or an empty list if no patches can be found.
+     */
+    List<Patch> getPatchesAssociatedWith(Issue issue);
 
-    List<Patch> listByStatus(Repository repository, PatchStatus status);
+    /**
+     * Retrieve all Patches associated with the provided <code>Repository</code> object, which have a
+     * status that matches the provided <code>PatchStatus</code> object.
+     *
+     * @param repository the <code>Repository</code> object whose associated Patches should be returned.
+     * @param status the <code>PatchStatus</code> which the returned <code>Patch</code> objects must have.
+     * @return a list of all matching <code>Patch</code> objects, or an empty list if no patches can be found.
+     */
+    List<Patch> getPatchesByStatus(Repository repository, PatchStatus status);
 
-    void addComment(Patch patch, String comment);
+    /**
+     * Add a <code>Comment</code> to the specified <code>Patch</code> object, and propagate the changes
+     * to the remote repository.
+     *
+     * @param patch the <code>Patch</code> on which the comment will be made.
+     * @param comment the new <code>Comment</code>.
+     * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
+     */
+    void addComment(Patch patch, String comment) throws NotFoundException;
 }
