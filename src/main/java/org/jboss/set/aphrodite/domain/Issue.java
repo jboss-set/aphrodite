@@ -35,6 +35,13 @@ public class Issue {
 
     private URL url;
 
+    // The unique id of an issue within its issue tracker domain e.g WFLY-5048
+    private String trackerId;
+
+    private String product; // E.g EAP6
+
+    private String component; // E.g Clustering
+
     private String description;
 
     private String assignee;
@@ -57,6 +64,9 @@ public class Issue {
 
     public Issue(URL url) {
         this.url = url;
+        this.trackerId = null;
+        this.product = null;
+        this.component = null;
         this.stage = new Stage();
         this.status = IssueStatus.UNDEFINED;
         this.type = IssueType.UNDEFINED;
@@ -69,6 +79,30 @@ public class Issue {
 
     public URL getURL() {
         return url;
+    }
+
+    public String getTrackerId() {
+        return trackerId;
+    }
+
+    public void setTrackerId(String trackerId) {
+        this.trackerId = trackerId;
+    }
+
+    public String getProduct() {
+        return product;
+    }
+
+    public void setProduct(String product) {
+        this.product = product;
+    }
+
+    public String getComponent() {
+        return component;
+    }
+
+    public void setComponent(String component) {
+        this.component = component;
     }
 
     public String getDescription() {
