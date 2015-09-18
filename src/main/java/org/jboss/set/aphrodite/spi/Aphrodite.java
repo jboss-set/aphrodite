@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.set.aphrodite.service;
+package org.jboss.set.aphrodite.spi;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
 
-// this will be the façade whenever the services are ready
 public class Aphrodite {
 
     public static final String FILE_LOCATION = "aphrodite.file";

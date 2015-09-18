@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.set.aphrodite.service;
+package org.jboss.set.aphrodite.spi;
 
 import java.net.URL;
 import java.util.List;
@@ -30,6 +30,7 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 
 public interface RepositoryService {
 
