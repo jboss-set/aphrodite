@@ -22,25 +22,60 @@
 
 package org.jboss.set.aphrodite.spi;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.pull.shared.Util;
+import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.ServiceLoader;
 
 public class Aphrodite {
 
     public static final String FILE_LOCATION = "aphrodite.file";
 
+    private static final Log LOG = LogFactory.getLog(Aphrodite.class);
     private static Aphrodite instance;
 
+    /**
+     * Get an instance of the Aphrodite service. If the service has not yet been initialised, then
+     * a new service is created.
+     *
+     * This service will use the YAML configuration file specified in the {@value FILE_LOCATION}
+     * environment variable.
+     *
+     * @return instance the singleton instance of the Aphrodite service.
+     * @throws AphroditeException if the specified configuration file cannot be opened.
+     */
     public static synchronized Aphrodite instance() throws AphroditeException {
         if (instance == null) {
             instance = new Aphrodite();
         }
         return instance;
+    }
+
+    /**
+     * Get an instance of the Aphrodite service. If the service has not yet been initialised, then
+     * a new service is created using the provided config. If the service has already been initialised
+     * then an <code>IllegalStateException</code> is thrown.
+     *
+     * @param config an <code>AphroditeConfig</code> object containing all configuration data.
+     * @return instance the singleton instance of the Aphrodite service.
+     * @throws AphroditeException
+     * @throws IllegalStateException if an <code>Aphrodite</code> service has already been initialised.
+     */
+    public static synchronized Aphrodite instance(AphroditeConfig config) throws AphroditeException {
+        if (instance != null)
+            throw new IllegalStateException("Cannot create a new instance of " +
+                    Aphrodite.class.getName() + " as it is a singleton which has already been initialised.");
+
+        instance = new Aphrodite(config);
+        return instance();
     }
 
     private List<IssueTrackerService> issueTrackers;
@@ -53,16 +88,26 @@ public class Aphrodite {
             throw new IllegalArgumentException("Environment variable '" + FILE_LOCATION + "' must be set");
 
         try (InputStream is = new FileInputStream(System.getenv(FILE_LOCATION))) {
-            issueTrackers = new ArrayList<>();
-            repositories = new ArrayList<>();
-
-            Properties properties = new Properties();
-            properties.load(is);
-
-            ServiceLoader.load(IssueTrackerService.class).forEach(issueTracker -> issueTracker.init(properties));
-            ServiceLoader.load(RepositoryService.class).forEach(repositoryService -> repositoryService.init(properties));
+            init(new Yaml().loadAs(is, AphroditeConfig.class));
         } catch (IOException e) {
+            Util.logException(LOG, "Unable to load file: " + propFileLocation, e);
             throw new AphroditeException(e);
         }
+    }
+
+    private Aphrodite(AphroditeConfig config) throws AphroditeException {
+        init(config);
+    }
+
+    private void init(AphroditeConfig config) {
+        issueTrackers = new ArrayList<>();
+        repositories = new ArrayList<>();
+
+        ServiceLoader.load(IssueTrackerService.class).forEach(issueTracker -> issueTracker.init(config));
+        ServiceLoader.load(RepositoryService.class).forEach(repositoryService -> repositoryService.init(config));
+    }
+
+    public static void main(String[] args) throws Exception {
+        Aphrodite.instance();
     }
 }

@@ -22,29 +22,29 @@
 
 package org.jboss.set.aphrodite.spi;
 
-import java.net.URL;
-import java.util.List;
-import java.util.Properties;
-
+import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
 
+import java.net.URL;
+import java.util.List;
+
 public interface RepositoryService {
 
     /**
-     * Initiate this <code>IssueTrackerService</code> using the supplied properties object.
+     * Initiate this <code>RepositoryService</code> using the supplied properties object.
      *
-     * @param properties A properties object containing all configuration information required by
-     *                   the IssueTrackerService.
+     * @param config a <code>AphroditeConfig</code> object containing all configuration information
+     *               required by a RepositoryService.
      */
-    void init(Properties properties);
+    void init(AphroditeConfig config);
 
     /**
-     * Sets the base url of this <code>IssueTrackerService</code>.
+     * Sets the base url of this <code>RepositoryService</code>.
      *
-     * @param url the base url of the <code>IssueTrackerService</code>
+     * @param url the base url of the <code>RepositoryService</code>
      * @return <code>true</code> if this URL exists and has not previously been set.
      */
     boolean setBaseUrl(URL url);
