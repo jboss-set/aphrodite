@@ -23,6 +23,7 @@
 package org.jboss.set.aphrodite.spi;
 
 import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 
@@ -32,20 +33,23 @@ import java.util.List;
 public interface IssueTrackerService {
 
     /**
-     * Initiate this <code>IssueTrackerService</code> using the supplied properties object.
+     * Initiate this <code>IssueTrackerService</code> using the supplied <code>AphroditeConfig</code>.
+     * The first <code>IssueTrackerConfig</code> object found in the <code>AphroditeConfig</code> object,
+     * is used to initiate the service and is subsequently removed from the config to prevent the same
+     * service being initiated twice.
      *
-     * @param config a <code>AphroditeConfig</code> object containing all configuration
-     *                        information required by an IssueTrackerService.
+     * @param config a <code>AphroditeConfig</code> object containing at least one
+     *               <code>IssueTrackerConfig</code> object.
+     * @throws IllegalArgumentException if no <code>IssueTrackerConfig</code> objects are present.
      */
     void init(AphroditeConfig config);
 
     /**
-     * Sets the base url of this <code>IssueTrackerService</code>.
+     * Initiate this <code>IssueTrackerService</code> using the supplied <code>IssueTrackerConfig</code>.
      *
-     * @param url the base url of the <code>IssueTrackerService</code>
-     * @return <code>true</code> if this URL exists and has not previously been set.
+     * @param config a <code>IssueTrackerConfig</code> object containing all configuration information.
      */
-    boolean setBaseUrl(URL url);
+    void init(IssueTrackerConfig config);
 
     /**
      * Retrieve all Issues associated with the provided patch object.

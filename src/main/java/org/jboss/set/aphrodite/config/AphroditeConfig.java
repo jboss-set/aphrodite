@@ -40,6 +40,10 @@ public class AphroditeConfig {
         this.repositoryConfigs = repositoryConfigs;
     }
 
+    public AphroditeConfig(AphroditeConfig config) {
+        this(new ArrayList<>(config.getIssueTrackerConfigs()), new ArrayList<>(config.getRepositoryConfigs()));
+    }
+
     public List<IssueTrackerConfig> getIssueTrackerConfigs() {
         return issueTrackerConfigs;
     }

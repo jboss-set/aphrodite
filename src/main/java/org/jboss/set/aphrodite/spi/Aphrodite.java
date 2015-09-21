@@ -31,8 +31,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ServiceLoader;
 
 public class Aphrodite {
@@ -78,9 +76,7 @@ public class Aphrodite {
         return instance();
     }
 
-    private List<IssueTrackerService> issueTrackers;
-
-    private List<RepositoryService> repositories;
+    private AphroditeConfig config;
 
     private Aphrodite() throws AphroditeException {
         String propFileLocation = System.getenv(FILE_LOCATION);
@@ -100,11 +96,12 @@ public class Aphrodite {
     }
 
     private void init(AphroditeConfig config) {
-        issueTrackers = new ArrayList<>();
-        repositories = new ArrayList<>();
+        this.config = config;
 
-        ServiceLoader.load(IssueTrackerService.class).forEach(issueTracker -> issueTracker.init(config));
-        ServiceLoader.load(RepositoryService.class).forEach(repositoryService -> repositoryService.init(config));
+        // Create new config object, as the object passed to init() will have its state changed.
+        AphroditeConfig mutableConfig = new AphroditeConfig(config);
+        ServiceLoader.load(IssueTrackerService.class).forEach(issueTracker -> issueTracker.init(mutableConfig));
+        ServiceLoader.load(RepositoryService.class).forEach(repositoryService -> repositoryService.init(mutableConfig));
     }
 
     public static void main(String[] args) throws Exception {
