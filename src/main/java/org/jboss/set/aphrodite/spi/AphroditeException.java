@@ -31,4 +31,11 @@ public class AphroditeException extends Exception {
         super(th);
     }
 
+    public AphroditeException(String message) {
+        super(message);
+    }
+
+    public AphroditeException(String message, Throwable th) {
+        super(message, th);
+    }
 }
