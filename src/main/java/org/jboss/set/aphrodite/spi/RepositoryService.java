@@ -42,16 +42,18 @@ public interface RepositoryService {
      *
      * @param config a <code>AphroditeConfig</code> object containing at least one
      *               <code>RepositoryConfig</code> object.
+     * @return <code>true</code> if the service was initialised without errors, <code>false</code> otherwise.
      * @throws IllegalArgumentException if no <code>RepositoryConfig</code> objects are present.
      */
-    void init(AphroditeConfig config);
+    boolean init(AphroditeConfig config);
 
     /**
      * Initiate this <code>RepositoryService</code> using the supplied <code>RepositoryConfig</code>.
      *
      * @param config a <code>RepositoryConfig</code> object containing all configuration information.
+     * @return <code>true</code> if the service was initialised without errors, <code>false</code> otherwise.
      */
-    void init(RepositoryConfig config);
+    boolean init(RepositoryConfig config);
 
     /**
      * Get the repository located at the provided <code>URL</code>.

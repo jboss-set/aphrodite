@@ -40,16 +40,18 @@ public interface IssueTrackerService {
      *
      * @param config a <code>AphroditeConfig</code> object containing at least one
      *               <code>IssueTrackerConfig</code> object.
+     * @return <code>true</code> if the service was initialised without errors, <code>false</code> otherwise.
      * @throws IllegalArgumentException if no <code>IssueTrackerConfig</code> objects are present.
      */
-    void init(AphroditeConfig config);
+    boolean init(AphroditeConfig config);
 
     /**
      * Initiate this <code>IssueTrackerService</code> using the supplied <code>IssueTrackerConfig</code>.
      *
      * @param config a <code>IssueTrackerConfig</code> object containing all configuration information.
+     * @return <code>true</code> if the service was initialised without errors, <code>false</code> otherwise.
      */
-    void init(IssueTrackerConfig config);
+    boolean init(IssueTrackerConfig config);
 
     /**
      * Retrieve all Issues associated with the provided patch object.
