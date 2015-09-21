@@ -31,6 +31,8 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ServiceLoader;
 
 public class Aphrodite {
@@ -76,6 +78,9 @@ public class Aphrodite {
         return instance();
     }
 
+    private final List<IssueTrackerService> issueTrackers = new ArrayList<>();
+    private final List<RepositoryService> repositories = new ArrayList<>();
+
     private AphroditeConfig config;
 
     private Aphrodite() throws AphroditeException {
@@ -95,13 +100,27 @@ public class Aphrodite {
         init(config);
     }
 
-    private void init(AphroditeConfig config) {
+    private void init(AphroditeConfig config) throws AphroditeException {
         this.config = config;
 
         // Create new config object, as the object passed to init() will have its state changed.
         AphroditeConfig mutableConfig = new AphroditeConfig(config);
-        ServiceLoader.load(IssueTrackerService.class).forEach(issueTracker -> issueTracker.init(mutableConfig));
-        ServiceLoader.load(RepositoryService.class).forEach(repositoryService -> repositoryService.init(mutableConfig));
+
+        for (IssueTrackerService is : ServiceLoader.load(IssueTrackerService.class)) {
+            boolean initialised = is.init(mutableConfig);
+            if (initialised)
+                issueTrackers.add(is);
+        }
+
+        if (issueTrackers.isEmpty())
+            throw new AphroditeException("Unable to initiatilise Aphrodite, as a valid " +
+                    IssueTrackerService.class.getName() + " has not been created.");
+
+        for (RepositoryService rs : ServiceLoader.load(RepositoryService.class)) {
+            boolean initialised = rs.init(mutableConfig);
+            if (initialised)
+                repositories.add(rs);
+        }
     }
 
     public static void main(String[] args) throws Exception {
