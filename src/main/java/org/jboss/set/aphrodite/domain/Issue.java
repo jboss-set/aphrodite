@@ -62,6 +62,8 @@ public class Issue {
 
     private IssueTracking tracking;
 
+    private List<Comment> comments;
+
     public Issue(URL url) {
         this.url = url;
         this.trackerId = null;
@@ -71,10 +73,11 @@ public class Issue {
         this.status = IssueStatus.UNDEFINED;
         this.type = IssueType.UNDEFINED;
         this.release = new Release();
-        this.streams = new ArrayList<Stream>();
+        this.streams = new ArrayList<>();
         this.dependsOn = new ArrayList<>();
         this.blocks = new ArrayList<>();
         this.tracking = new IssueTracking();
+        this.comments = new ArrayList<>();
     }
 
     public URL getURL() {
@@ -183,5 +186,34 @@ public class Issue {
 
     public void setTracking(IssueTracking tracking) {
         this.tracking = tracking;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
+    @Override
+    public String toString() {
+        return "Issue{" +
+                "url=" + url +
+                ", trackerId='" + trackerId + '\'' +
+                ", product='" + product + '\'' +
+                ", component='" + component + '\'' +
+                ", description='" + description.substring(0, 10) + " ..." + '\'' +
+                ", assignee='" + assignee + '\'' +
+                ", stage=" + stage +
+                ", status=" + status +
+                ", type=" + type +
+                ", release=" + release +
+                ", streams=" + streams +
+                ", dependsOn=" + dependsOn +
+                ", blocks=" + blocks +
+                ", tracking=" + tracking +
+                ", #comments=" + comments.size() +
+                '}';
     }
 }

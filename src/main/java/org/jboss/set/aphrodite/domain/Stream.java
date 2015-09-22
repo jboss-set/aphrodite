@@ -40,6 +40,11 @@ public class Stream {
         this.status = FlagStatus.NO_SET;
     }
 
+    public Stream(String name, FlagStatus status) {
+        this.name = name;
+        this.status = status;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -54,5 +59,13 @@ public class Stream {
 
     public void setStatus(FlagStatus status) {
         this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Stream{" +
+                "name='" + name + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

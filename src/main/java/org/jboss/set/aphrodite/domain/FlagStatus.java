@@ -35,4 +35,11 @@ public enum FlagStatus {
     public String getSymbol() {
         return symbol;
     }
+
+    public static FlagStatus getMatchingFlag(String symbol) {
+        for (FlagStatus f : FlagStatus.values())
+            if (f.getSymbol().equals(symbol))
+                return f;
+        return NO_SET;
+    }
 }

@@ -53,4 +53,12 @@ public class Release {
     public void setMilestone(String milestone) {
         this.milestone = milestone;
     }
+
+    @Override
+    public String toString() {
+        return "Release{" +
+                "version='" + version + '\'' +
+                ", milestone='" + milestone + '\'' +
+                '}';
+    }
 }

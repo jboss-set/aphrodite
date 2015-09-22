@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (c) 2013, Red Hat, Inc., and individual contributors
+ * Copyright 2015, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -96,6 +96,10 @@ public class Util {
     public static void logWarnMessage(Log log, String message) {
         if (log.isWarnEnabled())
             log.warn(message);
+    }
+
+    public static void logException(Log log, Exception e) {
+        logException(log, null, e);
     }
 
     public static void logException(Log log, String message, Exception e) {

@@ -24,20 +24,36 @@ package org.jboss.set.aphrodite.domain;
 
 public class Comment {
 
-    private String id;
+    private final String id;
 
-    private String body;
+    private final String body;
 
-    public Comment(String id, String body) {
+    private final boolean isPrivate;
+
+    public Comment(String id, String body, boolean isPrivate) {
         this.id = id;
         this.body = body;
+        this.isPrivate = isPrivate;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getBody() {
         return body;
     }
 
-    public String getId() {
-        return id;
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
+    @Override
+    public String toString() {
+        return "Comment{" +
+                "id='" + id + '\'' +
+                ", body='" + body + '\'' +
+                ", isPrivate=" + isPrivate +
+                '}';
     }
 }

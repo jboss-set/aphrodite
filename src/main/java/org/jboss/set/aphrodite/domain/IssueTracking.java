@@ -49,4 +49,12 @@ public class IssueTracking {
     public double getHoursWorked() {
         return hoursWorked;
     }
+
+    @Override
+    public String toString() {
+        return "IssueTracking{" +
+                "initialEstimate=" + initialEstimate +
+                ", hoursWorked=" + hoursWorked +
+                '}';
+    }
 }

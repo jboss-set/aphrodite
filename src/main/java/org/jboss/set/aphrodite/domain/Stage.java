@@ -30,7 +30,7 @@ public class Stage {
     private Map<Flag, FlagStatus> state;
 
     public Stage () {
-        this.state = new HashMap<Flag, FlagStatus>();
+        this.state = new HashMap<>();
     }
 
     public FlagStatus getStatus(Flag flag) {
@@ -39,5 +39,12 @@ public class Stage {
 
     public FlagStatus setStatus(Flag flag, FlagStatus status) {
         return state.put(flag, status);
+    }
+
+    @Override
+    public String toString() {
+        return "Stage{" +
+                "state=" + state +
+                '}';
     }
 }
