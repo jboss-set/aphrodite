@@ -70,6 +70,7 @@ class BugzillaFields {
     static final String METHOD_UPDATE_BUG = "Bug.update";
     static final String METHOD_ADD_COMMENT = "Bug.add_comment";
     static final String METHOD_GET_COMMENT = "Bug.comments";
+    static final String METHOD_USER_LOGIN = "User.login";
 
     static final String RESULT_BUGS = "bugs";
     static final String RESULT_INCLUDE_FIELDS = "include_fields";

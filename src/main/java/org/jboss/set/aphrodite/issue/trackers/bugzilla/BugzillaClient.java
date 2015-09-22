@@ -66,7 +66,7 @@ public class BugzillaClient {
     private final Map<String, Object> requestMap;
 
 
-    public BugzillaClient(URL baseURL, String login, String password) {
+    public BugzillaClient(URL baseURL, String login, String password) throws IllegalStateException {
         this.baseURL = baseURL;
 
         Map<String, String> params = new HashMap<>();
@@ -75,6 +75,9 @@ public class BugzillaClient {
         if (password != null)
             params.put(PASSWORD, password);
         requestMap = Collections.unmodifiableMap(params);
+
+        // Check that the provided login details are correct - Fail fast.
+        runCommand(METHOD_USER_LOGIN, params);
     }
 
     public Issue getIssue(String trackerId) throws MalformedURLException {
