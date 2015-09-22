@@ -28,7 +28,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfig;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
-import org.jboss.pull.shared.Util;
+import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
@@ -90,7 +90,7 @@ public class BugzillaClient {
             Map<String, Object> results = (Map<String, Object>) bugs[0];
             return getIssueObject(results);
         } else {
-            Util.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
+            Utils.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
             return null;
         }
     }
@@ -252,7 +252,7 @@ public class BugzillaClient {
         try {
             return type.cast(getRpcClient().execute(method, params));
         } catch (XmlRpcException e) {
-            Util.logException(LOG, e);
+            Utils.logException(LOG, e);
             throw new RuntimeException(e); // TODO improve exception handling
         }
     }
@@ -266,7 +266,7 @@ public class BugzillaClient {
             URL url = new URL(apiURL);
             rpcClient.setConfig(getClientConfig(url));
         } catch (MalformedURLException e) {
-            Util.logException(LOG, e);
+            Utils.logException(LOG, e);
             throw new RuntimeException(e);
         }
         return rpcClient;

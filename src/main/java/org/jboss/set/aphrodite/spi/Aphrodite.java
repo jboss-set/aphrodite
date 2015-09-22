@@ -24,7 +24,7 @@ package org.jboss.set.aphrodite.spi;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jboss.pull.shared.Util;
+import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.yaml.snakeyaml.Yaml;
 
@@ -91,7 +91,7 @@ public class Aphrodite {
         try (InputStream is = new FileInputStream(System.getenv(FILE_LOCATION))) {
             init(new Yaml().loadAs(is, AphroditeConfig.class));
         } catch (IOException e) {
-            Util.logException(LOG, "Unable to load file: " + propFileLocation, e);
+            Utils.logException(LOG, "Unable to load file: " + propFileLocation, e);
             throw new AphroditeException(e);
         }
     }
