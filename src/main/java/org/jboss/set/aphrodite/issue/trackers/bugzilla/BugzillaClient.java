@@ -28,6 +28,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfig;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.jboss.pull.shared.Util;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
@@ -80,7 +81,7 @@ public class BugzillaClient {
         runCommand(METHOD_USER_LOGIN, params);
     }
 
-    public Issue getIssue(String trackerId) throws MalformedURLException {
+    public Issue getIssue(String trackerId) {
         Map<String, Object> params = new HashMap<>(requestMap);
         params.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
         params.put(ISSUE_IDS, trackerId);
@@ -91,11 +92,15 @@ public class BugzillaClient {
         if (bugs.length == 1) {
             @SuppressWarnings("unchecked")
             Map<String, Object> results = (Map<String, Object>) bugs[0];
-            return getIssueObject(results);
+            try {
+                return getIssueObject(results);
+            } catch (MalformedURLException e) {
+                Util.logException(LOG, "Unable to create Issue Object.", e);
+            }
         } else {
             Utils.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
-            return null;
         }
+        return null;
     }
 
     public Issue getIssueWithComments(String trackerId) throws MalformedURLException {
