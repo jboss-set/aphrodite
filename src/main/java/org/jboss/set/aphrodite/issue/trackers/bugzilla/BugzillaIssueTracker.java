@@ -124,8 +124,8 @@ public class BugzillaIssueTracker implements IssueTrackerService {
     }
 
     @Override
-    public void updateIssue(Issue issue) throws NotFoundException {
-
+    public boolean updateIssue(Issue issue) throws NotFoundException {
+        return false;
     }
 
     public BugzillaClient getBzClient() {

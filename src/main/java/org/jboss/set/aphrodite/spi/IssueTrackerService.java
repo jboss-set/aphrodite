@@ -83,8 +83,9 @@ public interface IssueTrackerService {
      * Update an <code>Issue</code> at the remote issue tracker service.
      *
      * @param issue the issue to be updated at the <code>IssueTrackerService</code>
+     * @return true if the issue was successfully updated, false otherwise.
      * @throws NotFoundException if the provided <code>Issue</code> cannot be found at the IssueTracker.
      */
-    void updateIssue(Issue issue) throws NotFoundException;
+    boolean updateIssue(Issue issue) throws NotFoundException;
 
 }
