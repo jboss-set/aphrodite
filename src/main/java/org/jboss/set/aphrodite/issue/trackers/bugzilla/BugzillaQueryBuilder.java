@@ -23,7 +23,7 @@
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
 import org.jboss.set.aphrodite.domain.FlagStatus;
-import org.jboss.set.aphrodite.spi.SearchCriteria;
+import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.util.ArrayList;
 import java.util.HashMap;

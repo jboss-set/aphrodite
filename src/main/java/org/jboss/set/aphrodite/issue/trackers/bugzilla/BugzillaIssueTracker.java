@@ -34,7 +34,7 @@ import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
-import org.jboss.set.aphrodite.spi.SearchCriteria;
+import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.net.MalformedURLException;
 import java.net.URL;
