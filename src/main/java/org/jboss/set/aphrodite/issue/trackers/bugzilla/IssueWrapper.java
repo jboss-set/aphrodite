@@ -85,12 +85,12 @@ class IssueWrapper {
 
     Map<String, Object> issueToBugzillaBug(Issue issue, Map<String, Object> loginDetails) {
         Map<String, Object> params = new HashMap<>(loginDetails);
-        issue.getTrackerId().ifPresent(x -> params.put(ISSUE_IDS, x));
-        issue.getProduct().ifPresent(x -> params.put(PRODUCT, x));
-        issue.getComponent().ifPresent(x -> params.put(COMPONENT, x));
-        issue.getAssignee().ifPresent(x -> params.put(ASSIGNEE, x));
-        issue.getRelease().getVersion().ifPresent(x -> params.put(VERSION, x));
-        issue.getRelease().getMilestone().ifPresent(x -> params.put(TARGET_MILESTONE, x));
+        issue.getTrackerId().ifPresent(trackerId -> params.put(ISSUE_IDS, trackerId));
+        issue.getProduct().ifPresent(product -> params.put(PRODUCT, product));
+        issue.getComponent().ifPresent(component -> params.put(COMPONENT, component));
+        issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee));
+        issue.getRelease().getVersion().ifPresent(version -> params.put(VERSION, version));
+        issue.getRelease().getMilestone().ifPresent(milestone -> params.put(TARGET_MILESTONE, milestone));
 
         params.put(STATUS, issue.getStatus().toString());
         params.put(ISSUE_TYPE, issue.getType().toString());
@@ -116,11 +116,11 @@ class IssueWrapper {
         for (Map.Entry<Flag, FlagStatus> entry : stateMap.entrySet()) {
             Map<String, Object> flagMap = new HashMap<>();
             Optional<String> bzFlag = getBugzillaFlag(entry.getKey());
-            if (bzFlag.isPresent()) {
-                flagMap.put(FLAG_NAME, bzFlag.get());
+            bzFlag.ifPresent(flagName -> {
+                flagMap.put(FLAG_NAME, flagName);
                 flagMap.put(FLAG_STATUS, entry.getValue().getSymbol());
                 flags.add(flagMap);
-            }
+            });
         }
         return flags;
     }
