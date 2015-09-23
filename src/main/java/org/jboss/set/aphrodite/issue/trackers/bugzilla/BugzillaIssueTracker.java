@@ -100,7 +100,7 @@ public class BugzillaIssueTracker implements IssueTrackerService {
 
     @Override
     public List<Issue> getIssuesAssociatedWith(Patch patch) {
-        return null;
+        throw new UnsupportedOperationException("Not yet implemented.");
     }
 
     @Override
