@@ -22,7 +22,6 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
-import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Release;
@@ -65,13 +64,13 @@ class BugzillaQueryBuilder {
         if (criteria.getLastUpdated().isPresent())
             queryMap.put(LAST_UPDATED, criteria.getLastUpdated().get().atStartOfDay().toString());
 
-        Utils.addOptionalToMap(PRODUCT, criteria.getProduct(), queryMap);
-        Utils.addOptionalToMap(COMPONENT, criteria.getComponent(), queryMap);
+        addOptionalToMap(PRODUCT, criteria.getProduct(), queryMap);
+        addOptionalToMap(COMPONENT, criteria.getComponent(), queryMap);
 
         if (criteria.getRelease().isPresent()) {
             Release release = criteria.getRelease().get();
-            Utils.addOptionalToMap(TARGET_MILESTONE, release.getMilestone(), queryMap);
-            Utils.addOptionalToMap(VERSION, release.getVersion(), queryMap);
+            addOptionalToMap(TARGET_MILESTONE, release.getMilestone(), queryMap);
+            addOptionalToMap(VERSION, release.getVersion(), queryMap);
         }
 
         // TODO, this does not currently work! Appears that BZ does not support flag queries via XMLRPC
@@ -112,5 +111,10 @@ class BugzillaQueryBuilder {
                 }
             }
         }
+    }
+
+    private void addOptionalToMap(String key, Optional optional, Map<String, Object> map) {
+        if (optional.isPresent())
+            map.put(key, optional.get());
     }
 }
