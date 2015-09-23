@@ -28,7 +28,6 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfig;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
-import org.jboss.pull.shared.Util;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
@@ -95,7 +94,7 @@ public class BugzillaClient {
             try {
                 return getIssueObject(results);
             } catch (MalformedURLException e) {
-                Util.logException(LOG, "Unable to create Issue Object.", e);
+                Utils.logException(LOG, "Unable to create Issue Object.", e);
             }
         } else {
             Utils.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
@@ -129,8 +128,22 @@ public class BugzillaClient {
         return new ArrayList<>();
     }
 
-    public List<Issue> searchForIssues(SearchCriteria criteria) {
+    public List<Issue> searchIssues(SearchCriteria criteria) {
+        Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, requestMap).getQueryMap();
+
         List<Issue> issues = new ArrayList<>();
+        Map<String, ?> resultMap = executeRequest(XMLRPC.RPC_STRUCT, METHOD_SEARCH, queryMap);
+        if (resultMap != null && !resultMap.isEmpty()) {
+            final Object[] bugs = XMLRPC.cast(XMLRPC.RPC_ARRAY, resultMap.get(RESULT_BUGS));
+            for (Map<String, Object> struct : XMLRPC.iterable(XMLRPC.RPC_STRUCT, bugs)) {
+                try {
+                    Issue issue = getIssueObject(struct);
+                    issues.add(issue);
+                } catch (MalformedURLException e) {
+                    Utils.logException(LOG, "Unable to create Issue Object.", e);
+                }
+            }
+        }
         return issues;
     }
 
@@ -182,12 +195,17 @@ public class BugzillaClient {
         issue.setTrackerId(id.toString());
         issue.setAssignee((String) issueFields.get(ASSIGNEE));
         issue.setDescription((String) issueFields.get(DESCRIPTION));
-        issue.setType(IssueType.valueOf(((String) issueFields.get(ISSUE_TYPE)).toUpperCase()));
         issue.setStatus(IssueStatus.valueOf((String) issueFields.get(STATUS)));
         issue.setComponent((String) ((Object[]) issueFields.get(COMPONENT))[0]);
         issue.setProduct((String) issueFields.get(PRODUCT));
         issue.setStatus(IssueStatus.valueOf(((String) issueFields.get(STATUS)).toUpperCase()));
-        issue.setType(IssueType.valueOf(((String) issueFields.get(ISSUE_TYPE)).toUpperCase()));
+
+        String type = (String) issueFields.get(ISSUE_TYPE);
+        try {
+            issue.setType(IssueType.valueOf(type.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            issue.setType(IssueType.UNDEFINED);
+        }
 
         String version = (String) ((Object[]) issueFields.get(VERSION))[0];
         Release release = new Release(version, (String) issueFields.get(TARGET_MILESTONE));
@@ -216,7 +234,7 @@ public class BugzillaClient {
             String name = (String) flagMap.get(FLAG_NAME);
 
             if (name.contains("_ack")) { // If Flag
-                Optional<Flag> flag = getFlag(name);
+                Optional<Flag> flag = getAphroditeFlag(name);
                 if (!flag.isPresent())
                     continue;
 

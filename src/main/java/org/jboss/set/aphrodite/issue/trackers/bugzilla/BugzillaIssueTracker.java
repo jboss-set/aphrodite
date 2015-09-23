@@ -120,7 +120,7 @@ public class BugzillaIssueTracker implements IssueTrackerService {
 
     @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
-        return null;
+        return bzClient.searchIssues(searchCriteria);
     }
 
     @Override

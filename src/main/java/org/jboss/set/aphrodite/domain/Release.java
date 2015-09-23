@@ -22,18 +22,18 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import java.util.Optional;
+
 public class Release {
 
-    private String version;
 
+    private String version;
     private String milestone;
 
     public Release() {
-        this.version = "N/A";
-        this.milestone = "--";
     }
 
-    public Release (String version, String milestone) {
+    public Release(String version, String milestone) {
         this.version = version;
         this.milestone = milestone;
     }
@@ -42,12 +42,12 @@ public class Release {
         this.version = version;
     }
 
-    public String getVersion() {
-        return version;
+    public Optional<String> getVersion() {
+        return Optional.ofNullable(version);
     }
 
-    public String getMilestone() {
-        return milestone;
+    public Optional<String> getMilestone() {
+        return Optional.ofNullable(milestone);
     }
 
     public void setMilestone(String milestone) {

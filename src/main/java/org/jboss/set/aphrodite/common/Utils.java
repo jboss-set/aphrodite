@@ -24,10 +24,18 @@ package org.jboss.set.aphrodite.common;
 
 import org.apache.commons.logging.Log;
 
+import java.util.Map;
+import java.util.Optional;
+
 /**
  * @author Ryan Emerson
  */
 public class Utils {
+
+    public static void addOptionalToMap(String key, Optional optional, Map<String, Object> map) {
+        if (optional.isPresent())
+            map.put(key, optional.get());
+    }
 
     public static void logWarnMessage(Log log, String message) {
         if (log.isWarnEnabled())

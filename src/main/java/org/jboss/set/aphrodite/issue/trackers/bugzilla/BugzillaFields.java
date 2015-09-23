@@ -57,6 +57,7 @@ class BugzillaFields {
     static final String ID = "id";
     static final String ISSUE_IDS = "ids";
     static final String ISSUE_TYPE = "cf_type";
+    static final String LAST_UPDATED = "last_change_time";
     static final String NAME = "name";
     static final String PRIVATE_COMMENT = "private";
     static final String PRODUCT = "product";
@@ -70,10 +71,12 @@ class BugzillaFields {
     static final String METHOD_UPDATE_BUG = "Bug.update";
     static final String METHOD_ADD_COMMENT = "Bug.add_comment";
     static final String METHOD_GET_COMMENT = "Bug.comments";
+    static final String METHOD_SEARCH = "Bug.search";
     static final String METHOD_USER_LOGIN = "User.login";
 
     static final String RESULT_BUGS = "bugs";
     static final String RESULT_INCLUDE_FIELDS = "include_fields";
+    static final String RESULT_LIMIT = "limit";
     static final String RESULT_PERMISSIVE_SEARCH = "permissive";
 
     static final Object[] RESULT_FIELDS = { ASSIGNEE, BLOCKS, COMPONENT, DEPENDS_ON, DESCRIPTION,
@@ -83,7 +86,7 @@ class BugzillaFields {
 
     static final Object[] COMMENT_FIELDS = {COMMENT_ID, COMMENT_BODY, COMMENT_IS_PRIVATE};
 
-    static Optional<Flag> getFlag(String bzFlag) {
+    static Optional<Flag> getAphroditeFlag(String bzFlag) {
         switch (bzFlag) {
             case FLAG_ACK_DEVEL:
                 return Optional.of(Flag.DEV);
@@ -91,6 +94,18 @@ class BugzillaFields {
                 return Optional.of(Flag.PM);
             case FLAG_ACK_QA:
                 return Optional.of(Flag.QE);
+        }
+        return Optional.empty();
+    }
+
+    static Optional<String> getBugzillaFlag(Flag flag) {
+        switch (flag) {
+            case DEV:
+                return Optional.of(FLAG_ACK_DEVEL);
+            case PM:
+                return Optional.of(FLAG_ACK_PM);
+            case QE:
+                return Optional.of(FLAG_ACK_QA);
         }
         return Optional.empty();
     }

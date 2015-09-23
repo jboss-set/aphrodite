@@ -41,6 +41,10 @@ public class Stage {
         return state.put(flag, status);
     }
 
+    public Map<Flag, FlagStatus> getStateMap() {
+        return state;
+    }
+
     @Override
     public String toString() {
         return "Stage{" +

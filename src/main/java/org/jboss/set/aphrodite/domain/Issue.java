@@ -203,7 +203,7 @@ public class Issue {
                 ", trackerId='" + trackerId + '\'' +
                 ", product='" + product + '\'' +
                 ", component='" + component + '\'' +
-                ", description='" + description.substring(0, 10) + " ..." + '\'' +
+                ", description='" + getPrintableDescription() + '\'' +
                 ", assignee='" + assignee + '\'' +
                 ", stage=" + stage +
                 ", status=" + status +
@@ -214,6 +214,12 @@ public class Issue {
                 ", blocks=" + blocks +
                 ", tracking=" + tracking +
                 ", #comments=" + comments.size() +
-                '}';
+                "}\n";
+    }
+
+    private String getPrintableDescription() {
+        if (description.length() < 10)
+            return description + "... ";
+        return description.substring(0, 10) + "... ";
     }
 }

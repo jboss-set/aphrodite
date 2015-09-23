@@ -42,21 +42,21 @@ public class SearchCriteria {
     private final Stage stage;
     private final Release release;
     private final List<Stream> streams;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
+    private final LocalDate lastUpdated;
     private final Integer maxResults;
 
     private SearchCriteria(String product, String component, Stage stage, Release release,
-                           List<Stream> streams, LocalDate startDate, LocalDate endDate,
-                           Integer maxResults) {
+                           List<Stream> streams, LocalDate lastUpdated, Integer maxResults) {
         this.product = product;
         this.component = component;
         this.stage = stage;
         this.release = release;
         this.streams = streams;
-        this.startDate = startDate;
-        this.endDate = endDate;
+        this.lastUpdated = lastUpdated;
         this.maxResults = maxResults;
+
+        if (lastUpdated != null && lastUpdated.isAfter(LocalDate.now()))
+            throw new IllegalArgumentException("lastUpdated cannot be in the future.");
     }
 
     public Optional<String> getProduct() {
@@ -79,12 +79,8 @@ public class SearchCriteria {
         return Optional.ofNullable(streams);
     }
 
-    public Optional<LocalDate> getStartDate() {
-        return Optional.ofNullable(startDate);
-    }
-
-    public Optional<LocalDate> getEndDate() {
-        return Optional.ofNullable(endDate);
+    public Optional<LocalDate> getLastUpdated() {
+        return Optional.ofNullable(lastUpdated);
     }
 
     public Optional<Integer> getMaxResults() {
@@ -99,7 +95,6 @@ public class SearchCriteria {
         private Release release;
         private List<Stream> streams;
         private LocalDate startDate;
-        private LocalDate endDate = LocalDate.now();
         private int maxResults;
 
         public Builder setProduct(String product) {
@@ -132,11 +127,6 @@ public class SearchCriteria {
             return this;
         }
 
-        public Builder setEndDate(LocalDate endDate) {
-            this.endDate = endDate;
-            return this;
-        }
-
         public Builder setMaxResults(int maxResults) {
             this.maxResults = maxResults;
             return this;
@@ -144,7 +134,7 @@ public class SearchCriteria {
 
         public SearchCriteria build() {
             return new SearchCriteria(product, component, stage, release, streams, startDate,
-                    endDate, maxResults);
+                    maxResults);
         }
     }
 }
