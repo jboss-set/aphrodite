@@ -25,6 +25,7 @@ package org.jboss.set.aphrodite.domain;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Represents an issue in a issue tracker (bugzilla, jira...)
@@ -65,10 +66,10 @@ public class Issue {
     private List<Comment> comments;
 
     public Issue(URL url) {
+        if (url == null)
+            throw new IllegalArgumentException("Issue URL cannot be null");
+
         this.url = url;
-        this.trackerId = null;
-        this.product = null;
-        this.component = null;
         this.stage = new Stage();
         this.status = IssueStatus.UNDEFINED;
         this.type = IssueType.UNDEFINED;
@@ -84,40 +85,40 @@ public class Issue {
         return url;
     }
 
-    public String getTrackerId() {
-        return trackerId;
+    public Optional<String> getTrackerId() {
+        return Optional.ofNullable(trackerId);
     }
 
     public void setTrackerId(String trackerId) {
         this.trackerId = trackerId;
     }
 
-    public String getProduct() {
-        return product;
+    public Optional<String> getProduct() {
+        return Optional.ofNullable(product);
     }
 
     public void setProduct(String product) {
         this.product = product;
     }
 
-    public String getComponent() {
-        return component;
+    public Optional<String> getComponent() {
+        return Optional.ofNullable(component);
     }
 
     public void setComponent(String component) {
         this.component = component;
     }
 
-    public String getDescription() {
-        return description;
+    public Optional<String> getDescription() {
+        return Optional.ofNullable(description);
     }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public String getAssignee() {
-        return assignee;
+    public Optional<String> getAssignee() {
+        return Optional.ofNullable(assignee);
     }
 
     public void setAssignee(String assignee) {

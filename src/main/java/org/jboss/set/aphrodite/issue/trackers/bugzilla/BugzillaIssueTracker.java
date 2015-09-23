@@ -28,8 +28,10 @@ import org.jboss.pull.shared.Util;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.SearchCriteria;
@@ -38,8 +40,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the Bugzilla issue tracker.
@@ -49,7 +49,6 @@ import java.util.regex.Pattern;
 public class BugzillaIssueTracker implements IssueTrackerService {
 
     private static final Log LOG = LogFactory.getLog(BugzillaIssueTracker.class);
-    private static final Pattern ID_PARAM_PATTERN = Pattern.compile("id=([^&]+)");
 
     private final String TRACKER_TYPE = "bugzilla";
     private BugzillaClient bzClient;
@@ -109,13 +108,7 @@ public class BugzillaIssueTracker implements IssueTrackerService {
             throw new NotFoundException("The requested issue cannot be found on this tracker as the " +
             "requested issue is not hosted on this server.");
 
-        String query = url.getQuery();
-        Matcher matcher = ID_PARAM_PATTERN.matcher(query);
-        if (!matcher.find())
-            throw new NotFoundException("No ID parameter specified in the provided url.");
-
-        String id = matcher.group(1);
-        return bzClient.getIssue(id);
+        return bzClient.getIssue(url);
     }
 
     @Override
@@ -124,7 +117,12 @@ public class BugzillaIssueTracker implements IssueTrackerService {
     }
 
     @Override
-    public boolean updateIssue(Issue issue) throws NotFoundException {
+    public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
+        return bzClient.updateIssue(issue);
+    }
+
+    @Override
+    public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         return false;
     }
 

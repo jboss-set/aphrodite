@@ -30,15 +30,10 @@ import org.apache.xmlrpc.client.XmlRpcClientConfig;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Comment;
-import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssueStatus;
-import org.jboss.set.aphrodite.domain.IssueTracking;
-import org.jboss.set.aphrodite.domain.IssueType;
-import org.jboss.set.aphrodite.domain.Release;
-import org.jboss.set.aphrodite.domain.Stage;
-import org.jboss.set.aphrodite.domain.Stream;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.SearchCriteria;
 
 import java.net.MalformedURLException;
@@ -51,7 +46,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
 
@@ -61,10 +56,11 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
 public class BugzillaClient {
 
     private static final Log LOG = LogFactory.getLog(BugzillaClient.class);
+    public static final Pattern ID_PARAM_PATTERN = Pattern.compile("id=([^&]+)");
 
+    private final IssueWrapper WRAPPER = new IssueWrapper();
     private final URL baseURL;
-    private final Map<String, Object> requestMap;
-
+    private final Map<String, Object> loginDetails;
 
     public BugzillaClient(URL baseURL, String login, String password) throws IllegalStateException {
         this.baseURL = baseURL;
@@ -74,14 +70,19 @@ public class BugzillaClient {
             params.put(LOGIN, login);
         if (password != null)
             params.put(PASSWORD, password);
-        requestMap = Collections.unmodifiableMap(params);
+        loginDetails = Collections.unmodifiableMap(params);
 
         // Check that the provided login details are correct - Fail fast.
         runCommand(METHOD_USER_LOGIN, params);
     }
 
-    public Issue getIssue(String trackerId) {
-        Map<String, Object> params = new HashMap<>(requestMap);
+    public Issue getIssue(URL url) throws NotFoundException {
+        String trackerId = Utils.getTrackerIdFromUrl(ID_PARAM_PATTERN, url);
+        return getIssue(trackerId);
+    }
+
+    public Issue getIssue(String trackerId) throws NotFoundException {
+        Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
         params.put(ISSUE_IDS, trackerId);
         params.put(RESULT_PERMISSIVE_SEARCH, true);
@@ -92,31 +93,34 @@ public class BugzillaClient {
             @SuppressWarnings("unchecked")
             Map<String, Object> results = (Map<String, Object>) bugs[0];
             try {
-                return getIssueObject(results);
+                return WRAPPER.bugzillaBugToIssue(results, baseURL);
             } catch (MalformedURLException e) {
                 Utils.logException(LOG, "Unable to create Issue Object.", e);
             }
         } else {
             Utils.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
         }
-        return null;
+        throw new NotFoundException();
     }
 
-    public Issue getIssueWithComments(String trackerId) throws MalformedURLException {
+    public Issue getIssueWithComments(String trackerId) throws NotFoundException, MalformedURLException {
         Issue issue = getIssue(trackerId);
         issue.setComments(getCommentsForIssue(trackerId));
         return issue;
     }
 
-
-    public List<Comment> getCommentsForIssue(Issue issue) {
+    public List<Comment> getCommentsForIssue(Issue issue) throws NotFoundException {
         if (issue == null)
             throw new IllegalArgumentException("The provided issue cannot be null.");
-        return getCommentsForIssue(issue.getTrackerId());
+
+        if (issue.getTrackerId().isPresent())
+            return getCommentsForIssue(issue.getTrackerId().get());
+
+        return getCommentsForIssue(Utils.getTrackerIdFromUrl(ID_PARAM_PATTERN, issue.getURL()));
     }
 
     public List<Comment> getCommentsForIssue(String trackerId) {
-        Map<String, Object> params = new HashMap<>(requestMap);
+        Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(ISSUE_IDS, trackerId);
         params.put(RESULT_INCLUDE_FIELDS, COMMENT_FIELDS);
         Map<String, ?> results = executeRequest(XMLRPC.RPC_STRUCT, METHOD_GET_COMMENT, params);
@@ -129,7 +133,7 @@ public class BugzillaClient {
     }
 
     public List<Issue> searchIssues(SearchCriteria criteria) {
-        Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, requestMap).getQueryMap();
+        Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, loginDetails).getQueryMap();
 
         List<Issue> issues = new ArrayList<>();
         Map<String, ?> resultMap = executeRequest(XMLRPC.RPC_STRUCT, METHOD_SEARCH, queryMap);
@@ -137,7 +141,7 @@ public class BugzillaClient {
             final Object[] bugs = XMLRPC.cast(XMLRPC.RPC_ARRAY, resultMap.get(RESULT_BUGS));
             for (Map<String, Object> struct : XMLRPC.iterable(XMLRPC.RPC_STRUCT, bugs)) {
                 try {
-                    Issue issue = getIssueObject(struct);
+                    Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURL);
                     issues.add(issue);
                 } catch (MalformedURLException e) {
                     Utils.logException(LOG, "Unable to create Issue Object.", e);
@@ -145,6 +149,11 @@ public class BugzillaClient {
             }
         }
         return issues;
+    }
+
+    public boolean updateIssue(Issue issue) {
+        Map<String, Object> params = WRAPPER.issueToBugzillaBug(issue, loginDetails);
+        return runCommand(METHOD_UPDATE_BUG, params);
     }
 
     public boolean updateTargetRelease(int id, final String... targetRelease) {
@@ -163,92 +172,27 @@ public class BugzillaClient {
         return updateField(id, ESTIMATED_TIME, worktime);
     }
 
-    public boolean postComment(Integer id, String comment, boolean isPrivate) {
-        Map<String, Object> params = new HashMap<>(requestMap);
+    public boolean postComment(int id, String comment, boolean isPrivate) {
+        Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(ID, id);
         params.put(COMMENT, comment);
         params.put(PRIVATE_COMMENT, isPrivate);
         return runCommand(METHOD_ADD_COMMENT, params);
     }
 
-    public boolean updateFlags(Integer[] ids, String name, FlagStatus status) {
+    public boolean updateFlags(int ids, String name, FlagStatus status) {
         String flagStatus = status.getSymbol();
         Map<String, String> updates = new HashMap<>();
         updates.put(NAME, name);
         updates.put(STATUS, flagStatus);
         Object[] updateArray = {updates};
 
-        Map<String, Object> params = new HashMap<>(requestMap);
+        Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(ISSUE_IDS, ids);
         params.put(UPDATE_FIELDS, updateArray);
         params.put(RESULT_PERMISSIVE_SEARCH, true);
 
         return runCommand(METHOD_UPDATE_BUG, params);
-    }
-
-    // Bit of a mess, is there a better way of doing this?
-    @SuppressWarnings("unchecked")
-    private Issue getIssueObject(Map<String, Object> issueFields) throws MalformedURLException {
-        Integer id = (Integer) issueFields.get(ID);
-        URL url = new URL(baseURL + ID_QUERY + id);
-        Issue issue = new Issue(url);
-        issue.setTrackerId(id.toString());
-        issue.setAssignee((String) issueFields.get(ASSIGNEE));
-        issue.setDescription((String) issueFields.get(DESCRIPTION));
-        issue.setStatus(IssueStatus.valueOf((String) issueFields.get(STATUS)));
-        issue.setComponent((String) ((Object[]) issueFields.get(COMPONENT))[0]);
-        issue.setProduct((String) issueFields.get(PRODUCT));
-        issue.setStatus(IssueStatus.valueOf(((String) issueFields.get(STATUS)).toUpperCase()));
-
-        String type = (String) issueFields.get(ISSUE_TYPE);
-        try {
-            issue.setType(IssueType.valueOf(type.toUpperCase()));
-        } catch (IllegalArgumentException e) {
-            issue.setType(IssueType.UNDEFINED);
-        }
-
-        String version = (String) ((Object[]) issueFields.get(VERSION))[0];
-        Release release = new Release(version, (String) issueFields.get(TARGET_MILESTONE));
-        issue.setRelease(release);
-
-        List<URL> dependsOn = new ArrayList<>();
-        Object[] dependencies = (Object[]) issueFields.get(DEPENDS_ON);
-        for (Object dependencyId : dependencies)
-            dependsOn.add(new URL(baseURL + BugzillaFields.ID_QUERY + dependencyId));
-        issue.setDependsOn(dependsOn);
-
-        List<URL> blocks = new ArrayList<>();
-        Object[] blockers = (Object[]) issueFields.get(BLOCKS);
-        for (Object blockingId : blockers)
-            blocks.add(new URL(baseURL + BugzillaFields.ID_QUERY + blockingId));
-        issue.setBlocks(blocks);
-
-        Double estimatedTime = (Double) issueFields.get(ESTIMATED_TIME);
-        Double hoursWorked = (Double) issueFields.get(HOURS_WORKED);
-        issue.setTracking(new IssueTracking(estimatedTime, hoursWorked));
-
-        Stage issueStage = new Stage();
-        List<Stream> streams = new ArrayList<>();
-        for (Object object : (Object[]) issueFields.get(FLAGS)) {
-            Map<String, Object> flagMap = (Map<String, Object>) object;
-            String name = (String) flagMap.get(FLAG_NAME);
-
-            if (name.contains("_ack")) { // If Flag
-                Optional<Flag> flag = getAphroditeFlag(name);
-                if (!flag.isPresent())
-                    continue;
-
-                FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
-                issueStage.setStatus(flag.get(), status);
-            } else { // Else Stream
-                FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
-                streams.add(new Stream(name, status));
-            }
-        }
-        issue.setStage(issueStage);
-        issue.setStreams(streams);
-
-        return issue;
     }
 
     @SuppressWarnings("unchecked")
@@ -268,7 +212,7 @@ public class BugzillaClient {
     }
 
     private boolean updateField(int bugzillaId, String field, Object content) {
-        Map<String, Object> params = new HashMap<>(requestMap);
+        Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(ID, bugzillaId);
         params.put(field, content);
         return runCommand(METHOD_UPDATE_BUG, params);

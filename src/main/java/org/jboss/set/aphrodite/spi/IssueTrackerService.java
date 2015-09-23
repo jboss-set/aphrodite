@@ -24,6 +24,7 @@ package org.jboss.set.aphrodite.spi;
 
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 
@@ -82,10 +83,24 @@ public interface IssueTrackerService {
     /**
      * Update an <code>Issue</code> at the remote issue tracker service.
      *
+     * Note, this does not update issue comments or an issues description.
+     * To add a new comment, use {@link #addCommentToIssue(Issue, Comment)}
+     *
      * @param issue the issue to be updated at the <code>IssueTrackerService</code>
      * @return true if the issue was successfully updated, false otherwise.
      * @throws NotFoundException if the provided <code>Issue</code> cannot be found at the IssueTracker.
+     * @throws AphroditeException if the user credentials supplied for this issue track do not have
+     *                               permission to update this issue, or a field within this issue.
      */
-    boolean updateIssue(Issue issue) throws NotFoundException;
+    boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException;
 
+    /**
+     * Adds a new comment to the specified issue.
+     *
+     * @param issue the issue to add a new comment to.
+     * @param comment the comment to be added to the issue.
+     * @return true if the comment was successfully added to the issue, false otherwise.
+     * @throws NotFoundException if the provided <code>Issue</code> cannot be found at the IssueTracker.
+     */
+    boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException;
 }
