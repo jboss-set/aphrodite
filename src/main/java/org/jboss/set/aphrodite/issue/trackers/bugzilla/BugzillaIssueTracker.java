@@ -24,17 +24,16 @@ package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jboss.pull.shared.Util;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
-import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -87,7 +86,7 @@ public class BugzillaIssueTracker implements IssueTrackerService {
         try {
             bzClient = new BugzillaClient(baseUrl, config.getUsername(), config.getPassword());
         } catch (IllegalStateException e) {
-            Util.logException(LOG, e);
+            Utils.logException(LOG, e);
             return false;
         }
         return true;
