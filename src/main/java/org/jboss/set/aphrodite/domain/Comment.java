@@ -22,6 +22,8 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import java.util.Optional;
+
 public class Comment {
 
     private final String id;
@@ -36,8 +38,14 @@ public class Comment {
         this.isPrivate = isPrivate;
     }
 
-    public String getId() {
-        return id;
+    public Comment(String body, boolean isPrivate) {
+        this.id = null;
+        this.body = body;
+        this.isPrivate = isPrivate;
+    }
+
+    public Optional<String> getId() {
+        return Optional.ofNullable(id);
     }
 
     public String getBody() {

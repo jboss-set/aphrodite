@@ -172,6 +172,11 @@ public class BugzillaClient {
         return updateField(id, ESTIMATED_TIME, worktime);
     }
 
+    public boolean postComment(Issue issue, Comment comment) throws NotFoundException {
+        String trackerId = issue.getTrackerId().orElse(Utils.getTrackerIdFromUrl(ID_PARAM_PATTERN, issue.getURL()));
+        return postComment(new Integer(trackerId), comment.getBody(), comment.isPrivate());
+    }
+
     public boolean postComment(int id, String comment, boolean isPrivate) {
         Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(ID, id);
