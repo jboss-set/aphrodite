@@ -54,8 +54,6 @@ public class BugzillaIssueTracker implements IssueTrackerService {
     private BugzillaClient bzClient;
     private IssueTrackerConfig config;
     private URL baseUrl;
-    private String username;
-    private String password;
 
     @Override
     public boolean init(AphroditeConfig aphroditeConfig) {
@@ -79,8 +77,6 @@ public class BugzillaIssueTracker implements IssueTrackerService {
 
         try {
             baseUrl = new URL(config.getUrl());
-            username = config.getUsername();
-            password = config.getPassword();
         } catch (MalformedURLException e) {
             String errorMsg = "Invalid tracker url '" + url + "'. " + this.getClass().getName() +
                     " service for '" + url + "' cannot be started";
