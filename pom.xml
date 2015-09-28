@@ -21,17 +21,13 @@
         <checkstyle.version>6.7</checkstyle.version>
         <checkstyle.plugin.version>2.11</checkstyle.plugin.version>
         <commons.logging.version>1.1.1</commons.logging.version>
-        <commons.codec.version>1.9</commons.codec.version>
-        <jersey.json.version>1.5</jersey.json.version>
-        <jira.rest.client.version>1.0</jira.rest.client.version>
+        <jira.client.version>0.5</jira.client.version>
         <maven.shade.plugin.version>2.4.1</maven.shade.plugin.version>
         <maven.source.plugin.version>2.2.1</maven.source.plugin.version>
         <maven.javadoc.plugin.version>2.9.1</maven.javadoc.plugin.version>
-        <mockito.version>1.9.5</mockito.version>
         <org.eclipse.egit.github.core.version>2.1.2</org.eclipse.egit.github.core.version>
         <org.wildfly.checkstyle-config.version>1.0.4.Final</org.wildfly.checkstyle-config.version>
         <org.yaml.snakeyaml.version>1.16</org.yaml.snakeyaml.version>
-        <testng.version>6.8.7</testng.version>
         <xmlrpc.client.version>3.1.3</xmlrpc.client.version>
 
         <!-- Plugin versions -->
@@ -187,11 +183,6 @@
             <version>${commons.logging.version}</version>
         </dependency>
         <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>${commons.codec.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.mylyn.github</groupId>
             <artifactId>org.eclipse.egit.github.core</artifactId>
             <version>${org.eclipse.egit.github.core.version}</version>
@@ -202,14 +193,25 @@
             <version>${xmlrpc.client.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-json</artifactId>
-            <version>${jersey.json.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.jira</groupId>
-            <artifactId>jira-rest-java-client</artifactId>
-            <version>${jira.rest.client.version}</version>
+            <groupId>net.rcarz</groupId>
+            <artifactId>jira-client</artifactId>
+            <version>${jira.client.version}</version>
+            <scope>compile</scope>
+            <!-- Exclusions necessary to prevent conflicting classes warning -->
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-beanutils</groupId>
+                    <artifactId>commons-beanutils</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-all</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -217,22 +219,6 @@
             <artifactId>snakeyaml</artifactId>
             <version>${org.yaml.snakeyaml.version}</version>
         </dependency>
-
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <repositories>
