@@ -109,12 +109,13 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.jboss.set.aphrodite.Test</mainClass>
+                                    <mainClass>org.jboss.set.aphrodite.Aphrodite</mainClass>
                                 </transformer>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                                     <resource>META-INF/services</resource>
-                                    <file>src/main/resources/META-INF/services/org.jboss.set.aphrodite.Aphrodite</file>
+                                    <file>src/main/resources/META-INF/services/org.jboss.set.aphrodite.spi.IssueTrackerService</file>
+                                    <file>src/main/resources/META-INF/services/org.jboss.set.aphrodite.spi.RepositoryService</file>
                                 </transformer>
                             </transformers>
                         </configuration>
