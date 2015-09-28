@@ -25,19 +25,16 @@ package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
+import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
-import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -45,43 +42,21 @@ import java.util.List;
  *
  * @author Ryan Emerson
  */
-public class BugzillaIssueTracker implements IssueTrackerService {
+public class BugzillaIssueTracker extends AbstractIssueTracker {
 
     private static final Log LOG = LogFactory.getLog(BugzillaIssueTracker.class);
 
-    private final String TRACKER_TYPE = "bugzilla";
     private BugzillaClient bzClient;
-    private IssueTrackerConfig config;
-    private URL baseUrl;
 
-    @Override
-    public boolean init(AphroditeConfig aphroditeConfig) {
-        Iterator<IssueTrackerConfig> i = aphroditeConfig.getIssueTrackerConfigs().iterator();
-        while (i.hasNext()) {
-            IssueTrackerConfig config = i.next();
-            if (config.getTracker().equalsIgnoreCase(TRACKER_TYPE)) {
-                i.remove(); // Remove so that this service cannot be instantiated twice
-                return init(config);
-            }
-        }
-        return false;
+    public BugzillaIssueTracker() {
+        super("bugzilla");
     }
 
     @Override
     public boolean init(IssueTrackerConfig config) {
-        this.config = config;
-        String url = config.getUrl();
-        if (!url.endsWith("/"))
-            url = url + "/";
-
-        try {
-            baseUrl = new URL(config.getUrl());
-        } catch (MalformedURLException e) {
-            String errorMsg = "Invalid tracker url '" + url + "'. " + this.getClass().getName() +
-                    " service for '" + url + "' cannot be started";
-            Utils.logException(LOG, errorMsg, e);
+        boolean parentInitiated = super.init(config);
+        if (!parentInitiated)
             return false;
-        }
 
         try {
             bzClient = new BugzillaClient(baseUrl, config.getUsername(), config.getPassword());
@@ -127,5 +102,10 @@ public class BugzillaIssueTracker implements IssueTrackerService {
 
     public BugzillaClient getBzClient() {
         return bzClient;
+    }
+
+    @Override
+    protected Log getLog() {
+        return LOG;
     }
 }
