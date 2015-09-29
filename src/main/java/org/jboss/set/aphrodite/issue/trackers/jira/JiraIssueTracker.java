@@ -20,7 +20,13 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.set.aphrodite.issue.trackers.bugzilla;
+package org.jboss.set.aphrodite.issue.trackers.jira;
+
+import net.rcarz.jiraclient.BasicCredentials;
+import net.rcarz.jiraclient.ICredentials;
+import net.rcarz.jiraclient.JiraClient;
+import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.RestException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,22 +40,28 @@ import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
+
 /**
- * An implementation of the <code>IssueTrackerService</code> for the Bugzilla issue tracker.
+ * An implementation of the <code>IssueTrackerService</code> for the JIRA issue tracker.
  *
  * @author Ryan Emerson
  */
-public class BugzillaIssueTracker extends AbstractIssueTracker {
+public class JiraIssueTracker extends AbstractIssueTracker {
 
-    private static final Log LOG = LogFactory.getLog(BugzillaIssueTracker.class);
+    private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
 
-    private BugzillaClient bzClient;
+    private final IssueWrapper WRAPPER = new IssueWrapper();
+    private JiraClient jiraClient;
 
-    public BugzillaIssueTracker() {
-        super("bugzilla");
+    public JiraIssueTracker() {
+        super("jira");
     }
 
     @Override
@@ -59,9 +71,15 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
             return false;
 
         try {
-            bzClient = new BugzillaClient(baseUrl, config.getUsername(), config.getPassword());
-        } catch (IllegalStateException e) {
+            ICredentials credentials = new BasicCredentials(config.getUsername(), config.getPassword());
+            jiraClient = new JiraClient(baseUrl.toString(), credentials);
+            // Check if provided credentials are correct, an exception is thrown if they aren't
+            jiraClient.getRestClient().get("/rest/api/2/myself");
+        } catch (IOException | URISyntaxException e) {
             Utils.logException(LOG, e);
+            return false;
+        } catch (RestException e) {
+            Utils.logException(LOG, "Authentication failed for IssueTrackerService: " + this.getClass().getName(), e);
             return false;
         }
         return true;
@@ -75,34 +93,44 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     @Override
     public Issue getIssue(URL url) throws NotFoundException {
         super.getIssue(url);
-        return bzClient.getIssue(url);
+
+        try {
+            net.rcarz.jiraclient.Issue jiraIssue = jiraClient.getIssue(getIssueKey(url));
+            return WRAPPER.jiraIssueToIssue(url, jiraIssue);
+        } catch (JiraException e) {
+            throw new NotFoundException(e);
+        }
     }
 
     @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
-        return bzClient.searchIssues(searchCriteria);
+        return null;
     }
 
     @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
-        return bzClient.updateIssue(issue);
+        return false;
     }
 
     @Override
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
-        comment.getId().ifPresent(id ->
-                        Utils.logWarnMessage(LOG, "ID: " + id + "ignored when posting comments " +
-                                "as this is set by the issue tracker.")
-        );
-        return bzClient.postComment(issue, comment);
-    }
-
-    public BugzillaClient getBzClient() {
-        return bzClient;
+        return false;
     }
 
     @Override
-    protected Log getLog() {
+    public Log getLog() {
         return LOG;
+    }
+
+    private String getIssueKey(URL url) throws NotFoundException {
+        String path = url.getPath();
+        boolean api = path.contains(API_ISSUE_PATH);
+        boolean browse = path.contains(BROWSE_ISSUE_PATH);
+
+        if (!(api || browse))
+            throw new NotFoundException("The URL path must be of the form '" + API_ISSUE_PATH +
+                    "' OR '" + BROWSE_ISSUE_PATH + "'");
+
+        return api ? path.substring(API_ISSUE_PATH.length()) : path.substring(BROWSE_ISSUE_PATH.length());
     }
 }

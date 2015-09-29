@@ -22,6 +22,8 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import net.sf.json.JSONNull;
+
 public enum FlagStatus {
 
     SET("?"), ACCEPTED("+"), REJECTED("-"), NO_SET("");
@@ -36,10 +38,12 @@ public enum FlagStatus {
         return symbol;
     }
 
-    public static FlagStatus getMatchingFlag(String symbol) {
-        for (FlagStatus f : FlagStatus.values())
-            if (f.getSymbol().equals(symbol))
-                return f;
+    public static FlagStatus getMatchingFlag(Object jsonVal) {
+        if (!(jsonVal instanceof JSONNull)) {
+            for (FlagStatus f : FlagStatus.values())
+                if (f.getSymbol().equals(jsonVal))
+                    return f;
+        }
         return NO_SET;
     }
 }

@@ -26,7 +26,9 @@ import org.apache.commons.logging.Log;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -71,11 +73,19 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         try {
             baseUrl = new URL(config.getUrl());
         } catch (MalformedURLException e) {
-            String errorMsg = "Invalid tracker url '" + url + "'. " + this.getClass().getName() +
+            String errorMsg = "Invalid IssueTracker url. " + this.getClass().getName() +
                     " service for '" + url + "' cannot be started";
             Utils.logException(getLog(), errorMsg, e);
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Issue getIssue(URL url) throws NotFoundException {
+        if (!url.getHost().equals(baseUrl.getHost()))
+            throw new NotFoundException("The requested issue cannot be found on this tracker as the " +
+                    "requested issue is not hosted on this server.");
+        return null;
     }
 }

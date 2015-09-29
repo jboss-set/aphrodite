@@ -1,1 +1,2 @@
 org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaIssueTracker
+org.jboss.set.aphrodite.issue.trackers.jira.JiraIssueTracker
