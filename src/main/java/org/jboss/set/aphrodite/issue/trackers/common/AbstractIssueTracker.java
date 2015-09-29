@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -87,5 +88,14 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
             throw new NotFoundException("The requested issue cannot be found on this tracker as the " +
                     "requested issue is not hosted on this server.");
         return null;
+    }
+
+    @Override
+    public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
+        comment.getId().ifPresent(id ->
+                        Utils.logWarnMessage(getLog(), "ID: " + id + "ignored when posting comments " +
+                                "as this is set by the issue tracker.")
+        );
+        return false;
     }
 }

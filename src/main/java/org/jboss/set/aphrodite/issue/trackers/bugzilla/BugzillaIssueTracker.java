@@ -90,10 +90,7 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
 
     @Override
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
-        comment.getId().ifPresent(id ->
-                        Utils.logWarnMessage(LOG, "ID: " + id + "ignored when posting comments " +
-                                "as this is set by the issue tracker.")
-        );
+        super.addCommentToIssue(issue, comment);
         return bzClient.postComment(issue, comment);
     }
 

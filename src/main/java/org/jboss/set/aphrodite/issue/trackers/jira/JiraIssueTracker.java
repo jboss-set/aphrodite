@@ -93,10 +93,13 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     @Override
     public Issue getIssue(URL url) throws NotFoundException {
         super.getIssue(url);
+        net.rcarz.jiraclient.Issue jiraIssue = getIssue(getIssueKey(url));
+        return WRAPPER.jiraIssueToIssue(url, jiraIssue);
+    }
 
+    private net.rcarz.jiraclient.Issue getIssue(String trackerId) throws NotFoundException {
         try {
-            net.rcarz.jiraclient.Issue jiraIssue = jiraClient.getIssue(getIssueKey(url));
-            return WRAPPER.jiraIssueToIssue(url, jiraIssue);
+            return jiraClient.getIssue(trackerId);
         } catch (JiraException e) {
             throw new NotFoundException(e);
         }
@@ -114,7 +117,21 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
-        return false;
+        super.addCommentToIssue(issue, comment);
+
+        if (comment.isPrivate())
+            Utils.logWarnMessage(LOG, "Private comments are not currently supported by " + getClass().getName());
+
+        String trackerId = issue.getTrackerId().orElse(getIssueKey(issue.getURL()));
+        net.rcarz.jiraclient.Issue jiraIssue = getIssue(trackerId);
+        try {
+            // TODO make so that a comment is added directly to issue without retrieving issue first?
+            jiraIssue.addComment(comment.getBody());
+            return true;
+        } catch (JiraException e) {
+            Utils.logException(LOG, e);
+            return false;
+        }
     }
 
     @Override
