@@ -26,14 +26,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -124,6 +128,24 @@ public class Aphrodite {
             if (initialised)
                 repositories.add(rs);
         }
+    }
+
+    public Issue getIssue(URL url) throws NotFoundException {
+        for (IssueTrackerService trackerService : issueTrackers) {
+            try {
+                return trackerService.getIssue(url);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("Issue not found at IssueTrackerService: " + trackerService.getClass().getName());
+            }
+        }
+        throw new NotFoundException("No issues found which correspond to the provided url.");
+    }
+
+    public List<Issue> searchIssues(SearchCriteria searchCriteria) {
+        List<Issue> issues = new ArrayList<>();
+        issueTrackers.forEach(tracker -> issues.addAll(tracker.searchIssues(searchCriteria)));
+        return issues;
     }
 
     public static void main(String[] args) throws Exception {
