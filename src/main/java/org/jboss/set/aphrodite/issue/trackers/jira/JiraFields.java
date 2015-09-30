@@ -22,6 +22,7 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
+import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 
 /**
@@ -33,10 +34,13 @@ class JiraFields {
     static final String API_ISSUE_PATH = API_BASE_PATH + "issue/";
     static final String BROWSE_ISSUE_PATH = "/browse/";
 
-    static final String PM_ACK = "customfield_12311242";
-    static final String DEV_ACK = "customfield_12311243";
-    static final String QE_ACK = "customfield_12311244";
-    static final String TARGET_RELEASE = "customfield_12311240";
+    static final String JSON_CUSTOM_FIELD = "customfield_";
+    static final String JQL_CUSTOM_TEMPLATE = "cf[%s]";
+
+    static final String PM_ACK = "12311242";
+    static final String DEV_ACK = "12311243";
+    static final String QE_ACK = "12311244";
+    static final String TARGET_RELEASE = "12311240";
 
     static IssueStatus getAphroditeStatus(String status) {
         switch (status.toLowerCase()) {
@@ -59,5 +63,22 @@ class JiraFields {
             default:
                 return IssueStatus.UNDEFINED;
         }
+    }
+
+    static String getJQLField(Flag status) {
+        switch (status) {
+            case DEV:
+                return getJQLField(DEV_ACK);
+            case PM:
+                return getJQLField(PM_ACK);
+            case QE:
+                return getJQLField(QE_ACK);
+            default:
+                return null;
+        }
+    }
+
+    static String getJQLField(String field) {
+        return String.format(JQL_CUSTOM_TEMPLATE, field);
     }
 }

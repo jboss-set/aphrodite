@@ -91,7 +91,7 @@ public class SearchCriteria {
         private Release release;
         private List<Stream> streams;
         private LocalDate startDate;
-        private int maxResults;
+        private Integer maxResults;
 
         public Builder setProduct(String product) {
             this.product = product;
@@ -123,7 +123,7 @@ public class SearchCriteria {
             return this;
         }
 
-        public Builder setMaxResults(int maxResults) {
+        public Builder setMaxResults(Integer maxResults) {
             this.maxResults = maxResults;
             return this;
         }

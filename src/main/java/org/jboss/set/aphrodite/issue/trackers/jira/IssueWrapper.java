@@ -46,6 +46,7 @@ import java.util.List;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
@@ -55,6 +56,11 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphrodit
  * @author Ryan Emerson
  */
 class IssueWrapper {
+
+    Issue jiraSearchIssueToIssue(URL baseURL, net.rcarz.jiraclient.Issue jiraIssue) {
+        URL url = trackerIdToBrowsableUrl(baseURL, jiraIssue.getKey());
+        return jiraIssueToIssue(url, jiraIssue);
+    }
 
     Issue jiraIssueToIssue(URL url, net.rcarz.jiraclient.Issue jiraIssue) {
         Issue issue = new Issue(url);
@@ -97,9 +103,9 @@ class IssueWrapper {
 
     private void setIssueStage(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
         Stage stage = new Stage();
-        stage.setStatus(Flag.PM, FlagStatus.getMatchingFlag(jiraIssue.getField(PM_ACK)));
-        stage.setStatus(Flag.DEV, FlagStatus.getMatchingFlag(jiraIssue.getField(DEV_ACK)));
-        stage.setStatus(Flag.QE, FlagStatus.getMatchingFlag(jiraIssue.getField(QE_ACK)));
+        stage.setStatus(Flag.PM, FlagStatus.getMatchingFlag(jiraIssue.getField(JSON_CUSTOM_FIELD + PM_ACK)));
+        stage.setStatus(Flag.DEV, FlagStatus.getMatchingFlag(jiraIssue.getField(JSON_CUSTOM_FIELD + DEV_ACK)));
+        stage.setStatus(Flag.QE, FlagStatus.getMatchingFlag(jiraIssue.getField(JSON_CUSTOM_FIELD + QE_ACK)));
         issue.setStage(stage);
     }
 
@@ -114,7 +120,7 @@ class IssueWrapper {
 
     private void setIssueRelease(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
         Release release = new Release();
-        Object jsonField = jiraIssue.getField(TARGET_RELEASE);
+        Object jsonField = jiraIssue.getField(JSON_CUSTOM_FIELD + TARGET_RELEASE);
         if (jsonField instanceof JSONNull)
             return;
 
@@ -157,7 +163,7 @@ class IssueWrapper {
 
     private URL trackerIdToBrowsableUrl(URL url, String trackerId) {
         try {
-            String link = url.getProtocol() + url.getHost() + BROWSE_ISSUE_PATH + trackerId;
+            String link = url.getProtocol() + "://" + url.getHost() + BROWSE_ISSUE_PATH + trackerId;
             return new URL(link);
         } catch (MalformedURLException e) {
             return null;

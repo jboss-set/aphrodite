@@ -43,6 +43,7 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
@@ -107,7 +108,17 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
-        return null;
+        List<Issue> issues = new ArrayList<>();
+        String jql = new JiraQueryBuilder(searchCriteria).getJQLString();
+
+        int maxResults = searchCriteria.getMaxResults().orElse(JiraQueryBuilder.DEFAULT_MAX_RESULTS);
+        try {
+            net.rcarz.jiraclient.Issue.SearchResult sr = jiraClient.searchIssues(jql, maxResults);
+            sr.issues.forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
+        } catch (JiraException e) {
+            Utils.logException(LOG, e);
+        }
+        return issues;
     }
 
     @Override
