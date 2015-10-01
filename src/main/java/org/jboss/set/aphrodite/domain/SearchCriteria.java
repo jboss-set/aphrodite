@@ -23,7 +23,7 @@
 package org.jboss.set.aphrodite.domain;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -37,12 +37,12 @@ public class SearchCriteria {
     private final String component;
     private final Stage stage;
     private final Release release;
-    private final List<Stream> streams;
+    private final Map<Stream, FlagStatus> streams;
     private final LocalDate lastUpdated;
     private final Integer maxResults;
 
     private SearchCriteria(String product, String component, Stage stage, Release release,
-                           List<Stream> streams, LocalDate lastUpdated, Integer maxResults) {
+                           Map<Stream, FlagStatus> streams, LocalDate lastUpdated, Integer maxResults) {
         this.product = product;
         this.component = component;
         this.stage = stage;
@@ -71,7 +71,7 @@ public class SearchCriteria {
         return Optional.ofNullable(release);
     }
 
-    public Optional<List<Stream>> getStreams() {
+    public Optional<Map<Stream, FlagStatus>> getStreams() {
         return Optional.ofNullable(streams);
     }
 
@@ -89,7 +89,7 @@ public class SearchCriteria {
         private String component;
         private Stage stage;
         private Release release;
-        private List<Stream> streams;
+        private Map<Stream,FlagStatus> streams;
         private LocalDate startDate;
         private Integer maxResults;
 
@@ -113,7 +113,7 @@ public class SearchCriteria {
             return this;
         }
 
-        public Builder setStreams(List<Stream> streams) {
+        public Builder setStreams(Map<Stream, FlagStatus> streams) {
             this.streams = streams;
             return this;
         }
@@ -129,8 +129,7 @@ public class SearchCriteria {
         }
 
         public SearchCriteria build() {
-            return new SearchCriteria(product, component, stage, release, streams, startDate,
-                    maxResults);
+            return new SearchCriteria(product, component, stage, release, streams, startDate, maxResults);
         }
     }
 }
