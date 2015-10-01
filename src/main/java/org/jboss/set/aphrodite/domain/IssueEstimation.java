@@ -27,17 +27,17 @@ package org.jboss.set.aphrodite.domain;
  *
  * @author Ryan Emerson
  */
-public class IssueTracking {
+public class IssueEstimation {
     private double initialEstimate = 0.0;
     private double hoursWorked = 0.0;
 
-    public IssueTracking(){}
+    public IssueEstimation(){}
 
-    public IssueTracking(double initialEstimate) {
+    public IssueEstimation(double initialEstimate) {
         this.initialEstimate = initialEstimate;
     }
 
-    public IssueTracking(double initialEstimate, double hoursWorked) {
+    public IssueEstimation(double initialEstimate, double hoursWorked) {
         this.initialEstimate = initialEstimate;
         this.hoursWorked = hoursWorked;
     }
@@ -52,7 +52,7 @@ public class IssueTracking {
 
     @Override
     public String toString() {
-        return "IssueTracking{" +
+        return "IssueEstimation{" +
                 "initialEstimate=" + initialEstimate +
                 ", hoursWorked=" + hoursWorked +
                 '}';

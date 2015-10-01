@@ -35,7 +35,7 @@ import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.IssueTracking;
+import org.jboss.set.aphrodite.domain.IssueEstimation;
 import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
@@ -72,7 +72,7 @@ class IssueWrapper {
         issue.setStatus(getAphroditeStatus(jiraIssue.getStatus().getName()));
 
         if (jiraIssue.getTimeEstimate() > 0 || jiraIssue.getTimeSpent() > 0)
-            issue.setTracking(new IssueTracking(jiraIssue.getTimeEstimate(), jiraIssue.getTimeSpent()));
+            issue.setEstimation(new IssueEstimation(jiraIssue.getTimeEstimate(), jiraIssue.getTimeSpent()));
 
         // TODO implement streams when it is in JIRA
         setIssueProject(issue, jiraIssue);
@@ -107,7 +107,7 @@ class IssueWrapper {
         // TODO implement streams when it is in JIRA
         // TODO implement issueLinks
 
-        issue.getTracking().ifPresent(tracking -> {
+        issue.getEstimation().ifPresent(tracking -> {
             update.field(Field.TIME_ESTIMATE, tracking.getInitialEstimate());
             update.field(Field.TIME_SPENT, tracking.getHoursWorked());
         });

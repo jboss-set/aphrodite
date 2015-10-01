@@ -61,7 +61,7 @@ public class Issue {
 
     private List<URL> blocks;
 
-    private IssueTracking tracking;
+    private IssueEstimation estimation;
 
     private List<Comment> comments;
 
@@ -180,12 +180,12 @@ public class Issue {
         this.blocks = blocks;
     }
 
-    public Optional<IssueTracking> getTracking() {
-        return Optional.ofNullable(tracking);
+    public Optional<IssueEstimation> getEstimation() {
+        return Optional.ofNullable(estimation);
     }
 
-    public void setTracking(IssueTracking tracking) {
-        this.tracking = tracking;
+    public void setEstimation(IssueEstimation estimation) {
+        this.estimation = estimation;
     }
 
     public List<Comment> getComments() {
@@ -212,7 +212,7 @@ public class Issue {
                 ", streams=" + streams +
                 ", dependsOn=" + dependsOn +
                 ", blocks=" + blocks +
-                ", tracking=" + tracking +
+                ", estimation=" + estimation +
                 ", #comments=" + comments.size() +
                 "}\n";
     }

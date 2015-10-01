@@ -26,8 +26,8 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.IssueEstimation;
 import org.jboss.set.aphrodite.domain.IssueStatus;
-import org.jboss.set.aphrodite.domain.IssueTracking;
 import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
@@ -77,7 +77,7 @@ class IssueWrapper {
 
         Double estimatedTime = (Double) bug.get(ESTIMATED_TIME);
         Double hoursWorked = (Double) bug.get(HOURS_WORKED);
-        issue.setTracking(new IssueTracking(estimatedTime, hoursWorked));
+        issue.setEstimation(new IssueEstimation(estimatedTime, hoursWorked));
 
         extractStageAndStreams(bug, issue);
         return issue;
@@ -91,7 +91,7 @@ class IssueWrapper {
         issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee));
         issue.getRelease().getVersion().ifPresent(version -> params.put(VERSION, version));
         issue.getRelease().getMilestone().ifPresent(milestone -> params.put(TARGET_MILESTONE, milestone));
-        issue.getTracking().ifPresent(tracking -> {
+        issue.getEstimation().ifPresent(tracking -> {
             params.put(HOURS_WORKED, tracking.getHoursWorked());
             params.put(ESTIMATED_TIME, tracking.getInitialEstimate());
         });
