@@ -28,6 +28,7 @@ import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
@@ -84,9 +85,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
 
     @Override
     public Issue getIssue(URL url) throws NotFoundException {
-        if (!url.getHost().equals(baseUrl.getHost()))
-            throw new NotFoundException("The requested issue cannot be found on this tracker as the " +
-                    "requested issue is not hosted on this server.");
+        checkHost(url);
         return null;
     }
 
@@ -97,5 +96,17 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
                                 "as this is set by the issue tracker.")
         );
         return false;
+    }
+
+    @Override
+    public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
+        checkHost(issue.getURL());
+        return true;
+    }
+
+    private void checkHost(URL url) throws NotFoundException {
+        if (!url.getHost().equals(baseUrl.getHost()))
+            throw new NotFoundException("The requested issue cannot be found on this tracker as the " +
+                    "requested issue is not hosted on this server.");
     }
 }

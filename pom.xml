@@ -20,6 +20,7 @@
         <!-- Dependency versions, please keep alphabetically -->
         <checkstyle.version>6.7</checkstyle.version>
         <checkstyle.plugin.version>2.11</checkstyle.plugin.version>
+        <com.google.guava.version>18.0</com.google.guava.version>
         <commons.logging.version>1.1.1</commons.logging.version>
         <jira.client.version>0.5</jira.client.version>
         <maven.shade.plugin.version>2.4.1</maven.shade.plugin.version>
@@ -177,6 +178,11 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${com.google.guava.version}</version>
+        </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>

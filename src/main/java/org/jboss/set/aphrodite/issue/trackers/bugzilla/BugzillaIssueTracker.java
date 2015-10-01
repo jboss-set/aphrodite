@@ -85,6 +85,7 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
 
     @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
+        super.updateIssue(issue);
         return bzClient.updateIssue(issue);
     }
 

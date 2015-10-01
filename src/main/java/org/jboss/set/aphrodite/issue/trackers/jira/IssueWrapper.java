@@ -23,6 +23,7 @@
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
 import net.rcarz.jiraclient.Component;
+import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.IssueLink;
 import net.rcarz.jiraclient.Project;
 import net.rcarz.jiraclient.User;
@@ -46,6 +47,7 @@ import java.util.List;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
@@ -68,7 +70,9 @@ class IssueWrapper {
         issue.setTrackerId(jiraIssue.getKey());
         issue.setDescription(jiraIssue.getDescription());
         issue.setStatus(getAphroditeStatus(jiraIssue.getStatus().getName()));
-        issue.setTracking(new IssueTracking(jiraIssue.getTimeEstimate(), jiraIssue.getTimeSpent()));
+
+        if (jiraIssue.getTimeEstimate() > 0 || jiraIssue.getTimeSpent() > 0)
+            issue.setTracking(new IssueTracking(jiraIssue.getTimeEstimate(), jiraIssue.getTimeSpent()));
 
         // TODO implement streams when it is in JIRA
         setIssueProject(issue, jiraIssue);
@@ -81,6 +85,34 @@ class IssueWrapper {
         setIssueComments(issue, jiraIssue);
 
         return issue;
+    }
+
+    net.rcarz.jiraclient.Issue.FluentUpdate issueToFluentUpdate(Issue issue, net.rcarz.jiraclient.Issue.FluentUpdate update) {
+        issue.getComponent().ifPresent(component -> update.field(Field.COMPONENTS, new ArrayList<String>() {{ add(component); }} ));
+        issue.getDescription().ifPresent(description -> update.field(Field.DESCRIPTION, description));
+        issue.getAssignee().ifPresent(assignee -> update.field(Field.ASSIGNEE, assignee));
+
+        issue.getStage().getStateMap().entrySet()
+                .stream()
+                .filter(entry -> entry.getValue() != FlagStatus.NO_SET)
+                .forEach(entry -> update.field(JSON_CUSTOM_FIELD + FLAG_MAP.get(entry.getKey()),
+                        entry.getValue().getSymbol()));
+
+        issue.getRelease().getMilestone().ifPresent(milestone -> update.field(JSON_CUSTOM_FIELD + TARGET_RELEASE, milestone));
+        issue.getRelease().getVersion().ifPresent(version ->
+            update.field(Field.VERSIONS, new ArrayList<String>() {{
+                add(version);
+            }}));
+
+        // TODO implement streams when it is in JIRA
+        // TODO implement issueLinks
+
+        issue.getTracking().ifPresent(tracking -> {
+            update.field(Field.TIME_ESTIMATE, tracking.getInitialEstimate());
+            update.field(Field.TIME_SPENT, tracking.getHoursWorked());
+        });
+
+        return update;
     }
 
     private void setIssueProject(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {

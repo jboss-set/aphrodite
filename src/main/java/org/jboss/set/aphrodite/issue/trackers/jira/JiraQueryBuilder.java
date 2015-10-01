@@ -27,6 +27,7 @@ import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.time.format.DateTimeFormatter;
 
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.CUSTOM_FIELD_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJQLField;
 
@@ -65,7 +66,9 @@ class JiraQueryBuilder {
                 stage -> stage.getStateMap().entrySet()
                         .stream()
                         .filter(entry -> entry.getValue() != FlagStatus.NO_SET)
-                        .forEach(entry -> addCriteriaToJQL(getJQLField(entry.getKey()) + " = ", entry.getValue().getSymbol(), sb)));
+                        .forEach(entry ->
+                                addCriteriaToJQL(CUSTOM_FIELD_MAP.get(entry.getKey().toString()) + " = ",
+                                entry.getValue().getSymbol(), sb)));
 
         jql = sb.toString();
         return jql;

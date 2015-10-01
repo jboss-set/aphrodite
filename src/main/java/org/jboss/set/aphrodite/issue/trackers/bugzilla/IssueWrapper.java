@@ -91,11 +91,13 @@ class IssueWrapper {
         issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee));
         issue.getRelease().getVersion().ifPresent(version -> params.put(VERSION, version));
         issue.getRelease().getMilestone().ifPresent(milestone -> params.put(TARGET_MILESTONE, milestone));
+        issue.getTracking().ifPresent(tracking -> {
+            params.put(HOURS_WORKED, tracking.getHoursWorked());
+            params.put(ESTIMATED_TIME, tracking.getInitialEstimate());
+        });
 
         params.put(STATUS, issue.getStatus().toString());
         params.put(ISSUE_TYPE, issue.getType().toString());
-        params.put(HOURS_WORKED, issue.getTracking().getHoursWorked());
-        params.put(ESTIMATED_TIME, issue.getTracking().getInitialEstimate());
         params.put(FLAGS, getStageAndStreamsMap(issue.getStreams(), issue.getStage().getStateMap()));
 
         addURLCollectionToParameters(issue.getDependsOn(), DEPENDS_ON, params);

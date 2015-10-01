@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
+import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
@@ -45,9 +46,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.*;
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the JIRA issue tracker.
@@ -98,6 +100,11 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         return WRAPPER.jiraIssueToIssue(url, jiraIssue);
     }
 
+    private net.rcarz.jiraclient.Issue getIssue(Issue issue) throws NotFoundException {
+        String trackerId = issue.getTrackerId().orElse(getIssueKey(issue.getURL()));
+        return getIssue(trackerId);
+    }
+
     private net.rcarz.jiraclient.Issue getIssue(String trackerId) throws NotFoundException {
         try {
             return jiraClient.getIssue(trackerId);
@@ -121,9 +128,27 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         return issues;
     }
 
+    /**
+     * Known limitations:
+     * - Jira api does not allow an issue type to be update (WTF?)
+     * - Jira api does not allow project to be changed
+     */
     @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
-        return false;
+        super.updateIssue(issue);
+
+        try {
+            net.rcarz.jiraclient.Issue jiraIssue = getIssue(issue);
+            net.rcarz.jiraclient.Issue.FluentUpdate update = WRAPPER.issueToFluentUpdate(issue, jiraIssue.update());
+            update.execute();
+            if (!hasSameIssueStatus(issue, jiraIssue)) {
+                String transition = getJiraTransition(issue, jiraIssue);
+                jiraIssue.transition().execute(transition);
+            }
+            return true;
+        } catch (JiraException e) {
+            throw new AphroditeException(getUpdateErrorMessage(issue, e), e);
+        }
     }
 
     @Override
@@ -133,11 +158,9 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         if (comment.isPrivate())
             Utils.logWarnMessage(LOG, "Private comments are not currently supported by " + getClass().getName());
 
-        String trackerId = issue.getTrackerId().orElse(getIssueKey(issue.getURL()));
-        net.rcarz.jiraclient.Issue jiraIssue = getIssue(trackerId);
         try {
             // TODO make so that a comment is added directly to issue without retrieving issue first?
-            jiraIssue.addComment(comment.getBody());
+            getIssue(issue).addComment(comment.getBody());
             return true;
         } catch (JiraException e) {
             Utils.logException(LOG, e);
@@ -160,5 +183,29 @@ public class JiraIssueTracker extends AbstractIssueTracker {
                     "' OR '" + BROWSE_ISSUE_PATH + "'");
 
         return api ? path.substring(API_ISSUE_PATH.length()) : path.substring(BROWSE_ISSUE_PATH.length());
+    }
+
+    private String getUpdateErrorMessage(Issue issue, JiraException e) {
+        String msg = e.getMessage();
+        if (msg.contains("does not exist or read-only")) {
+            for (Map.Entry<Flag, String> entry : FLAG_MAP.entrySet()) {
+                if (msg.contains(entry.getValue())) {
+                    String retMsg = "Flag '%1$s' set in Issue.stage cannot be set for %2$s '%3$s'";
+                    return getOptionalErrorMessage(retMsg, issue.getProduct(), entry.getKey(), issue.getURL());
+                }
+            }
+            if (msg.contains(TARGET_RELEASE)) {
+                String retMsg = "Release.milestone cannot be set for %2$s ''%3$s'";
+                return getOptionalErrorMessage(retMsg, issue.getProduct(), null, issue.getURL());
+            }
+        }
+        return null;
+    }
+
+    private String getOptionalErrorMessage(String template, Optional<?> optional, Object val, URL url) {
+        if (optional.isPresent())
+            return String.format(template, val, "issues in project", optional.get());
+        else
+            return String.format(template, val, "issue at ", url);
     }
 }

@@ -148,6 +148,18 @@ public class Aphrodite {
         return issues;
     }
 
+    public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
+        for (IssueTrackerService trackerService : issueTrackers) {
+            try {
+                return trackerService.updateIssue(issue);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("Issue not found at IssueTrackerService: " + trackerService.getClass().getName());
+            }
+        }
+        throw new NotFoundException("No issues found which correspond to the provided url.");
+    }
+
     public static void main(String[] args) throws Exception {
         Aphrodite.instance();
     }

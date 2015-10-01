@@ -77,7 +77,6 @@ public class Issue {
         this.streams = new ArrayList<>();
         this.dependsOn = new ArrayList<>();
         this.blocks = new ArrayList<>();
-        this.tracking = new IssueTracking();
         this.comments = new ArrayList<>();
     }
 
@@ -181,8 +180,8 @@ public class Issue {
         this.blocks = blocks;
     }
 
-    public IssueTracking getTracking() {
-        return tracking;
+    public Optional<IssueTracking> getTracking() {
+        return Optional.ofNullable(tracking);
     }
 
     public void setTracking(IssueTracking tracking) {
