@@ -172,17 +172,14 @@ class IssueWrapper {
             return;
 
         for (IssueLink il : links) {
-            net.rcarz.jiraclient.Issue linkedIssue =
-                    il.getInwardIssue() != null ? il.getInwardIssue() : il.getOutwardIssue();
-
-            URL url = trackerIdToBrowsableUrl(originalUrl, linkedIssue.getKey());
-            switch (il.getType().getName().toLowerCase()) {
-                case "dependency":
-                    issue.getDependsOn().add(url);
-                    break;
-                case "blocks":
-                    issue.getBlocks().add(url);
-                    break;
+            if (il.getInwardIssue() != null) {
+                net.rcarz.jiraclient.Issue linkedIssue = il.getInwardIssue();
+                URL url = trackerIdToBrowsableUrl(originalUrl, linkedIssue.getKey());
+                issue.getBlocks().add(url);
+            } else {
+                net.rcarz.jiraclient.Issue linkedIssue = il.getOutwardIssue();
+                URL url = trackerIdToBrowsableUrl(originalUrl, linkedIssue.getKey());
+                issue.getDependsOn().add(url);
             }
         }
     }

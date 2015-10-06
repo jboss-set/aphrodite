@@ -22,8 +22,11 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
+import com.google.common.collect.Iterables;
+
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.ICredentials;
+import net.rcarz.jiraclient.IssueLink;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.RestException;
@@ -45,9 +48,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.*;
 
@@ -145,10 +151,58 @@ public class JiraIssueTracker extends AbstractIssueTracker {
                 String transition = getJiraTransition(issue, jiraIssue);
                 jiraIssue.transition().execute(transition);
             }
+            addNewIssueLinks(issue, jiraIssue);
+            removeOldIssueLinks(issue, jiraIssue);
             return true;
         } catch (JiraException e) {
             throw new AphroditeException(getUpdateErrorMessage(issue, e), e);
         }
+    }
+
+    private void removeOldIssueLinks(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) throws JiraException, NotFoundException {
+        Set<String> ids = new HashSet<>();
+        for (URL url : Iterables.concat(issue.getBlocks(), issue.getDependsOn()))
+            ids.add(getIssueKey(url));
+
+        for (IssueLink link : jiraIssue.getIssueLinks()) {
+            net.rcarz.jiraclient.Issue linkedIssue = link.getInwardIssue();
+            if (linkedIssue == null)
+                linkedIssue = link.getOutwardIssue();
+
+            if (!ids.contains(linkedIssue.getKey()))
+                link.delete();
+        }
+    }
+
+    private void addNewIssueLinks(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) throws JiraException, NotFoundException {
+        for (URL url : issue.getBlocks()) {
+            String trackerId = getIssueKey(url);
+            net.rcarz.jiraclient.Issue issueToBlock = getIssue(trackerId);
+            if (!issueLinkExists(url, issueToBlock.getIssueLinks()))
+                issueToBlock.link(jiraIssue.getKey(), "Dependency");
+        }
+
+        for (URL url : issue.getDependsOn()) {
+            if (!issueLinkExists(url, jiraIssue.getIssueLinks())) {
+                String trackerId = getIssueKey(url);
+                jiraIssue.link(trackerId, "Dependency");
+            }
+        }
+    }
+
+    private boolean issueLinkExists(URL url, List<IssueLink> links) throws NotFoundException {
+        Predicate<IssueLink> predicate = checkIfLinkExists(url);
+        return links.stream().anyMatch(predicate);
+    }
+
+    private Predicate<IssueLink> checkIfLinkExists(URL url) throws NotFoundException {
+        String trackerId = getIssueKey(url);
+        return p -> {
+            if (p.getInwardIssue() != null)
+                return p.getInwardIssue().getKey().equals(trackerId);
+
+            return p.getOutwardIssue() != null && p.getOutwardIssue().getKey().equals(trackerId);
+        };
     }
 
     @Override
