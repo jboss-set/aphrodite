@@ -33,39 +33,34 @@ public class Stream {
 
     private String name;
 
-    private FlagStatus status;
+    private Stream upstream;
 
     public Stream() {
-        this.name = "N/A";
-        this.status = FlagStatus.NO_SET;
+        this("N/A", null);
     }
 
-    public Stream(String name, FlagStatus status) {
-        this.name = name;
-        this.status = status;
+    public Stream(String name) {
+        this(name, null);
     }
 
-    public void setName(String name) {
+    public Stream(String name, Stream upstream) {
         this.name = name;
+        this.upstream = upstream;
     }
 
     public String getName() {
         return name;
     }
 
-    public FlagStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(FlagStatus status) {
-        this.status = status;
+    public Stream getUpstream() {
+        return upstream;
     }
 
     @Override
     public String toString() {
         return "Stream{" +
                 "name='" + name + '\'' +
-                ", status=" + status +
+                ", upstream=" + upstream +
                 '}';
     }
 }

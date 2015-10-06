@@ -106,12 +106,12 @@ class IssueWrapper {
         return params;
     }
 
-    private List<Map<String, Object>> getStageAndStreamsMap(List<Stream> streams, Map<Flag, FlagStatus> stateMap) {
+    private List<Map<String, Object>> getStageAndStreamsMap(Map<Stream,FlagStatus> streams, Map<Flag, FlagStatus> stateMap) {
         List<Map<String, Object>> flags = new ArrayList<>();
-        for (Stream stream : streams) {
+        for (Map.Entry<Stream, FlagStatus> stream : streams.entrySet()) {
             Map<String, Object> flagMap = new HashMap<>();
-            flagMap.put(FLAG_NAME, stream.getName());
-            flagMap.put(FLAG_STATUS, stream.getStatus().getSymbol());
+            flagMap.put(FLAG_NAME, stream.getKey().getName());
+            flagMap.put(FLAG_STATUS, stream.getValue().getSymbol());
             flags.add(flagMap);
         }
 
@@ -144,7 +144,7 @@ class IssueWrapper {
 
     private void extractStageAndStreams(Map<String, Object> bug, Issue issue) {
         Stage issueStage = new Stage();
-        List<Stream> streams = new ArrayList<>();
+        Map<Stream,FlagStatus> streams = new HashMap<>();
         for (Object object : (Object[]) bug.get(FLAGS)) {
             Map<String, Object> flagMap = (Map<String, Object>) object;
             String name = (String) flagMap.get(FLAG_NAME);
@@ -158,7 +158,7 @@ class IssueWrapper {
                 issueStage.setStatus(flag.get(), status);
             } else { // Else Stream
                 FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
-                streams.add(new Stream(name, status));
+                streams.put(new Stream(name), status);
             }
         }
         issue.setStage(issueStage);

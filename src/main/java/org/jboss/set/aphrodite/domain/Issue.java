@@ -24,7 +24,9 @@ package org.jboss.set.aphrodite.domain;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -55,7 +57,7 @@ public class Issue {
 
     private Release release;
 
-    private List<Stream> streams;
+    private Map<Stream,FlagStatus> streams;
 
     private List<URL> dependsOn;
 
@@ -74,7 +76,7 @@ public class Issue {
         this.status = IssueStatus.UNDEFINED;
         this.type = IssueType.UNDEFINED;
         this.release = new Release();
-        this.streams = new ArrayList<>();
+        this.streams = new HashMap<>();
         this.dependsOn = new ArrayList<>();
         this.blocks = new ArrayList<>();
         this.comments = new ArrayList<>();
@@ -156,11 +158,11 @@ public class Issue {
         this.release = release;
     }
 
-    public List<Stream> getStreams() {
+    public Map<Stream, FlagStatus> getStreams() {
         return streams;
     }
 
-    public void setStreams(List<Stream> streams) {
+    public void setStreams(Map<Stream, FlagStatus> streams) {
         this.streams = streams;
     }
 
