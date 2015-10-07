@@ -22,6 +22,7 @@
         <checkstyle.plugin.version>2.11</checkstyle.plugin.version>
         <com.google.guava.version>18.0</com.google.guava.version>
         <commons.logging.version>1.1.1</commons.logging.version>
+        <egit.github.core.version>2.1.5</egit.github.core.version>
         <javax.json.version>1.0.4</javax.json.version>
         <jira.client.version>0.5</jira.client.version>
         <maven.shade.plugin.version>2.4.1</maven.shade.plugin.version>
@@ -178,6 +179,11 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.eclipse.mylyn.github</groupId>
+            <artifactId>org.eclipse.egit.github.core</artifactId>
+            <version>${egit.github.core.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.json</artifactId>

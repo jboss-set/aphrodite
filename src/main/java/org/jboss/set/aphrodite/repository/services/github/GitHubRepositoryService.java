@@ -24,8 +24,17 @@ package org.jboss.set.aphrodite.repository.services.github;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.UserService;
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.config.RepositoryConfig;
+import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
+
+import java.io.IOException;
+import java.net.URL;
 
 /**
  * @author Ryan Emerson
@@ -33,6 +42,7 @@ import org.jboss.set.aphrodite.spi.RepositoryService;
 public class GitHubRepositoryService extends AbstractRepositoryService {
 
     private static final Log LOG = LogFactory.getLog(RepositoryService.class);
+    private GitHubClient gitHubClient;
 
     public GitHubRepositoryService() {
         super("github");
@@ -41,5 +51,27 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     @Override
     protected Log getLog() {
         return LOG;
+    }
+
+    @Override
+    public boolean init(RepositoryConfig config) {
+        boolean parentInitiated = super.init(config);
+        if (!parentInitiated)
+            return false;
+
+        try {
+            gitHubClient = GitHubClient.createClient(baseUrl.toString());
+            gitHubClient.setCredentials(config.getUsername(), config.getPassword());
+            new UserService(gitHubClient).getUser();
+        } catch (IOException e) {
+            Utils.logException(LOG, "Authentication failed for RepositoryService: " + this.getClass().getName(), e);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public Repository getRepository(URL url) throws NotFoundException {
+        return super.getRepository(url);
     }
 }
