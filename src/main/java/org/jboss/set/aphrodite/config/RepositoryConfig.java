@@ -26,10 +26,16 @@ package org.jboss.set.aphrodite.config;
  * @author Ryan Emerson
  */
 public class RepositoryConfig extends AbstractServiceConfig {
-    public RepositoryConfig() {
-    }
-
     public RepositoryConfig(String url, String username, String password) {
         super(url, username, password);
+    }
+
+    @Override
+    public String toString() {
+        return "RepositoryConfig{" +
+                "url='" + getUrl() + '\'' +
+                ", username='" + getUsername() + '\'' +
+                ", password='" + getPassword() + '\'' +
+                '}';
     }
 }

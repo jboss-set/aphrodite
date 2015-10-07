@@ -24,16 +24,18 @@ package org.jboss.set.aphrodite.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 
 /**
  * @author Ryan Emerson
  */
 public class AphroditeConfig {
-    private List<IssueTrackerConfig> issueTrackerConfigs = new ArrayList<>();
-    private List<RepositoryConfig> repositoryConfigs = new ArrayList<>();
-
-    public AphroditeConfig() {
-    }
+    private final List<IssueTrackerConfig> issueTrackerConfigs;
+    private final List<RepositoryConfig> repositoryConfigs;
 
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs) {
         this.issueTrackerConfigs = issueTrackerConfigs;
@@ -48,15 +50,43 @@ public class AphroditeConfig {
         return issueTrackerConfigs;
     }
 
-    public void setIssueTrackerConfigs(List<IssueTrackerConfig> issueTrackerConfigs) {
-        this.issueTrackerConfigs = issueTrackerConfigs;
-    }
-
     public List<RepositoryConfig> getRepositoryConfigs() {
         return repositoryConfigs;
     }
 
-    public void setRepositoryConfigs(List<RepositoryConfig> repositoryConfigs) {
-        this.repositoryConfigs = repositoryConfigs;
+    @Override
+    public String toString() {
+        return "AphroditeConfig{" +
+                "issueTrackerConfigs=" + issueTrackerConfigs +
+                ", repositoryConfigs=" + repositoryConfigs +
+                '}';
+    }
+
+    public static AphroditeConfig fromJson(JsonObject jsonObject) {
+        JsonArray jsonArray = jsonObject.getJsonArray("issueTrackerConfigs");
+        Objects.requireNonNull(jsonArray, "issueTrackerConfigs array must be specified");
+        List<IssueTrackerConfig> issueTrackerConfigs = jsonArray
+                .stream()
+                .map(JsonObject.class::cast)
+                .map(json -> new IssueTrackerConfig(
+                        json.getString("url", null),
+                        json.getString("username", null),
+                        json.getString("password", null),
+                        json.getString("tracker", null)))
+                .collect(Collectors.toList());
+
+        jsonArray = jsonObject.getJsonArray("repositoryConfigs");
+        Objects.requireNonNull(jsonArray, "repositoryConfigs array must be specified");
+        List<RepositoryConfig> repositoryConfigs = jsonArray
+                .stream()
+                .map(JsonObject.class::cast)
+                .map(json ->
+                        new RepositoryConfig(
+                                json.getString("url", null),
+                                json.getString("username", null),
+                                json.getString("password", null)))
+                .collect(Collectors.toList());
+
+        return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);
     }
 }

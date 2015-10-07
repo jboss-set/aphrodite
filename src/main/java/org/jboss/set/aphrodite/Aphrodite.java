@@ -32,15 +32,16 @@ import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
+
+import javax.json.Json;
+import javax.json.JsonReader;
 
 public class Aphrodite {
 
@@ -95,8 +96,8 @@ public class Aphrodite {
         if (propFileLocation == null)
             throw new IllegalArgumentException("Property '" + FILE_PROPERTY + "' must be set");
 
-        try (InputStream is = new FileInputStream(propFileLocation)) {
-            init(new Yaml().loadAs(is, AphroditeConfig.class));
+        try (JsonReader jr = Json.createReader(new FileInputStream(propFileLocation))) {
+            init(AphroditeConfig.fromJson(jr.readObject()));
         } catch (IOException e) {
             Utils.logException(LOG, "Unable to load file: " + propFileLocation, e);
             throw new AphroditeException(e);

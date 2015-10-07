@@ -22,17 +22,18 @@
 
 package org.jboss.set.aphrodite.config;
 
+import java.util.Objects;
+
 /**
  * @author Ryan Emerson
  */
 public class IssueTrackerConfig extends AbstractServiceConfig {
-    private String tracker;
-
-    public IssueTrackerConfig() {
-    }
+    private final String tracker;
 
     public IssueTrackerConfig(String url, String username, String password, String tracker) {
         super(url, username, password);
+
+        Objects.requireNonNull(tracker, "The 'tracker' field must be set for all IssueTrackers");
         this.tracker = tracker;
     }
 
@@ -40,7 +41,13 @@ public class IssueTrackerConfig extends AbstractServiceConfig {
         return tracker;
     }
 
-    public void setTracker(String tracker) {
-        this.tracker = tracker;
+    @Override
+    public String toString() {
+        return "IssueTrackerConfig{" +
+                "url='" + getUrl() + '\'' +
+                ", username='" + getUsername() + '\'' +
+                ", password='" + getPassword() + '\'' +
+                ", tracker='" + tracker + '\'' +
+                '}';
     }
 }
