@@ -84,7 +84,8 @@ public class AphroditeConfig {
                         new RepositoryConfig(
                                 json.getString("url", null),
                                 json.getString("username", null),
-                                json.getString("password", null)))
+                                json.getString("password", null),
+                                json.getString("type", null)))
                 .collect(Collectors.toList());
 
         return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);

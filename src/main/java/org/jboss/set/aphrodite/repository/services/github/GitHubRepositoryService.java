@@ -20,35 +20,26 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.set.aphrodite.config;
+package org.jboss.set.aphrodite.repository.services.github;
 
-import java.util.Objects;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
+import org.jboss.set.aphrodite.spi.RepositoryService;
 
 /**
  * @author Ryan Emerson
  */
-public class RepositoryConfig extends AbstractServiceConfig {
+public class GitHubRepositoryService extends AbstractRepositoryService {
 
-    private final String type;
+    private static final Log LOG = LogFactory.getLog(RepositoryService.class);
 
-    public RepositoryConfig(String url, String username, String password, String type) {
-        super(url, username, password);
-
-        Objects.requireNonNull(type, "A 'type' must be specified for each repository.");
-        this.type = type;
-    }
-
-    public String getType() {
-        return type;
+    public GitHubRepositoryService() {
+        super("github");
     }
 
     @Override
-    public String toString() {
-        return "RepositoryConfig{" +
-                "url='" + getUrl() + '\'' +
-                ", username='" + getUsername() + '\'' +
-                ", password='" + getPassword() + '\'' +
-                ", type='" + type + '\'' +
-                '}';
+    protected Log getLog() {
+        return LOG;
     }
 }

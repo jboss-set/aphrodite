@@ -11,7 +11,8 @@
         {
             "url": "https://github.com/",
             "username": "",
-            "password": ""
+            "password": "",
+            "type": "github"
         }
     ]
 }
