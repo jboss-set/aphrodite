@@ -188,6 +188,31 @@ public class Aphrodite {
         return new ArrayList<>();
     }
 
+    public Patch getPatch(URL url) throws NotFoundException {
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                return repositoryService.getPatch(url);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
+        throw new NotFoundException("No patch found which corresponds to the provided patch.");
+    }
+
+    public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                repositoryService.addComment(patch, comment);
+                return;
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
+        throw new NotFoundException("No patch found which corresponds to the provided patch.");
+    }
+
     public static void main(String[] args) throws Exception {
         Aphrodite.instance();
     }

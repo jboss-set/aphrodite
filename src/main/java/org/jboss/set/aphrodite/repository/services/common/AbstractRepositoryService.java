@@ -90,6 +90,11 @@ public abstract class AbstractRepositoryService implements RepositoryService {
     }
 
     @Override
+    public Patch getPatch(URL url) throws NotFoundException {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    @Override
     public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }

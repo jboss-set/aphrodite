@@ -28,6 +28,7 @@ import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
 import org.eclipse.egit.github.core.service.UserService;
@@ -79,6 +80,23 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
+    public Patch getPatch(URL url) throws NotFoundException {
+        checkHost(url);
+
+        String[] elements = url.getPath().split("/");
+        int pullId = Integer.parseInt(elements[elements.length - 1]);
+        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+        PullRequestService pullRequestService = new PullRequestService(gitHubClient);
+        try {
+            PullRequest pullRequest = pullRequestService.getPullRequest(repositoryId, pullId);
+            return WRAPPER.pullRequestToPatch(pullRequest);
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+    }
+
+    @Override
     public Repository getRepository(URL url) throws NotFoundException {
         checkHost(url);
 
@@ -104,6 +122,22 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             String githubStatus =  status.toString().toLowerCase();
             List<PullRequest> pullRequests = pullRequestService.getPullRequests(id, githubStatus);
             return WRAPPER.toAphroditePatches(pullRequests);
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+    }
+
+    @Override
+    public void addComment(Patch patch, String comment) throws NotFoundException {
+        URL url = patch.getURL();
+        checkHost(url);
+
+        int pullId = Integer.parseInt(patch.getId());
+        RepositoryId id = RepositoryId.createFromUrl(url);
+        try {
+            IssueService is = new IssueService(gitHubClient);
+            is.createComment(id, pullId, comment);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);

@@ -65,6 +65,15 @@ public interface RepositoryService {
     Repository getRepository(URL url) throws NotFoundException;
 
     /**
+     * Get the <code>Patch</code> located at the provided <code>URL</code>.
+     *
+     * @param url the <code>URL</code> of the patch to be retrieved.
+     * @return the <code>Patch</code> object.
+     * @throws NotFoundException if a <code>Patch</code> cannot be found at the provided base url.
+     */
+    Patch getPatch(URL url) throws NotFoundException;
+
+    /**
      * Retrieve all Patches associated with the provided <code>Issue</code> object
      *
      * @param issue the <code>Issue</code> object whose associated Patches should be returned.

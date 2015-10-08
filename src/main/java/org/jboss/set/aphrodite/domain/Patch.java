@@ -26,20 +26,26 @@ import java.net.URL;
 
 public class Patch {
 
+    private final String id;
     private final URL url;
     private final Codebase codebase;
     private PatchStatus status;
     private String description;
 
-    public Patch(URL url, Codebase codebase, PatchStatus status, String description) {
+    public Patch(String id, URL url, Codebase codebase, PatchStatus status, String description) {
+        this.id = id;
         this.url = url;
         this.codebase = codebase;
         this.status = status;
         this.description = description;
     }
 
-    public Patch(URL url, Codebase codebase, PatchStatus status) {
-        this(url, codebase, status, null);
+    public Patch(String id, URL url, Codebase codebase, PatchStatus status) {
+        this(id, url, codebase, status, null);
+    }
+
+    public String getId() {
+        return id;
     }
 
     public URL getURL() {

@@ -55,13 +55,14 @@ class GitHubWrapper {
                 .collect(Collectors.toList());
     }
 
-    private Patch pullRequestToPatch(PullRequest pullRequest) {
+    Patch pullRequestToPatch(PullRequest pullRequest) {
         try {
-            URL url = new URL(pullRequest.getUrl());
+            String id = Integer.toString(pullRequest.getNumber());
+            URL url = new URL(pullRequest.getHtmlUrl());
             Codebase codebase = new Codebase(pullRequest.getBase().getRef());
             PatchStatus status = getPatchStatus(pullRequest.getState());
             String description = pullRequest.getBody();
-            return new Patch(url, codebase, status, description);
+            return new Patch(id, url, codebase, status, description);
         } catch (MalformedURLException e) {
             return null;
         }
