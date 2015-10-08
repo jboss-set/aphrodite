@@ -105,7 +105,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
     }
 
     @Override
-    public void addComment(Patch patch, String comment) throws NotFoundException {
+    public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 

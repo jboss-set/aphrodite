@@ -203,7 +203,7 @@ public class Aphrodite {
     public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
         for (RepositoryService repositoryService : repositories) {
             try {
-                repositoryService.addComment(patch, comment);
+                repositoryService.addCommentToPatch(patch, comment);
                 return;
             } catch (NotFoundException e) {
                 if (LOG.isInfoEnabled())

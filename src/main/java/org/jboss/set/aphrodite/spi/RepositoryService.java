@@ -101,5 +101,5 @@ public interface RepositoryService {
      * @param comment the new <code>Comment</code>.
      * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
      */
-    void addComment(Patch patch, String comment) throws NotFoundException;
+    void addCommentToPatch(Patch patch, String comment) throws NotFoundException;
 }

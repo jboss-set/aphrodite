@@ -129,7 +129,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public void addComment(Patch patch, String comment) throws NotFoundException {
+    public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
         URL url = patch.getURL();
         checkHost(url);
 
