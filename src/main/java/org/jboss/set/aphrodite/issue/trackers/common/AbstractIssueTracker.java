@@ -28,7 +28,6 @@ import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
@@ -84,12 +83,6 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     }
 
     @Override
-    public Issue getIssue(URL url) throws NotFoundException {
-        checkHost(url);
-        return null;
-    }
-
-    @Override
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         comment.getId().ifPresent(id ->
                         Utils.logWarnMessage(getLog(), "ID: " + id + "ignored when posting comments " +
@@ -98,13 +91,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         return false;
     }
 
-    @Override
-    public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
-        checkHost(issue.getURL());
-        return true;
-    }
-
-    private void checkHost(URL url) throws NotFoundException {
+    protected void checkHost(URL url) throws NotFoundException {
         if (!url.getHost().equals(baseUrl.getHost()))
             throw new NotFoundException("The requested issue cannot be found on this tracker as the " +
                     "requested issue is not hosted on this server.");

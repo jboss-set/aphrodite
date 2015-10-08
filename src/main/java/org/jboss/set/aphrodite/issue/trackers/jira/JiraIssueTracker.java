@@ -101,7 +101,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public Issue getIssue(URL url) throws NotFoundException {
-        super.getIssue(url);
+        checkHost(url);
         net.rcarz.jiraclient.Issue jiraIssue = getIssue(getIssueKey(url));
         return WRAPPER.jiraIssueToIssue(url, jiraIssue);
     }
@@ -141,7 +141,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
      */
     @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
-        super.updateIssue(issue);
+        checkHost(issue.getURL());
 
         try {
             net.rcarz.jiraclient.Issue jiraIssue = getIssue(issue);
