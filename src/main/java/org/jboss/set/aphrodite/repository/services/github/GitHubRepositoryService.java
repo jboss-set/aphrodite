@@ -24,18 +24,24 @@ package org.jboss.set.aphrodite.repository.services.github;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.egit.github.core.PullRequest;
+import org.eclipse.egit.github.core.RepositoryBranch;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
 import org.eclipse.egit.github.core.service.UserService;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
+import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 /**
  * @author Ryan Emerson
@@ -74,11 +80,30 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     @Override
     public Repository getRepository(URL url) throws NotFoundException {
-        RepositoryId.createFromUrl(url);
+        checkHost(url);
+
+        RepositoryId id = RepositoryId.createFromUrl(url);
         RepositoryService rs = new RepositoryService(gitHubClient);
         try {
-            RepositoryId id = RepositoryId.createFromUrl(url);
-            return WRAPPER.toAphroditeRepository(url, rs.getBranches(id));
+            List<RepositoryBranch> branches = rs.getBranches(id);
+            return WRAPPER.toAphroditeRepository(url, branches);
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+    }
+
+    @Override
+    public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) throws NotFoundException {
+        URL url = repository.getURL();
+        checkHost(url);
+
+        RepositoryId id = RepositoryId.createFromUrl(url);
+        PullRequestService pullRequestService = new PullRequestService(gitHubClient);
+        try {
+            String githubStatus =  status.toString().toLowerCase();
+            List<PullRequest> pullRequests = pullRequestService.getPullRequests(id, githubStatus);
+            return WRAPPER.toAphroditePatches(pullRequests);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);

@@ -69,8 +69,9 @@ public interface RepositoryService {
      *
      * @param issue the <code>Issue</code> object whose associated Patches should be returned.
      * @return a list of all <code>Patch</code> objects, or an empty list if no patches can be found.
+     * @throws NotFoundException if the provided <code>Repository</code> cannot be found at the RepositoryService.
      */
-    List<Patch> getPatchesAssociatedWith(Issue issue);
+    List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException;
 
     /**
      * Retrieve all Patches associated with the provided <code>Repository</code> object, which have a
@@ -79,8 +80,9 @@ public interface RepositoryService {
      * @param repository the <code>Repository</code> object whose associated Patches should be returned.
      * @param status the <code>PatchStatus</code> which the returned <code>Patch</code> objects must have.
      * @return a list of all matching <code>Patch</code> objects, or an empty list if no patches can be found.
+     * @throws NotFoundException if the provided <code>Repository</code> cannot be found at the RepositoryService.
      */
-    List<Patch> getPatchesByStatus(Repository repository, PatchStatus status);
+    List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) throws NotFoundException;
 
     /**
      * Add a <code>Comment</code> to the specified <code>Patch</code> object, and propagate the changes

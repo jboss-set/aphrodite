@@ -90,17 +90,23 @@ public abstract class AbstractRepositoryService implements RepositoryService {
     }
 
     @Override
-    public List<Patch> getPatchesAssociatedWith(Issue issue) {
+    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
     @Override
-    public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) {
+    public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
     @Override
     public void addComment(Patch patch, String comment) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    protected void checkHost(URL url) throws NotFoundException {
+        if (!url.getHost().equals(baseUrl.getHost()))
+            throw new NotFoundException("The requested Repository cannot be found as it is not " +
+                    "hosted on this server.");
     }
 }

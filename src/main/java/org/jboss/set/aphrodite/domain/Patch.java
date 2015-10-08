@@ -26,22 +26,28 @@ import java.net.URL;
 
 public class Patch {
 
-    private URL url;
-
+    private final URL url;
+    private final Codebase codebase;
     private PatchStatus status;
-
     private String description;
 
-    private Codebase codebase;
-
-    public Patch(URL url, PatchStatus status, Codebase codebase) {
+    public Patch(URL url, Codebase codebase, PatchStatus status, String description) {
         this.url = url;
-        this.status = status;
         this.codebase = codebase;
+        this.status = status;
+        this.description = description;
+    }
+
+    public Patch(URL url, Codebase codebase, PatchStatus status) {
+        this(url, codebase, status, null);
     }
 
     public URL getURL() {
         return url;
+    }
+
+    public Codebase getCodebase() {
+        return codebase;
     }
 
     public PatchStatus getStatus() {
@@ -60,7 +66,13 @@ public class Patch {
         this.description = description;
     }
 
-    public Codebase getCodebase() {
-        return codebase;
+    @Override
+    public String toString() {
+        return "Patch{" +
+                "url=" + url +
+                ", status=" + status +
+                ", description='" + description + '\'' +
+                ", codebase=" + codebase +
+                '}';
     }
 }

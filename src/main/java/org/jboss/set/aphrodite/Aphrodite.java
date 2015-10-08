@@ -27,6 +27,8 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -168,10 +170,22 @@ public class Aphrodite {
                 return repositoryService.getRepository(url);
             } catch (NotFoundException e) {
                 if (LOG.isInfoEnabled())
-                    LOG.info("Issue not found at RepositoryService: " + repositoryService.getClass().getName());
+                    LOG.info("Repository not found at RepositoryService: " + repositoryService.getClass().getName(), e);
             }
         }
         throw new NotFoundException("No repositories found which correspond to the provided url.");
+    }
+
+    public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) {
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                return repositoryService.getPatchesByStatus(repository, status);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
+        return new ArrayList<>();
     }
 
     public static void main(String[] args) throws Exception {

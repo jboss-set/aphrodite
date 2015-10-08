@@ -23,10 +23,14 @@
 package org.jboss.set.aphrodite.repository.services.github;
 
 
+import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,9 +43,39 @@ class GitHubWrapper {
     Repository toAphroditeRepository(URL url, List<RepositoryBranch> branches) {
         Repository repo = new Repository(url);
         List<Codebase> branchNames = branches.stream()
-                .map(branch -> new Codebase(branch.getName()))
+                .map(this::repositoryBranchToCodebase)
                 .collect(Collectors.toList());
         repo.getCodebases().addAll(branchNames);
         return repo;
+    }
+
+    List<Patch> toAphroditePatches(List<PullRequest> pullRequests) {
+        return pullRequests.stream()
+                .map(this::pullRequestToPatch)
+                .collect(Collectors.toList());
+    }
+
+    private Patch pullRequestToPatch(PullRequest pullRequest) {
+        try {
+            URL url = new URL(pullRequest.getUrl());
+            Codebase codebase = new Codebase(pullRequest.getBase().getRef());
+            PatchStatus status = getPatchStatus(pullRequest.getState());
+            String description = pullRequest.getBody();
+            return new Patch(url, codebase, status, description);
+        } catch (MalformedURLException e) {
+            return null;
+        }
+    }
+
+    private PatchStatus getPatchStatus(String status) {
+        try {
+            return PatchStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return PatchStatus.UNDEFINED;
+        }
+    }
+
+    private Codebase repositoryBranchToCodebase(RepositoryBranch branch) {
+        return new Codebase(branch.getName());
     }
 }
