@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
@@ -159,6 +160,18 @@ public class Aphrodite {
             }
         }
         throw new NotFoundException("No issues found which correspond to the provided url.");
+    }
+
+    public Repository getRepository(URL url) throws NotFoundException {
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                return repositoryService.getRepository(url);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("Issue not found at RepositoryService: " + repositoryService.getClass().getName());
+            }
+        }
+        throw new NotFoundException("No repositories found which correspond to the provided url.");
     }
 
     public static void main(String[] args) throws Exception {

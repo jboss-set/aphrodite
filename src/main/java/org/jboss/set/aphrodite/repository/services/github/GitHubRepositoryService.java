@@ -24,14 +24,15 @@ package org.jboss.set.aphrodite.repository.services.github;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.RepositoryService;
 import org.eclipse.egit.github.core.service.UserService;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
-import org.jboss.set.aphrodite.spi.RepositoryService;
 
 import java.io.IOException;
 import java.net.URL;
@@ -41,7 +42,8 @@ import java.net.URL;
  */
 public class GitHubRepositoryService extends AbstractRepositoryService {
 
-    private static final Log LOG = LogFactory.getLog(RepositoryService.class);
+    private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
+    private final GitHubWrapper WRAPPER = new GitHubWrapper();
     private GitHubClient gitHubClient;
 
     public GitHubRepositoryService() {
@@ -72,6 +74,14 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     @Override
     public Repository getRepository(URL url) throws NotFoundException {
-        return super.getRepository(url);
+        RepositoryId.createFromUrl(url);
+        RepositoryService rs = new RepositoryService(gitHubClient);
+        try {
+            RepositoryId id = RepositoryId.createFromUrl(url);
+            return WRAPPER.toAphroditeRepository(url, rs.getBranches(id));
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
     }
 }

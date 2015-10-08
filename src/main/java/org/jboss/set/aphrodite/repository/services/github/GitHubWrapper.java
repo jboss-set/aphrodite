@@ -20,26 +20,28 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.set.aphrodite.domain;
+package org.jboss.set.aphrodite.repository.services.github;
 
 
-// represents a branch
-public class Codebase {
+import org.eclipse.egit.github.core.RepositoryBranch;
+import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Repository;
 
-    private final String name;
+import java.net.URL;
+import java.util.List;
+import java.util.stream.Collectors;
 
-    public Codebase(String name) {
-        this.name = name;
-    }
+/**
+ * @author Ryan Emerson
+ */
+class GitHubWrapper {
 
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return "Codebase{" +
-                "name='" + name + '\'' +
-                '}';
+    Repository toAphroditeRepository(URL url, List<RepositoryBranch> branches) {
+        Repository repo = new Repository(url);
+        List<Codebase> branchNames = branches.stream()
+                .map(branch -> new Codebase(branch.getName()))
+                .collect(Collectors.toList());
+        repo.getCodebases().addAll(branchNames);
+        return repo;
     }
 }

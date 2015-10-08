@@ -23,13 +23,14 @@
 package org.jboss.set.aphrodite.domain;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Repository {
 
-    private URL url;
+    private final URL url;
 
-    private List<Codebase> codebases;
+    private final List<Codebase> codebases = new ArrayList<>();
 
     public Repository(URL url) {
         this.url = url;
@@ -41,5 +42,13 @@ public class Repository {
 
     public List<Codebase> getCodebases() {
         return codebases;
+    }
+
+    @Override
+    public String toString() {
+        return "Repository{" +
+                "url=" + url +
+                ", codebases=" + codebases +
+                '}';
     }
 }
