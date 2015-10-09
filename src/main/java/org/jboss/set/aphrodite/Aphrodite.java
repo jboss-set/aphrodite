@@ -176,6 +176,19 @@ public class Aphrodite {
         throw new NotFoundException("No repositories found which correspond to the provided url.");
     }
 
+    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+        List<Patch> patches = new ArrayList<>();
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                patches.addAll(repositoryService.getPatchesAssociatedWith(issue));
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
+        return patches;
+    }
+
     public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) {
         for (RepositoryService repositoryService : repositories) {
             try {

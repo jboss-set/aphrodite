@@ -28,12 +28,15 @@ import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.client.PagedRequest;
+import org.eclipse.egit.github.core.service.GitHubService;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
 import org.eclipse.egit.github.core.service.UserService;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
+import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
@@ -41,8 +44,16 @@ import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryServ
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+import static org.eclipse.egit.github.core.client.IGitHubConstants.SEGMENT_ISSUES;
+import static org.eclipse.egit.github.core.client.IGitHubConstants.SEGMENT_SEARCH;
 
 /**
  * @author Ryan Emerson
@@ -79,6 +90,14 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         return true;
     }
 
+    private Patch getPatch(String url) {
+        try {
+            return getPatch(new URL(url));
+        } catch (MalformedURLException | NotFoundException e) {
+            return null;
+        }
+    }
+
     @Override
     public Patch getPatch(URL url) throws NotFoundException {
         checkHost(url);
@@ -105,6 +124,22 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         try {
             List<RepositoryBranch> branches = rs.getBranches(id);
             return WRAPPER.toAphroditeRepository(url, branches);
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+    }
+
+    @Override
+    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+        String trackerId = issue.getTrackerId().orElseThrow(() -> new IllegalArgumentException("Issue.trackerId must be set."));
+        try {
+            GitHubGlobalSearchService searchService = new GitHubGlobalSearchService(gitHubClient);
+            List<SearchResult> searchResults = searchService.searchAllPullRequests(trackerId);
+            return searchResults.stream()
+                    .map(pr -> getPatch(pr.getUrl()))
+                    .filter(patch -> patch != null)
+                    .collect(Collectors.toList());
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
