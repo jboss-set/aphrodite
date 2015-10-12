@@ -26,6 +26,7 @@ import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.net.URL;
@@ -53,6 +54,14 @@ public interface IssueTrackerService {
      * @return <code>true</code> if the service was initialised without errors, <code>false</code> otherwise.
      */
     boolean init(IssueTrackerConfig config);
+
+    /**
+     * Retrieve all Issues associated with the provided patch object.
+     *
+     * @param patch the <code>Patch</code> object whoms associated Issues should be returned.
+     * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
+     */
+    List<Issue> getIssuesAssociatedWith(Patch patch);
 
     /**
      * Retrieve an issue object associated with the given <code>URL</code>.
