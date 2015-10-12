@@ -22,16 +22,15 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
-import org.jboss.set.aphrodite.domain.Stage;
+import org.jboss.set.aphrodite.domain.Stream;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
 
@@ -67,38 +66,48 @@ class BugzillaQueryBuilder {
             release.getVersion().ifPresent(version -> queryMap.put(VERSION, version));
         });
 
-        // TODO, this does not currently work! Appears that BZ does not support flag queries via XMLRPC
-        List<Map<String, Object>> flags = new ArrayList<>();
-        flags.addAll(getStageFlagsToSearchQuery());
-        flags.addAll(getStreamsToSearchQuery());
-        if (!flags.isEmpty()) {
-            queryMap.put(FLAGS, flags.toArray());
-        }
+        addStreamsAndStageToQueryMap();
         return queryMap;
     }
 
-    private List<Map<String, Object>> getStreamsToSearchQuery() {
-        return criteria.getStreams()
-                .orElse(Collections.emptyMap())
-                .entrySet().stream()
-                .map(e -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put(e.getKey().getName(), e.getValue().getSymbol());
-                    return map;
-                 })
-                .collect(Collectors.toList());
+    private void addStreamsAndStageToQueryMap() {
+        Map<Stream, FlagStatus> streams = criteria.getStreams().orElse(Collections.emptyMap());
+        if (streams.isEmpty())
+            return;
+
+        queryMap.put("j_top", "AND");
+        int index = 1;
+        for (Map.Entry<Stream, FlagStatus> entry : streams.entrySet()) {
+            if (entry.getValue() == FlagStatus.NO_SET)
+                continue;
+
+            addFlagSearchToMap(index, entry.getKey().getName() + entry.getValue().getSymbol());
+            index++;
+        }
+
+        if (!criteria.getStage().isPresent())
+            return;
+
+        Map<Flag, FlagStatus> stageMap = criteria.getStage().get().getStateMap();
+        if (stageMap.isEmpty())
+            return;
+
+        for (Map.Entry<Flag, FlagStatus> entry : stageMap.entrySet()) {
+            if (entry.getValue() == FlagStatus.NO_SET)
+                continue;
+
+            Optional<String> flag = getBugzillaFlag(entry.getKey());
+            if (!flag.isPresent())
+                continue;
+
+            addFlagSearchToMap(index, flag.get() + entry.getValue().getSymbol());
+            index++;
+        }
     }
 
-    private List<Map<String, Object>> getStageFlagsToSearchQuery() {
-        return criteria.getStage()
-                .orElse(new Stage())
-                .getStateMap().entrySet().stream()
-                .filter(e -> e.getValue() != FlagStatus.NO_SET)
-                .map(e -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put(getBugzillaFlag(e.getKey()).get(), e.getValue().getSymbol());
-                    return map;
-                 })
-                .collect(Collectors.toList());
+    private void addFlagSearchToMap(int index, String value) {
+        queryMap.put("f" + index, "flagtypes.name");
+        queryMap.put("o" + index, "equals");
+        queryMap.put("v" + index, value);
     }
 }
