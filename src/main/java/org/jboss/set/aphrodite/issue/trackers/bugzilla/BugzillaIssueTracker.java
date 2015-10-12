@@ -28,7 +28,6 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -65,11 +64,6 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public List<Issue> getIssuesAssociatedWith(Patch patch) {
-        throw new UnsupportedOperationException("Not yet implemented.");
     }
 
     @Override

@@ -38,7 +38,6 @@ import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -55,7 +54,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.*;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.hasSameIssueStatus;
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the JIRA issue tracker.
@@ -92,11 +96,6 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public List<Issue> getIssuesAssociatedWith(Patch patch) {
-        throw new UnsupportedOperationException("Not yet implemented.");
     }
 
     @Override
