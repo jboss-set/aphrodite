@@ -59,7 +59,7 @@ public class Aphrodite {
      * Get an instance of the Aphrodite service. If the service has not yet been initialised, then
      * a new service is created.
      *
-     * This service will use the YAML configuration file specified in the {@value FILE_PROPERTY}
+     * This service will use the JSON configuration file specified in the {@value FILE_PROPERTY}
      * environment variable.
      *
      * @return instance the singleton instance of the Aphrodite service.
