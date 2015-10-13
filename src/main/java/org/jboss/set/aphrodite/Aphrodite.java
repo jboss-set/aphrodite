@@ -40,8 +40,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonReader;
@@ -162,6 +164,13 @@ public class Aphrodite {
             }
         }
         throw new NotFoundException("No issues found which correspond to the provided url.");
+    }
+
+    public List<Issue> getIssuesAssociatedWith(Patch patch) {
+        return issueTrackers.stream()
+                .map(service -> service.getIssuesAssociatedWith(patch))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     public Repository getRepository(URL url) throws NotFoundException {

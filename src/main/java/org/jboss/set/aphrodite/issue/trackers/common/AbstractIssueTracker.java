@@ -28,12 +28,17 @@ import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An abstract IssueTracker which provides logic common to all issue trackers.
@@ -41,6 +46,8 @@ import java.util.Iterator;
  * @author Ryan Emerson
  */
 public abstract class AbstractIssueTracker implements IssueTrackerService {
+    public static final Pattern URL_REGEX = Pattern.compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?");
+
     protected final String TRACKER_TYPE;
     protected IssueTrackerConfig config;
     protected URL baseUrl;
@@ -80,6 +87,26 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public List<Issue> getIssuesAssociatedWith(Patch patch) {
+        List<Issue> issues = new ArrayList<>();
+        Matcher m = URL_REGEX.matcher(patch.getDescription());
+        while (m.find()) {
+            String link = m.group();
+            try {
+                URL url = new URL(link);
+                if (url.getHost().equals(baseUrl.getHost()))
+                    issues.add(getIssue(url));
+            } catch (MalformedURLException e) {
+                if (getLog().isTraceEnabled())
+                    getLog().trace(e);
+            } catch (NotFoundException e) {
+                Utils.logException(getLog(), "Unable to retrieve Issue at " + link + ":", e);
+            }
+        }
+        return issues;
     }
 
     @Override

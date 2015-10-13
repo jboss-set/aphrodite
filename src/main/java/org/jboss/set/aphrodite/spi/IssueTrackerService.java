@@ -57,6 +57,8 @@ public interface IssueTrackerService {
 
     /**
      * Retrieve all Issues associated with the provided patch object.
+     * Implementations of this method assume that the urls of the related issues are present in the
+     * patch's description field.
      *
      * @param patch the <code>Patch</code> object whoms associated Issues should be returned.
      * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
