@@ -80,6 +80,12 @@ class BugzillaFields {
     static final String RESULT_LIMIT = "limit";
     static final String RESULT_PERMISSIVE_SEARCH = "permissive";
 
+    static final String SEARCH_EQUALS = "equals";
+    static final String SEARCH_FLAGS = "flagtypes.name";
+    static final String SEARCH_FUNCTION = "f";
+    static final String SEARCH_OPTION = "o";
+    static final String SEARCH_VALUE = "v";
+
     static final Object[] RESULT_FIELDS = { ASSIGNEE, BLOCKS, COMPONENT, DEPENDS_ON, DESCRIPTION,
                                             ESTIMATED_TIME, FLAGS, HOURS_WORKED, ID, ISSUE_TYPE,
                                             PRODUCT, STATUS, TARGET_MILESTONE, TARGET_RELEASE,

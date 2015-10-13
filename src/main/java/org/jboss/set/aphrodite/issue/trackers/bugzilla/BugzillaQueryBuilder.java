@@ -106,8 +106,8 @@ class BugzillaQueryBuilder {
     }
 
     private void addFlagSearchToMap(int index, String value) {
-        queryMap.put("f" + index, "flagtypes.name");
-        queryMap.put("o" + index, "equals");
-        queryMap.put("v" + index, value);
+        queryMap.put(SEARCH_FUNCTION + index, SEARCH_FLAGS);
+        queryMap.put(SEARCH_OPTION + index, SEARCH_EQUALS);
+        queryMap.put(SEARCH_VALUE + index, value);
     }
 }
