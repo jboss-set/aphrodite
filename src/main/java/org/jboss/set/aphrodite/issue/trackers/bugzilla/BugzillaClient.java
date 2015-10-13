@@ -103,10 +103,23 @@ public class BugzillaClient {
         throw new NotFoundException();
     }
 
-    public Issue getIssueWithComments(String trackerId) throws NotFoundException, MalformedURLException {
+    public Issue getIssueWithComments(URL url) throws NotFoundException {
+        String trackerId = Utils.getTrackerIdFromUrl(ID_PARAM_PATTERN, url);
+        return getIssueWithComments(trackerId);
+    }
+
+    public Issue getIssueWithComments(String trackerId) throws NotFoundException {
         Issue issue = getIssue(trackerId);
-        issue.setComments(getCommentsForIssue(trackerId));
+        setCommentsForIssue(issue);
         return issue;
+    }
+
+    private void setCommentsForIssue(Issue issue) {
+        try {
+            issue.setComments(getCommentsForIssue(issue));
+        } catch (NotFoundException e) {
+            Utils.logException(LOG, "Unable to retrieve comments for issue: ", e);
+        }
     }
 
     public List<Comment> getCommentsForIssue(Issue issue) throws NotFoundException {
@@ -142,6 +155,7 @@ public class BugzillaClient {
             for (Map<String, Object> struct : XMLRPC.iterable(XMLRPC.RPC_STRUCT, bugs)) {
                 try {
                     Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURL);
+                    setCommentsForIssue(issue);
                     issues.add(issue);
                 } catch (MalformedURLException e) {
                     Utils.logException(LOG, "Unable to create Issue Object.", e);

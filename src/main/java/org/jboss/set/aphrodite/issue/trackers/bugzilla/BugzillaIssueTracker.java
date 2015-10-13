@@ -69,7 +69,7 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     @Override
     public Issue getIssue(URL url) throws NotFoundException {
         checkHost(url);
-        return bzClient.getIssue(url);
+        return bzClient.getIssueWithComments(url);
     }
 
     @Override
