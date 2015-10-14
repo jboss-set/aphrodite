@@ -105,7 +105,6 @@ class IssueWrapper {
             }}));
 
         // TODO implement streams when it is in JIRA
-        // TODO implement issueLinks
 
         issue.getEstimation().ifPresent(tracking -> {
             update.field(Field.TIME_ESTIMATE, tracking.getInitialEstimate());
