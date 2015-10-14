@@ -220,6 +220,9 @@ public class Issue {
     }
 
     private String getPrintableDescription() {
+        if (description == null)
+            return "";
+
         if (description.length() < 10)
             return description + "... ";
         return description.substring(0, 10) + "... ";

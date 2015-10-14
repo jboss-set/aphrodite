@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.CUSTOM_FIELD_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJQLField;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraStatus;
 
 /**
  * @author Ryan Emerson
@@ -50,6 +51,7 @@ class JiraQueryBuilder {
             return jql;
 
         StringBuilder sb = new StringBuilder();
+        criteria.getStatus().ifPresent(status -> addCriteriaToJQL("status = ", getJiraStatus(status), sb));
         criteria.getComponent().ifPresent(component -> addCriteriaToJQL("component = ", component, sb));
         criteria.getProduct().ifPresent(product -> addCriteriaToJQL("project = ", product, sb));
         criteria.getLastUpdated().ifPresent(date -> {
