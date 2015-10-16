@@ -146,6 +146,7 @@ class IssueWrapper {
         Stage issueStage = new Stage();
         Map<Stream,FlagStatus> streams = new HashMap<>();
         for (Object object : (Object[]) bug.get(FLAGS)) {
+            @SuppressWarnings("unchecked") // Necessary evil
             Map<String, Object> flagMap = (Map<String, Object>) object;
             String name = (String) flagMap.get(FLAG_NAME);
 
@@ -154,10 +155,10 @@ class IssueWrapper {
                 if (!flag.isPresent())
                     continue;
 
-                FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
+                FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
                 issueStage.setStatus(flag.get(), status);
             } else { // Else Stream
-                FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
+                FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
                 streams.put(new Stream(name), status);
             }
         }
