@@ -22,6 +22,7 @@
         <checkstyle.plugin.version>2.11</checkstyle.plugin.version>
         <com.google.guava.version>18.0</com.google.guava.version>
         <commons.logging.version>1.1.1</commons.logging.version>
+        <commons.beanutils.version>1.9.2</commons.beanutils.version>
         <egit.github.core.version>2.1.5</egit.github.core.version>
         <javax.json.version>1.0.4</javax.json.version>
         <jira.client.version>0.5</jira.client.version>
@@ -195,6 +196,11 @@
             <version>${commons.logging.version}</version>
         </dependency>
         <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${commons.beanutils.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.mylyn.github</groupId>
             <artifactId>org.eclipse.egit.github.core</artifactId>
             <version>${org.eclipse.egit.github.core.version}</version>
@@ -214,6 +220,10 @@
                 <exclusion>
                     <groupId>org.mockito</groupId>
                     <artifactId>mockito-all</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-beanutils</groupId>
+                    <artifactId>commons-beanutils</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
