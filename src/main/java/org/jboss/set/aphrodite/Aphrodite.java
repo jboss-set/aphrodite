@@ -235,6 +235,18 @@ public class Aphrodite {
         throw new NotFoundException("No patch found which corresponds to the provided patch.");
     }
 
+    public void addLabelToPatch(Patch patch, String labelName) {
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                repositoryService.addLabelToPatch(patch, labelName);
+                return;
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         Aphrodite.instance();
     }

@@ -59,6 +59,12 @@ public class Utils {
         return ids;
     }
 
+    public static String getTrailingValueFromUrlPath(URL url) {
+        String path = url.getPath();
+        String[] components = path.split("/");
+        return components[components.length - 1];
+    }
+
     public static void logWarnMessage(Log log, String message) {
         if (log.isWarnEnabled())
             log.warn(message);

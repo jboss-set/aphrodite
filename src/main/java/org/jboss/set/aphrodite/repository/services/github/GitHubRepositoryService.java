@@ -24,11 +24,13 @@ package org.jboss.set.aphrodite.repository.services.github;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.egit.github.core.Label;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.IssueService;
+import org.eclipse.egit.github.core.service.LabelService;
 import org.eclipse.egit.github.core.service.PullRequestService;
 import org.eclipse.egit.github.core.service.RepositoryService;
 import org.eclipse.egit.github.core.service.UserService;
@@ -146,7 +148,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         RepositoryId id = RepositoryId.createFromUrl(url);
         PullRequestService pullRequestService = new PullRequestService(gitHubClient);
         try {
-            String githubStatus =  status.toString().toLowerCase();
+            String githubStatus = status.toString().toLowerCase();
             List<PullRequest> pullRequests = pullRequestService.getPullRequests(id, githubStatus);
             return WRAPPER.toAphroditePatches(pullRequests);
         } catch (IOException e) {
@@ -169,5 +171,40 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
+    }
+
+    @Override
+    public void addLabelToPatch(Patch patch, String labelName) throws NotFoundException {
+        URL url = patch.getURL();
+        checkHost(url);
+
+        int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+        IssueService issueService = new IssueService(gitHubClient);
+        try {
+            Label newLabel = getLabel(repositoryId, labelName);
+            org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
+            List<Label> issueLabels = issue.getLabels();
+            if (issueLabels.contains(newLabel))
+                return;
+
+            issueLabels.add(newLabel);
+            issue.setLabels(issueLabels);
+            issueService.editIssue(repositoryId, issue);
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+    }
+
+    private Label getLabel(RepositoryId repositoryId, String labelName) throws NotFoundException, IOException {
+        LabelService labelService = new LabelService(gitHubClient);
+        List<Label> labels = labelService.getLabels(repositoryId);
+        for (Label label : labels)
+            if (label.getName().equalsIgnoreCase(labelName))
+                return label;
+
+        throw new NotFoundException("No label exists with the name '" + labelName +
+                "' at repository '" + repositoryId + "'");
     }
 }
