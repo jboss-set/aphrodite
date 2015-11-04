@@ -102,4 +102,15 @@ public interface RepositoryService {
      * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
      */
     void addCommentToPatch(Patch patch, String comment) throws NotFoundException;
+
+    /**
+     * Attach a label to the specified patch.  Note the label must already exist at remote repository,
+     * otherwise a <code>NotFoundException</code> will be thrown. If the specified label is already
+     * associated with the provided patch then no further action is taken.
+     *
+     * @param patch the <code>Patch</code> to which the label will be applied.
+     * @param labelName the name of the label to be applied.
+     * @throws NotFoundException if the specified labelName has not been defined at the remote repository.
+     */
+    void addLabelToPatch(Patch patch, String labelName) throws NotFoundException;
 }
