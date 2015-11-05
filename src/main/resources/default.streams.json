@@ -1,0 +1,88 @@
+{
+  "streams": [
+    {
+      "name": "wildfly",
+      "upstream": "null",
+      "codebases": [
+        {
+          "repository_url": "https://github.com/wildfly/wildfly",
+          "codebase": "master"
+        },
+        {
+          "repository_url": "https://github.com/infinispan/infinispan/",
+          "codebase": "8.0.x"
+        }
+      ]
+    },
+    {
+      "name": "jboss-eap-7.0.z",
+      "upstream": "wildfly",
+      "codebases": [
+        {
+          "repository_url": "https://github.com/jbossas/jboss-eap7",
+          "codebase": "7.x"
+        },
+        {
+          "repository_url": "https://github.com/infinispan/infinispan/",
+          "codebase": "8.0.x"
+        }
+      ]
+    },
+    {
+      "name": "jboss-eap-6.4.z",
+      "upstream": "jboss-eap-7.0.z",
+      "codebases": [
+        {
+          "repository_url": "https://github.com/jbossas/jboss-eap",
+          "codebase": "6.4.x"
+        },
+        {
+          "repository_url": "https://github.com/infinispan/infinispan/",
+          "codebase": "5.2.x"
+        }
+      ]
+    },
+    {
+      "name": "jboss-eap-6.3.z",
+      "upstream": "jboss-eap-6.4.z",
+      "codebases": [
+        {
+          "repository_url": "https://github.com/jbossas/jboss-eap",
+          "codebase": "6.3.x"
+        },
+        {
+          "repository_url": "https://github.com/infinispan/infinispan/",
+          "codebase": "5.2.x"
+        }
+      ]
+    },
+    {
+      "name": "jboss-eap-6.2.z",
+      "upstream": "jboss-eap-6.3.z",
+      "codebases": [
+        {
+          "repository_url": "https://github.com/jbossas/jboss-eap",
+          "codebase": "6.2.x"
+        },
+        {
+          "repository_url": "https://github.com/infinispan/infinispan/",
+          "codebase": "5.2.x"
+        }
+      ]
+    },
+    {
+      "name": "jboss-eap-6.1.z",
+      "upstream": "jboss-eap-6.2.z",
+      "codebases": [
+        {
+          "repository_url": "https://github.com/jbossas/jboss-eap",
+          "codebase": "6.1.x"
+        },
+        {
+          "repository_url": "https://github.com/infinispan/infinispan/",
+          "codebase": "5.2.x"
+        }
+      ]
+    }
+  ]
+}
