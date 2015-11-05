@@ -1,14 +1,13 @@
 package org.jboss.set.aphrodite.spi;
 
-import java.util.List;
-
 import org.jboss.set.aphrodite.domain.Stream;
-import org.jboss.set.aphrodite.domain.StreamConfiguration;
+
+import java.util.List;
 
 public interface StreamService {
 
     List<Stream> getStreams();
 
-    StreamConfiguration getConfigurationFor(Stream stream);
+    Stream getStream(String streamName);
 
 }

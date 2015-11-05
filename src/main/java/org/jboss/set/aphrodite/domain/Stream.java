@@ -23,17 +23,23 @@
 package org.jboss.set.aphrodite.domain;
 
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 /**
- * this is the flag z-stream represented by a stream
- * Usually the pattern is something like jboss‑eap‑6.4.z
- * @author egonzalez
+ * this is the flag z-stream represented by a stream Usually the pattern is something like
+ * jboss‑eap‑6.4.z
  *
+ * @author egonzalez
  */
 public class Stream {
 
-    private String name;
+    private final String name;
 
-    private Stream upstream;
+    private final Stream upstream;
+
+    private final Map<Repository, Codebase> codebases;
 
     public Stream() {
         this("N/A", null);
@@ -44,16 +50,52 @@ public class Stream {
     }
 
     public Stream(String name, Stream upstream) {
+        this(name, upstream, new HashMap<>());
+    }
+
+    public Stream(String name, Stream upstream, Map<Repository, Codebase> codebases) {
         this.name = name;
         this.upstream = upstream;
+        this.codebases = codebases;
     }
 
     public String getName() {
         return name;
     }
 
+    public boolean hasUpstream() {
+        return upstream != null;
+    }
+
     public Stream getUpstream() {
         return upstream;
+    }
+
+    public Map<Repository, Codebase> getCodebases() {
+        return codebases;
+    }
+
+    public Set<Repository> getRespositories() {
+        return codebases.keySet();
+    }
+
+    public Codebase getCodebaseFor(Repository repository) {
+        return codebases.getOrDefault(repository, null);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Stream stream = (Stream) o;
+
+        return name.equals(stream.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 
     @Override
