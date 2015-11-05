@@ -48,7 +48,6 @@ public class Repository {
     public String toString() {
         return "Repository{" +
                 "url=" + url +
-                ", codebases=" + codebases +
                 '}';
     }
 }

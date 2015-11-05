@@ -103,6 +103,7 @@ public class Stream {
         return "Stream{" +
                 "name='" + name + '\'' +
                 ", upstream=" + upstream +
+                ", codebases=" + codebases +
                 '}';
     }
 }

@@ -37,6 +37,20 @@ public class Codebase {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Codebase codebase = (Codebase) o;
+        return name.equals(codebase.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
     public String toString() {
         return "Codebase{" +
                 "name='" + name + '\'' +
