@@ -31,7 +31,6 @@ import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
-import org.jboss.set.aphrodite.domain.Stream;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -98,7 +97,7 @@ class IssueWrapper {
 
         params.put(STATUS, issue.getStatus().toString());
         params.put(ISSUE_TYPE, issue.getType().toString());
-        params.put(FLAGS, getStageAndStreamsMap(issue.getStreams(), issue.getStage().getStateMap()));
+        params.put(FLAGS, getStageAndStreamsMap(issue.getStreamStatus(), issue.getStage().getStateMap()));
 
         addURLCollectionToParameters(issue.getDependsOn(), DEPENDS_ON, params);
         addURLCollectionToParameters(issue.getBlocks(), BLOCKS, params);
@@ -106,11 +105,11 @@ class IssueWrapper {
         return params;
     }
 
-    private List<Map<String, Object>> getStageAndStreamsMap(Map<Stream,FlagStatus> streams, Map<Flag, FlagStatus> stateMap) {
+    private List<Map<String, Object>> getStageAndStreamsMap(Map<String,FlagStatus> streams, Map<Flag, FlagStatus> stateMap) {
         List<Map<String, Object>> flags = new ArrayList<>();
-        for (Map.Entry<Stream, FlagStatus> stream : streams.entrySet()) {
+        for (Map.Entry<String, FlagStatus> stream : streams.entrySet()) {
             Map<String, Object> flagMap = new HashMap<>();
-            flagMap.put(FLAG_NAME, stream.getKey().getName());
+            flagMap.put(FLAG_NAME, stream.getKey());
             flagMap.put(FLAG_STATUS, stream.getValue().getSymbol());
             flags.add(flagMap);
         }
@@ -144,7 +143,7 @@ class IssueWrapper {
 
     private void extractStageAndStreams(Map<String, Object> bug, Issue issue) {
         Stage issueStage = new Stage();
-        Map<Stream,FlagStatus> streams = new HashMap<>();
+        Map<String,FlagStatus> streams = new HashMap<>();
         for (Object object : (Object[]) bug.get(FLAGS)) {
             @SuppressWarnings("unchecked") // Necessary evil
             Map<String, Object> flagMap = (Map<String, Object>) object;
@@ -159,10 +158,10 @@ class IssueWrapper {
                 issueStage.setStatus(flag.get(), status);
             } else { // Else Stream
                 FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
-                streams.put(new Stream(name), status);
+                streams.put(name, status);
             }
         }
         issue.setStage(issueStage);
-        issue.setStreams(streams);
+        issue.setStreamStatus(streams);
     }
 }

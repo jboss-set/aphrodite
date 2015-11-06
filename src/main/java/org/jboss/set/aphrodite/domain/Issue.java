@@ -57,7 +57,7 @@ public class Issue {
 
     private Release release;
 
-    private Map<Stream,FlagStatus> streams;
+    private Map<String,FlagStatus> streamStatus;
 
     private List<URL> dependsOn;
 
@@ -76,7 +76,7 @@ public class Issue {
         this.status = IssueStatus.UNDEFINED;
         this.type = IssueType.UNDEFINED;
         this.release = new Release();
-        this.streams = new HashMap<>();
+        this.streamStatus = new HashMap<>();
         this.dependsOn = new ArrayList<>();
         this.blocks = new ArrayList<>();
         this.comments = new ArrayList<>();
@@ -158,12 +158,12 @@ public class Issue {
         this.release = release;
     }
 
-    public Map<Stream, FlagStatus> getStreams() {
-        return streams;
+    public Map<String, FlagStatus> getStreamStatus() {
+        return streamStatus;
     }
 
-    public void setStreams(Map<Stream, FlagStatus> streams) {
-        this.streams = streams;
+    public void setStreamStatus(Map<String, FlagStatus> streamStatus) {
+        this.streamStatus = streamStatus;
     }
 
     public List<URL> getDependsOn() {
@@ -211,7 +211,7 @@ public class Issue {
                 ", status=" + status +
                 ", type=" + type +
                 ", release=" + release +
-                ", streams=" + streams +
+                ", streamStatus=" + streamStatus +
                 ", dependsOn=" + dependsOn +
                 ", blocks=" + blocks +
                 ", estimation=" + estimation +
