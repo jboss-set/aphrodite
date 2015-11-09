@@ -5,10 +5,12 @@
       "upstream": "null",
       "codebases": [
         {
+          "component_name": "Application Server",
           "repository_url": "https://github.com/wildfly/wildfly",
           "codebase": "master"
         },
         {
+          "component_name": "Infinispan",
           "repository_url": "https://github.com/infinispan/infinispan/",
           "codebase": "8.0.x"
         }
@@ -19,10 +21,12 @@
       "upstream": "wildfly",
       "codebases": [
         {
+          "component_name": "Application Server",
           "repository_url": "https://github.com/jbossas/jboss-eap7",
           "codebase": "7.x"
         },
         {
+          "component_name": "Infinispan",
           "repository_url": "https://github.com/infinispan/infinispan/",
           "codebase": "8.0.x"
         }
@@ -33,10 +37,12 @@
       "upstream": "jboss-eap-7.0.z",
       "codebases": [
         {
+          "component_name": "Application Server",
           "repository_url": "https://github.com/jbossas/jboss-eap",
           "codebase": "6.4.x"
         },
         {
+          "component_name": "Infinispan",
           "repository_url": "https://github.com/infinispan/infinispan/",
           "codebase": "5.2.x"
         }
@@ -47,10 +53,12 @@
       "upstream": "jboss-eap-6.4.z",
       "codebases": [
         {
+          "component_name": "Application Server",
           "repository_url": "https://github.com/jbossas/jboss-eap",
           "codebase": "6.3.x"
         },
         {
+          "component_name": "Infinispan",
           "repository_url": "https://github.com/infinispan/infinispan/",
           "codebase": "5.2.x"
         }
@@ -61,10 +69,12 @@
       "upstream": "jboss-eap-6.3.z",
       "codebases": [
         {
+          "component_name": "Application Server",
           "repository_url": "https://github.com/jbossas/jboss-eap",
           "codebase": "6.2.x"
         },
         {
+          "component_name": "Infinispan",
           "repository_url": "https://github.com/infinispan/infinispan/",
           "codebase": "5.2.x"
         }
@@ -75,10 +85,12 @@
       "upstream": "jboss-eap-6.2.z",
       "codebases": [
         {
+          "component_name": "Application Server",
           "repository_url": "https://github.com/jbossas/jboss-eap",
           "codebase": "6.1.x"
         },
         {
+          "component_name": "Infinispan",
           "repository_url": "https://github.com/infinispan/infinispan/",
           "codebase": "5.2.x"
         }

@@ -22,65 +22,30 @@
 
 package org.jboss.set.aphrodite.domain;
 
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * this is the flag z-stream represented by a stream Usually the pattern is something like
- * jboss‑eap‑6.4.z
- *
- * @author egonzalez
+ * @author Ryan Emerson
  */
-public class Stream {
-
+public class StreamComponent {
     private final String name;
+    private final Repository repository;
+    private final Codebase codebase;
 
-    private final Stream upstream;
-
-    private final Map<String, StreamComponent> components;
-
-    public Stream() {
-        this("N/A");
-    }
-
-    public Stream(String name) {
-        this(name, null);
-    }
-
-    public Stream(String name, Stream upstream) {
-        this(name, upstream, new HashMap<>());
-    }
-
-    public Stream(String name, Stream upstream, Map<String, StreamComponent> components) {
-        this.name = name;
-        this.upstream = upstream;
-        this.components = components;
+    public StreamComponent(String name, Repository repository, Codebase codebase) {
+        this.name = name.toLowerCase();
+        this.repository = repository;
+        this.codebase = codebase;
     }
 
     public String getName() {
         return name;
     }
 
-    public boolean hasUpstream() {
-        return upstream != null;
+    public Repository getRepository() {
+        return repository;
     }
 
-    public Stream getUpstream() {
-        return upstream;
-    }
-
-    public Collection<StreamComponent> getAllComponents() {
-        return components.values();
-    }
-
-    public void addComponent(StreamComponent component) {
-        components.put(component.getName(), component);
-    }
-
-    public StreamComponent getComponent(String componentName) {
-        return components.get(componentName.toLowerCase());
+    public Codebase getCodebase() {
+        return codebase;
     }
 
     @Override
@@ -88,9 +53,8 @@ public class Stream {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Stream stream = (Stream) o;
-
-        return name.equals(stream.name);
+        StreamComponent streamComponent = (StreamComponent) o;
+        return name.equals(streamComponent.name);
     }
 
     @Override
@@ -100,10 +64,10 @@ public class Stream {
 
     @Override
     public String toString() {
-        return "Stream{" +
+        return "StreamComponent{" +
                 "name='" + name + '\'' +
-                ", upstream=" + upstream +
-                ", components=" + components +
+                ", repository=" + repository +
+                ", codebase=" + codebase +
                 '}';
     }
 }

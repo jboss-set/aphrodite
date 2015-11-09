@@ -28,6 +28,7 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Stream;
+import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.StreamService;
 
@@ -108,17 +109,18 @@ public class JsonStreamService implements StreamService {
             Stream upstream = streamMap.get(upstreamName);
 
             JsonArray codebases = json.getJsonArray("codebases");
-            Map<Repository, Codebase> codebaseMap = parseStreamCodebases(codebases);
+            Map<String, StreamComponent> codebaseMap = parseStreamCodebases(codebases);
 
             Stream currentStream = new Stream(json.getString("name"), upstream, codebaseMap);
             streamMap.put(currentStream.getName(), currentStream);
         }
     }
 
-    private Map<Repository, Codebase> parseStreamCodebases(JsonArray codebases) throws NotFoundException {
-        Map<Repository, Codebase> codebaseMap = new HashMap<>();
+    private Map<String, StreamComponent> parseStreamCodebases(JsonArray codebases) throws NotFoundException {
+        Map<String, StreamComponent> codebaseMap = new HashMap<>();
         for (JsonValue value : codebases) {
             JsonObject json = (JsonObject) value;
+            String componentName = json.getString("component_name");
             String codebaseName = json.getString("codebase");
             URL repositoryUrl = parseUrl(json.getString("repository_url"));
 
@@ -129,7 +131,8 @@ public class JsonStreamService implements StreamService {
                 throw new NotFoundException("The specified codebase '" + codebaseName + "' " +
                         "does not belong to the Repository at " + repository.getURL());
 
-            codebaseMap.put(repository, codebase);
+            StreamComponent component = new StreamComponent(componentName, repository, codebase);
+            codebaseMap.put(component.getName(), component);
         }
         return codebaseMap;
     }
