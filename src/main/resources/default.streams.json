@@ -10,8 +10,33 @@
           "codebase": "master"
         },
         {
+          "component_name": "Application Server Core",
+          "repository_url": "https://github.com/wildfly/wildfly-core",
+          "codebase": "master"
+        },
+        {
+          "component_name": "Artemis",
+          "repository_url": "https://github.com/apache/activemq-artemis",
+          "codebase": "master"
+        },
+        {
+          "component_name": "DMR",
+          "repository_url": "https://github.com/jbossas/jboss-dmr",
+          "codebase": "1.3"
+        },
+        {
+          "component_name": "EJB-Client",
+          "repository_url": "https://github.com/jbossas/jboss-ejb-client",
+          "codebase": "2.x"
+        },
+        {
+          "component_name": "Hibernate",
+          "repository_url": "https://github.com/hibernate/hibernate-orm",
+          "codebase": "5.0"
+        },
+        {
           "component_name": "Infinispan",
-          "repository_url": "https://github.com/infinispan/infinispan/",
+          "repository_url": "https://github.com/infinispan/infinispan",
           "codebase": "8.0.x"
         }
       ]
@@ -26,8 +51,33 @@
           "codebase": "7.x"
         },
         {
+          "component_name": "Application Server Core",
+          "repository_url": "https://github.com/jbossas/wildfly-core-eap",
+          "codebase": "2.x"
+        },
+        {
+          "component_name": "Artemis",
+          "repository_url": "https://github.com/apache/activemq-artemis",
+          "codebase": "master"
+        },
+        {
+          "component_name": "DMR",
+          "repository_url": "https://github.com/jbossas/jboss-dmr",
+          "codebase": "1.3"
+        },
+        {
+          "component_name": "EJB-Client",
+          "repository_url": "https://github.com/jbossas/jboss-ejb-client",
+          "codebase": "2.x"
+        },
+        {
+          "component_name": "Hibernate",
+          "repository_url": "https://github.com/hibernate/hibernate-orm",
+          "codebase": "5.0"
+        },
+        {
           "component_name": "Infinispan",
-          "repository_url": "https://github.com/infinispan/infinispan/",
+          "repository_url": "https://github.com/infinispan/infinispan",
           "codebase": "8.0.x"
         }
       ]
@@ -42,8 +92,28 @@
           "codebase": "6.4.x"
         },
         {
+          "component_name": "DMR",
+          "repository_url": "https://github.com/jbossas/jboss-dmr",
+          "codebase": "1.2"
+        },
+        {
+          "component_name": "EJB-Client",
+          "repository_url": "https://github.com/jbossas/jboss-ejb-client",
+          "codebase": "1.0"
+        },
+        {
+          "component_name": "Hibernate",
+          "repository_url": "https://github.com/hibernate/hibernate-orm",
+          "codebase": "4.2"
+        },
+        {
+          "component_name": "HornetQ",
+          "repository_url": "https://github.com/hornetq/hornetq",
+          "codebase": "2.3.25.x"
+        },
+        {
           "component_name": "Infinispan",
-          "repository_url": "https://github.com/infinispan/infinispan/",
+          "repository_url": "https://github.com/infinispan/infinispan",
           "codebase": "5.2.x"
         }
       ]
@@ -58,8 +128,28 @@
           "codebase": "6.3.x"
         },
         {
+          "component_name": "DMR",
+          "repository_url": "https://github.com/jbossas/jboss-dmr",
+          "codebase": "1.2"
+        },
+        {
+          "component_name": "EJB-Client",
+          "repository_url": "https://github.com/jbossas/jboss-ejb-client",
+          "codebase": "1.0"
+        },
+        {
+          "component_name": "Hibernate",
+          "repository_url": "https://github.com/hibernate/hibernate-orm",
+          "codebase": "4.2"
+        },
+        {
+          "component_name": "HornetQ",
+          "repository_url": "https://github.com/hornetq/hornetq",
+          "codebase": "2.3.25.x"
+        },
+        {
           "component_name": "Infinispan",
-          "repository_url": "https://github.com/infinispan/infinispan/",
+          "repository_url": "https://github.com/infinispan/infinispan",
           "codebase": "5.2.x"
         }
       ]
@@ -74,8 +164,28 @@
           "codebase": "6.2.x"
         },
         {
+          "component_name": "DMR",
+          "repository_url": "https://github.com/jbossas/jboss-dmr",
+          "codebase": "1.2"
+        },
+        {
+          "component_name": "EJB-Client",
+          "repository_url": "https://github.com/jbossas/jboss-ejb-client",
+          "codebase": "1.0"
+        },
+        {
+          "component_name": "Hibernate",
+          "repository_url": "https://github.com/hibernate/hibernate-orm",
+          "codebase": "4.2"
+        },
+        {
+          "component_name": "HornetQ",
+          "repository_url": "https://github.com/hornetq/hornetq",
+          "codebase": "2.3.25.x"
+        },
+        {
           "component_name": "Infinispan",
-          "repository_url": "https://github.com/infinispan/infinispan/",
+          "repository_url": "https://github.com/infinispan/infinispan",
           "codebase": "5.2.x"
         }
       ]
@@ -90,8 +200,28 @@
           "codebase": "6.1.x"
         },
         {
+          "component_name": "DMR",
+          "repository_url": "https://github.com/jbossas/jboss-dmr",
+          "codebase": "1.2"
+        },
+        {
+          "component_name": "EJB-Client",
+          "repository_url": "https://github.com/jbossas/jboss-ejb-client",
+          "codebase": "1.0"
+        },
+        {
+          "component_name": "Hibernate",
+          "repository_url": "https://github.com/hibernate/hibernate-orm",
+          "codebase": "4.2"
+        },
+        {
+          "component_name": "HornetQ",
+          "repository_url": "https://github.com/hornetq/hornetq",
+          "codebase": "2.3.25.x"
+        },
+        {
           "component_name": "Infinispan",
-          "repository_url": "https://github.com/infinispan/infinispan/",
+          "repository_url": "https://github.com/infinispan/infinispan",
           "codebase": "5.2.x"
         }
       ]
