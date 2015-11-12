@@ -22,6 +22,8 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import java.util.Optional;
+
 /**
  * @author Ryan Emerson
  */
@@ -46,6 +48,19 @@ public class StreamComponent {
 
     public Codebase getCodebase() {
         return codebase;
+    }
+
+    // Returns a String only if a rule has been established for the host.
+    // This is necessary to cater for any components hosted outside of github.
+    public Optional<String> getCodeBasePath() {
+        String url = repository.getURL().toExternalForm();
+        System.out.println(url);
+        if (url.contains("github.com")) {
+            if (!url.endsWith("/"))
+                url += "/";
+            return Optional.of(url + "tree/" + codebase.getName());
+        }
+        return Optional.empty();
     }
 
     @Override
