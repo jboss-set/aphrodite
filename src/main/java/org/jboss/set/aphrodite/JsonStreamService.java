@@ -53,7 +53,7 @@ import javax.json.JsonValue;
  * A stream service which reads stream date from the specified JSON file.  This implementation
  * assumes that streams are written in order in the json file, i.e. the most recent (upstream) issue
  * is specified as the first JSON object in the "streams" JSON array. An example JSON file can be
- * found in resources/default.streams.json
+ * found at https://github.com/jboss-set/jboss-streams
  *
  * @author Ryan Emerson
  */
