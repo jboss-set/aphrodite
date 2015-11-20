@@ -22,6 +22,8 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
@@ -48,12 +50,15 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
  */
 class IssueWrapper {
 
+    private static final Log LOG = LogFactory.getLog(BugzillaIssueTracker.class);
+
     Issue bugzillaBugToIssue(Map<String, Object> bug, URL baseURL) throws MalformedURLException {
         Integer id = (Integer) bug.get(ID);
         URL url = new URL(baseURL + ID_QUERY + id);
         Issue issue = new Issue(url);
         issue.setTrackerId(id.toString());
         issue.setAssignee((String) bug.get(ASSIGNEE));
+        issue.setReporter((String) bug.get(REPORTER));
         issue.setDescription((String) bug.get(DESCRIPTION));
         issue.setStatus(IssueStatus.valueOf((String) bug.get(STATUS)));
         issue.setComponent((String) ((Object[]) bug.get(COMPONENT))[0]);
@@ -83,11 +88,14 @@ class IssueWrapper {
     }
 
     Map<String, Object> issueToBugzillaBug(Issue issue, Map<String, Object> loginDetails) {
+        checkUnsupportedUpdateFields(issue);
+
         Map<String, Object> params = new HashMap<>(loginDetails);
         issue.getTrackerId().ifPresent(trackerId -> params.put(ISSUE_IDS, trackerId));
         issue.getProduct().ifPresent(product -> params.put(PRODUCT, product));
         issue.getComponent().ifPresent(component -> params.put(COMPONENT, component));
         issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee));
+        issue.getReporter().ifPresent(reporter -> params.put(REPORTER, reporter));
         issue.getRelease().getVersion().ifPresent(version -> params.put(VERSION, version));
         issue.getRelease().getMilestone().ifPresent(milestone -> params.put(TARGET_MILESTONE, milestone));
         issue.getEstimation().ifPresent(tracking -> {
@@ -103,6 +111,11 @@ class IssueWrapper {
         addURLCollectionToParameters(issue.getBlocks(), BLOCKS, params);
 
         return params;
+    }
+
+    private void checkUnsupportedUpdateFields(Issue issue) {
+        if (issue.getReporter().isPresent() && LOG.isDebugEnabled())
+            LOG.debug("Bugzilla does not support updating the reporter field, field ignored.");
     }
 
     private List<Map<String, Object>> getStageAndStreamsMap(Map<String,FlagStatus> streams, Map<Flag, FlagStatus> stateMap) {

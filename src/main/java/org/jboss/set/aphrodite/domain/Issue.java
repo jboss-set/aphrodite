@@ -49,6 +49,8 @@ public class Issue {
 
     private String assignee;
 
+    private String reporter;
+
     private Stage stage;
 
     private IssueStatus status;
@@ -124,6 +126,14 @@ public class Issue {
 
     public void setAssignee(String assignee) {
         this.assignee = assignee;
+    }
+
+    public Optional<String> getReporter() {
+        return Optional.ofNullable(reporter);
+    }
+
+    public void setReporter(String reporter) {
+        this.reporter = reporter;
     }
 
     public Stage getStage() {
@@ -207,6 +217,7 @@ public class Issue {
                 ", component='" + component + '\'' +
                 ", description='" + getPrintableDescription() + '\'' +
                 ", assignee='" + assignee + '\'' +
+                ", reporter='" + reporter + '\'' +
                 ", stage=" + stage +
                 ", status=" + status +
                 ", type=" + type +

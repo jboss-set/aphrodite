@@ -31,6 +31,8 @@ import net.rcarz.jiraclient.Version;
 import net.sf.json.JSONNull;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
@@ -59,6 +61,8 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphrodit
  */
 class IssueWrapper {
 
+    private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
+
     Issue jiraSearchIssueToIssue(URL baseURL, net.rcarz.jiraclient.Issue jiraIssue) {
         URL url = trackerIdToBrowsableUrl(baseURL, jiraIssue.getKey());
         return jiraIssueToIssue(url, jiraIssue);
@@ -78,6 +82,7 @@ class IssueWrapper {
         setIssueProject(issue, jiraIssue);
         setIssueComponent(issue, jiraIssue);
         setIssueAssignee(issue, jiraIssue);
+        setIssueReporter(issue, jiraIssue);
         setIssueStage(issue, jiraIssue);
         setIssueType(issue, jiraIssue);
         setIssueRelease(issue, jiraIssue);
@@ -88,6 +93,8 @@ class IssueWrapper {
     }
 
     net.rcarz.jiraclient.Issue.FluentUpdate issueToFluentUpdate(Issue issue, net.rcarz.jiraclient.Issue.FluentUpdate update) {
+        checkUnsupportedUpdateFields(issue);
+
         issue.getComponent().ifPresent(component -> update.field(Field.COMPONENTS, new ArrayList<String>() {{ add(component); }} ));
         issue.getDescription().ifPresent(description -> update.field(Field.DESCRIPTION, description));
         issue.getAssignee().ifPresent(assignee -> update.field(Field.ASSIGNEE, assignee));
@@ -114,6 +121,11 @@ class IssueWrapper {
         return update;
     }
 
+    private void checkUnsupportedUpdateFields(Issue issue) {
+        if (issue.getReporter().isPresent() && LOG.isDebugEnabled())
+            LOG.debug("JIRA does not support updating the reporter field, field ignored.");
+    }
+
     private void setIssueProject(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
         Project project = jiraIssue.getProject();
         if (project != null)
@@ -130,6 +142,12 @@ class IssueWrapper {
         User assignee = jiraIssue.getAssignee();
         if (assignee != null)
             issue.setAssignee(assignee.getName());
+    }
+
+    private void setIssueReporter(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+        User reporter = jiraIssue.getReporter();
+        if (reporter != null)
+            issue.setReporter(reporter.getName());
     }
 
     private void setIssueStage(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {

@@ -53,6 +53,7 @@ class JiraQueryBuilder {
         StringBuilder sb = new StringBuilder();
         criteria.getStatus().ifPresent(status -> addCriteriaToJQL("status = ", getJiraStatus(status), sb));
         criteria.getAssignee().ifPresent(assignee -> addCriteriaToJQL("assignee = ", assignee, sb));
+        criteria.getReporter().ifPresent(reporter -> addCriteriaToJQL("reporter = ", reporter, sb));
         criteria.getComponent().ifPresent(component -> addCriteriaToJQL("component = ", component, sb));
         criteria.getProduct().ifPresent(product -> addCriteriaToJQL("project = ", product, sb));
         criteria.getLastUpdated().ifPresent(date -> {

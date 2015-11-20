@@ -61,6 +61,7 @@ class BugzillaFields {
     static final String NAME = "name";
     static final String PRIVATE_COMMENT = "private";
     static final String PRODUCT = "product";
+    static final String REPORTER = "creator";
     static final String STATUS = "status";
     static final String TARGET_MILESTONE = "target_milestone";
     static final String TARGET_RELEASE = "target_release";
@@ -88,8 +89,8 @@ class BugzillaFields {
 
     static final Object[] RESULT_FIELDS = { ASSIGNEE, BLOCKS, COMPONENT, DEPENDS_ON, DESCRIPTION,
                                             ESTIMATED_TIME, FLAGS, HOURS_WORKED, ID, ISSUE_TYPE,
-                                            PRODUCT, STATUS, TARGET_MILESTONE, TARGET_RELEASE,
-                                            VERSION };
+                                            PRODUCT, REPORTER, STATUS, TARGET_MILESTONE,
+                                            TARGET_RELEASE, VERSION };
 
     static final Object[] COMMENT_FIELDS = {COMMENT_ID, COMMENT_BODY, COMMENT_IS_PRIVATE};
 

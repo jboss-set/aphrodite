@@ -35,6 +35,7 @@ import java.util.Optional;
 public class SearchCriteria {
     private final IssueStatus status;
     private final String assignee;
+    private final String reporter;
     private final String product;
     private final String component;
     private final Stage stage;
@@ -43,11 +44,12 @@ public class SearchCriteria {
     private final LocalDate lastUpdated;
     private final Integer maxResults;
 
-    private SearchCriteria(IssueStatus status, String assignee, String product, String component,
-                           Stage stage, Release release, Map<Stream, FlagStatus> streams,
+    private SearchCriteria(IssueStatus status, String assignee, String reporter, String product,
+                           String component, Stage stage, Release release, Map<Stream, FlagStatus> streams,
                            LocalDate lastUpdated, Integer maxResults) {
         this.status = status;
         this.assignee = assignee;
+        this.reporter = reporter;
         this.product = product;
         this.component = component;
         this.stage = stage;
@@ -66,6 +68,10 @@ public class SearchCriteria {
 
     public Optional<String> getAssignee() {
         return Optional.ofNullable(assignee);
+    }
+
+    public Optional<String> getReporter() {
+        return Optional.ofNullable(reporter);
     }
 
     public Optional<String> getProduct() {
@@ -100,6 +106,7 @@ public class SearchCriteria {
 
         private IssueStatus status;
         private String assignee;
+        private String reporter;
         private String product;
         private String component;
         private Stage stage;
@@ -115,6 +122,11 @@ public class SearchCriteria {
 
         public Builder setAssignee(String assignee) {
             this.assignee = assignee;
+            return this;
+        }
+
+        public Builder setReporter(String reporter) {
+            this.reporter = reporter;
             return this;
         }
 
@@ -154,8 +166,8 @@ public class SearchCriteria {
         }
 
         public SearchCriteria build() {
-            return new SearchCriteria(status, assignee, product, component, stage, release, streams,
-                    startDate, maxResults);
+            return new SearchCriteria(status, assignee, reporter, product, component, stage, release,
+                    streams, startDate, maxResults);
         }
     }
 }
