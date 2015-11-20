@@ -141,13 +141,13 @@ class IssueWrapper {
     private void setIssueAssignee(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
         User assignee = jiraIssue.getAssignee();
         if (assignee != null)
-            issue.setAssignee(assignee.getName());
+            issue.setAssignee(assignee.getEmail());
     }
 
     private void setIssueReporter(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
         User reporter = jiraIssue.getReporter();
         if (reporter != null)
-            issue.setReporter(reporter.getName());
+            issue.setReporter(reporter.getEmail());
     }
 
     private void setIssueStage(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
