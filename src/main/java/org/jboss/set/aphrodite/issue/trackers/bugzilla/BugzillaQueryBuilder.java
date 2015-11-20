@@ -59,6 +59,7 @@ class BugzillaQueryBuilder {
         queryMap.put(RESULT_LIMIT, criteria.getMaxResults().orElse(DEFAULT_MAX_RESULTS));
 
         criteria.getStatus().ifPresent(status -> queryMap.put(STATUS, status.toString()));
+        criteria.getAssignee().ifPresent(assignee -> queryMap.put(ASSIGNEE, assignee));
         criteria.getLastUpdated().ifPresent(date -> queryMap.put(LAST_UPDATED, date.atStartOfDay().toString()));
         criteria.getProduct().ifPresent(product -> queryMap.put(PRODUCT, product));
         criteria.getComponent().ifPresent(component -> queryMap.put(COMPONENT, component));
