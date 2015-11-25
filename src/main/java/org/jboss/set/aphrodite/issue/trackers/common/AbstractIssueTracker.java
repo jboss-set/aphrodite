@@ -120,7 +120,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
 
     protected void checkHost(URL url) throws NotFoundException {
         if (!url.getHost().equals(baseUrl.getHost()))
-            throw new NotFoundException("The requested issue cannot be found on this tracker as the " +
-                    "requested issue is not hosted on this server.");
+            throw new NotFoundException("The requested entity cannot be found at this tracker as " +
+                    "the specified host domain is different from this service.");
     }
 }

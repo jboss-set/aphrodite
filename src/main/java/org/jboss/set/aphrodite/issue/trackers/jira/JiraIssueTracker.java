@@ -128,6 +128,11 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         return issues;
     }
 
+    @Override
+    public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
+        throw new NotFoundException("Method not yet implemented");
+    }
+
     /**
      * Known limitations:
      * - Jira api does not allow an issue type to be update (WTF?)

@@ -47,6 +47,7 @@ class BugzillaFields {
     static final String DEPENDS_ON = "depends_on";
     static final String DESCRIPTION = "description";
     static final String ESTIMATED_TIME = "estimated_time";
+    static final String FILTER_SHARER_ID = "sharer_id";
     static final String FLAG_ACK_DEVEL = "devel_ack";
     static final String FLAG_ACK_PM = "pm_ack";
     static final String FLAG_ACK_QA = "qa_ack";
@@ -73,6 +74,7 @@ class BugzillaFields {
     static final String METHOD_ADD_COMMENT = "Bug.add_comment";
     static final String METHOD_GET_COMMENT = "Bug.comments";
     static final String METHOD_SEARCH = "Bug.search";
+    static final String METHOD_FILTER_SEARCH = "savedsearch";
     static final String METHOD_USER_LOGIN = "User.login";
     static final String METHOD_SET_COLLECTION = "set";
 

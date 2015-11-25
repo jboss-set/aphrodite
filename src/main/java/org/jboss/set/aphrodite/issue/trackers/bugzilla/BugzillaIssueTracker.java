@@ -78,6 +78,12 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
+    public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
+        checkHost(filterUrl);
+        return bzClient.searchIssuesByFilter(filterUrl);
+    }
+
+    @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
         checkHost(issue.getURL());
         return bzClient.updateIssue(issue);

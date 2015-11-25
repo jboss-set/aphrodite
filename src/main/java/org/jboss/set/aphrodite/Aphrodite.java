@@ -154,6 +154,19 @@ public class Aphrodite {
         return issues;
     }
 
+    public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
+        for (IssueTrackerService trackerService : issueTrackers) {
+            try {
+                return trackerService.searchIssuesByFilter(filterUrl);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("Filter not found at IssueTrackerService: " +
+                            trackerService.getClass().getName() + ":" + e);
+            }
+        }
+        throw new NotFoundException("No filter found which correspond to the provided url.");
+    }
+
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
         for (IssueTrackerService trackerService : issueTrackers) {
             try {
@@ -247,7 +260,4 @@ public class Aphrodite {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Aphrodite.instance();
-    }
 }

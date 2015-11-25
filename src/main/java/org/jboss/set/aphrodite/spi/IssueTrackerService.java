@@ -84,6 +84,15 @@ public interface IssueTrackerService {
     List<Issue> searchIssues(SearchCriteria searchCriteria);
 
     /**
+     * Return all issues which match the provided filter.
+     *
+     * @param filterUrl the url of the issue tracker filtered to be applied.
+     * @return a list of all <code>Issue</code> objects which are returned by the provided filter.
+     * @throws NotFoundException if the filterURL is not associated with any filters.
+     */
+    List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException;
+
+    /**
      * Update an <code>Issue</code> at the remote issue tracker service.
      *
      * Note, this does not update issue comments or an issues description.

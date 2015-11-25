@@ -33,8 +33,8 @@ import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssueStatus;
-import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -56,7 +56,10 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
 public class BugzillaClient {
 
     private static final Log LOG = LogFactory.getLog(BugzillaClient.class);
-    public static final Pattern ID_PARAM_PATTERN = Pattern.compile("id=([^&]+)");
+
+    static final Pattern ID_PARAM_PATTERN = Pattern.compile("id=([^&]+)");
+    static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("namedcmd=([^&]+)");
+    static final Pattern SHARER_ID_PARAM_PATTERN = Pattern.compile("sharer_id=([^&]+)");
 
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private final URL baseURL;
@@ -77,7 +80,7 @@ public class BugzillaClient {
     }
 
     public Issue getIssue(URL url) throws NotFoundException {
-        String trackerId = Utils.getTrackerIdFromUrl(ID_PARAM_PATTERN, url);
+        String trackerId = Utils.getParamaterFromUrl(ID_PARAM_PATTERN, url);
         return getIssue(trackerId);
     }
 
@@ -104,7 +107,7 @@ public class BugzillaClient {
     }
 
     public Issue getIssueWithComments(URL url) throws NotFoundException {
-        String trackerId = Utils.getTrackerIdFromUrl(ID_PARAM_PATTERN, url);
+        String trackerId = Utils.getParamaterFromUrl(ID_PARAM_PATTERN, url);
         return getIssueWithComments(trackerId);
     }
 
@@ -129,7 +132,7 @@ public class BugzillaClient {
         if (issue.getTrackerId().isPresent())
             return getCommentsForIssue(issue.getTrackerId().get());
 
-        return getCommentsForIssue(Utils.getTrackerIdFromUrl(ID_PARAM_PATTERN, issue.getURL()));
+        return getCommentsForIssue(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, issue.getURL()));
     }
 
     public List<Comment> getCommentsForIssue(String trackerId) {
@@ -145,9 +148,27 @@ public class BugzillaClient {
         return new ArrayList<>();
     }
 
+    public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
+        String filterName = Utils.getParamaterFromUrl(FILTER_NAME_PARAM_PATTERN, filterUrl);
+        int sharerId = Integer.parseInt(Utils.getParamaterFromUrl(SHARER_ID_PARAM_PATTERN, filterUrl));
+        Map<String, Object> queryMap = new HashMap<>(loginDetails);
+        queryMap.put(METHOD_FILTER_SEARCH, filterName);
+        queryMap.put(FILTER_SHARER_ID, sharerId);
+        queryMap.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
+
+        try {
+            return searchIssues(queryMap);
+        } catch (RuntimeException e) {
+            throw new NotFoundException(e);
+        }
+    }
+
     public List<Issue> searchIssues(SearchCriteria criteria) {
         Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, loginDetails).getQueryMap();
+        return searchIssues(queryMap);
+    }
 
+    private List<Issue> searchIssues(Map<String, Object> queryMap) {
         List<Issue> issues = new ArrayList<>();
         Map<String, ?> resultMap = executeRequest(XMLRPC.RPC_STRUCT, METHOD_SEARCH, queryMap);
         if (resultMap != null && !resultMap.isEmpty()) {
@@ -187,7 +208,7 @@ public class BugzillaClient {
     }
 
     public boolean postComment(Issue issue, Comment comment) throws NotFoundException {
-        String trackerId = issue.getTrackerId().orElse(Utils.getTrackerIdFromUrl(ID_PARAM_PATTERN, issue.getURL()));
+        String trackerId = issue.getTrackerId().orElse(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, issue.getURL()));
         return postComment(new Integer(trackerId), comment.getBody(), comment.isPrivate());
     }
 

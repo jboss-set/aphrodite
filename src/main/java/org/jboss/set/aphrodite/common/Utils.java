@@ -26,7 +26,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -39,19 +41,27 @@ public class Utils {
 
     private static final Log LOG = LogFactory.getLog(Utils.class);
 
-    public static String getTrackerIdFromUrl(Pattern pattern, URL url) throws NotFoundException {
-        Matcher matcher = pattern.matcher(url.getQuery());
-        if (!matcher.find())
-            throw new NotFoundException("No trackerId matching the specified pattern exists in the provided url.");
-
-        return matcher.group(1);
+    public static String decodeURLParam(String parameter) {
+        try {
+            return URLDecoder.decode(parameter, "UTF-8");
+        } catch (UnsupportedEncodingException e){
+            return null;
+        }
     }
 
-    public static List<String> getTrackerIdsFromUrls(Pattern pattern, List<URL> urls) {
+    public static String getParamaterFromUrl(Pattern pattern, URL url) throws NotFoundException {
+        Matcher matcher = pattern.matcher(url.getQuery());
+        if (!matcher.find())
+            throw new NotFoundException("No parameter matching the specified pattern exists in the provided url.");
+
+        return decodeURLParam(matcher.group(1));
+    }
+
+    public static List<String> getParametersFromUrls(Pattern pattern, List<URL> urls) {
         List<String> ids = new ArrayList<>();
         for (URL url : urls) {
             try {
-                ids.add(Utils.getTrackerIdFromUrl(pattern, url));
+                ids.add(Utils.getParamaterFromUrl(pattern, url));
             } catch (NotFoundException e) {
                 Utils.logException(LOG, e);
             }

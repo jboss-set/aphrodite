@@ -141,7 +141,7 @@ class IssueWrapper {
 
     private void addURLCollectionToParameters(List<URL> urls, String flag, Map<String, Object> params) {
         Map<String, Object> map = new HashMap<>();
-        List<String> ids = Utils.getTrackerIdsFromUrls(ID_PARAM_PATTERN, urls);
+        List<String> ids = Utils.getParametersFromUrls(ID_PARAM_PATTERN, urls);
         map.put(METHOD_SET_COLLECTION, ids);
         params.put(flag, map);
     }
