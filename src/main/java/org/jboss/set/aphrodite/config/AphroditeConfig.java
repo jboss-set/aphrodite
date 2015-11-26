@@ -37,6 +37,26 @@ public class AphroditeConfig {
     private final List<IssueTrackerConfig> issueTrackerConfigs;
     private final List<RepositoryConfig> repositoryConfigs;
 
+    public static AphroditeConfig singleIssueTracker(IssueTrackerConfig issueTrackerConfig) {
+        List<IssueTrackerConfig> list = new ArrayList<>();
+        list.add(issueTrackerConfig);
+        return issueTrackersOnly(list);
+    }
+
+    public static AphroditeConfig issueTrackersOnly(List<IssueTrackerConfig> issueTrackerConfigs) {
+        return new AphroditeConfig(issueTrackerConfigs, new ArrayList<>());
+    }
+
+    public static AphroditeConfig singleRepositoryService(RepositoryConfig repositoryConfig) {
+        List<RepositoryConfig> list = new ArrayList<>();
+        list.add(repositoryConfig);
+        return repositoryServicesOnly(list);
+    }
+
+    public static AphroditeConfig repositoryServicesOnly(List<RepositoryConfig> repositoryConfigs) {
+        return new AphroditeConfig(new ArrayList<>(), repositoryConfigs);
+    }
+
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs) {
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;

@@ -125,18 +125,21 @@ public class Aphrodite {
                 issueTrackers.add(is);
         }
 
-        if (issueTrackers.isEmpty())
-            throw new AphroditeException("Unable to initiatilise Aphrodite, as a valid " +
-                    IssueTrackerService.class.getName() + " has not been created.");
-
         for (RepositoryService rs : ServiceLoader.load(RepositoryService.class)) {
             boolean initialised = rs.init(mutableConfig);
             if (initialised)
                 repositories.add(rs);
         }
+
+        if (issueTrackers.isEmpty() && repositories.isEmpty())
+            throw new AphroditeException("Unable to initiatilise Aphrodite, as a valid " +
+                    IssueTrackerService.class.getName() + " or " + RepositoryService.class.getName()
+                    + " does not exist.");
     }
 
     public Issue getIssue(URL url) throws NotFoundException {
+        checkIssueTrackerExists();
+
         for (IssueTrackerService trackerService : issueTrackers) {
             try {
                 return trackerService.getIssue(url);
@@ -149,12 +152,16 @@ public class Aphrodite {
     }
 
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
+        checkIssueTrackerExists();
+
         List<Issue> issues = new ArrayList<>();
         issueTrackers.forEach(tracker -> issues.addAll(tracker.searchIssues(searchCriteria)));
         return issues;
     }
 
     public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
+        checkIssueTrackerExists();
+
         for (IssueTrackerService trackerService : issueTrackers) {
             try {
                 return trackerService.searchIssuesByFilter(filterUrl);
@@ -168,6 +175,8 @@ public class Aphrodite {
     }
 
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
+        checkIssueTrackerExists();
+
         for (IssueTrackerService trackerService : issueTrackers) {
             try {
                 return trackerService.updateIssue(issue);
@@ -180,6 +189,8 @@ public class Aphrodite {
     }
 
     public List<Issue> getIssuesAssociatedWith(Patch patch) {
+        checkIssueTrackerExists();
+
         return issueTrackers.stream()
                 .map(service -> service.getIssuesAssociatedWith(patch))
                 .flatMap(Collection::stream)
@@ -187,6 +198,8 @@ public class Aphrodite {
     }
 
     public Repository getRepository(URL url) throws NotFoundException {
+        checkRepositoryServiceExists();
+
         for (RepositoryService repositoryService : repositories) {
             try {
                 return repositoryService.getRepository(url);
@@ -199,6 +212,8 @@ public class Aphrodite {
     }
 
     public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+        checkRepositoryServiceExists();
+
         List<Patch> patches = new ArrayList<>();
         for (RepositoryService repositoryService : repositories) {
             try {
@@ -212,6 +227,8 @@ public class Aphrodite {
     }
 
     public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) {
+        checkRepositoryServiceExists();
+
         for (RepositoryService repositoryService : repositories) {
             try {
                 return repositoryService.getPatchesByStatus(repository, status);
@@ -224,6 +241,8 @@ public class Aphrodite {
     }
 
     public Patch getPatch(URL url) throws NotFoundException {
+        checkRepositoryServiceExists();
+
         for (RepositoryService repositoryService : repositories) {
             try {
                 return repositoryService.getPatch(url);
@@ -236,6 +255,8 @@ public class Aphrodite {
     }
 
     public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
+        checkRepositoryServiceExists();
+
         for (RepositoryService repositoryService : repositories) {
             try {
                 repositoryService.addCommentToPatch(patch, comment);
@@ -249,6 +270,8 @@ public class Aphrodite {
     }
 
     public void addLabelToPatch(Patch patch, String labelName) {
+        checkRepositoryServiceExists();
+
         for (RepositoryService repositoryService : repositories) {
             try {
                 repositoryService.addLabelToPatch(patch, labelName);
@@ -258,5 +281,17 @@ public class Aphrodite {
                     LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
             }
         }
+    }
+
+    private void checkIssueTrackerExists() {
+        if (issueTrackers.isEmpty())
+            throw new IllegalStateException("Unable to retrieve issues as a valid " +
+                    IssueTrackerService.class.getName() + " has not been created.");
+    }
+
+    private void checkRepositoryServiceExists() {
+        if (repositories.isEmpty())
+            throw new IllegalStateException("Unable to find any repository data as a valid " +
+                    RepositoryService.class.getName() + " has not been created.");
     }
 }
