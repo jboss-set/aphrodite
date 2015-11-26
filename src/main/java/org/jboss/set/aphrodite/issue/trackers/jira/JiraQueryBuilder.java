@@ -36,7 +36,6 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraStat
  * @author Ryan Emerson
  */
 class JiraQueryBuilder {
-    public static final Integer DEFAULT_MAX_RESULTS = 50;
 
     private final SearchCriteria criteria;
     private String jql;

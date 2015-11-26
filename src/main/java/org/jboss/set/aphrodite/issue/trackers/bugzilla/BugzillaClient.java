@@ -164,7 +164,12 @@ public class BugzillaClient {
     }
 
     public List<Issue> searchIssues(SearchCriteria criteria) {
-        Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, loginDetails).getQueryMap();
+        return searchIssues(criteria, -1);
+    }
+
+    public List<Issue> searchIssues(SearchCriteria criteria, int defaultIssueLimit) {
+        Map<String, Object> queryMap =
+                new BugzillaQueryBuilder(criteria, loginDetails, defaultIssueLimit).getQueryMap();
         return searchIssues(queryMap);
     }
 

@@ -120,7 +120,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
         String jql = new JiraQueryBuilder(searchCriteria).getJQLString();
-        int maxResults = searchCriteria.getMaxResults().orElse(JiraQueryBuilder.DEFAULT_MAX_RESULTS);
+        int maxResults = searchCriteria.getMaxResults().orElse(config.getDefaultIssueLimit());
         return searchIssues(jql, maxResults);
     }
 
@@ -138,7 +138,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     @Override
     public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
         String jql = getJQLFromFilter(filterUrl);
-        return searchIssues(jql, JiraQueryBuilder.DEFAULT_MAX_RESULTS);
+        return searchIssues(jql, config.getDefaultIssueLimit());
     }
 
     private String getJQLFromFilter(URL filterUrl) throws NotFoundException {

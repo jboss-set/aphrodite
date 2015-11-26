@@ -29,16 +29,23 @@ import java.util.Objects;
  */
 public class IssueTrackerConfig extends AbstractServiceConfig {
     private final String tracker;
+    private final int defaultIssueLimit;
 
-    public IssueTrackerConfig(String url, String username, String password, String tracker) {
+    public IssueTrackerConfig(String url, String username, String password, String tracker,
+                              int defaultIssueLimit) {
         super(url, username, password);
 
         Objects.requireNonNull(tracker, "The 'tracker' field must be set for all IssueTrackers");
         this.tracker = tracker;
+        this.defaultIssueLimit = defaultIssueLimit;
     }
 
     public String getTracker() {
         return tracker;
+    }
+
+    public int getDefaultIssueLimit() {
+        return defaultIssueLimit;
     }
 
     @Override
@@ -48,6 +55,7 @@ public class IssueTrackerConfig extends AbstractServiceConfig {
                 ", username='" + getUsername() + '\'' +
                 ", password='" + getPassword() + '\'' +
                 ", tracker='" + tracker + '\'' +
+                ", defaultIssueLimit='" + defaultIssueLimit + '\'' +
                 '}';
     }
 }

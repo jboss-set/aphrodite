@@ -39,14 +39,16 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
  */
 class BugzillaQueryBuilder {
 
-    private static final Integer DEFAULT_MAX_RESULTS = 50;
     private final SearchCriteria criteria;
     private final Map<String, Object> loginDetails;
+    private final int defaultIssueLimit;
     private Map<String, Object> queryMap;
 
-    BugzillaQueryBuilder(SearchCriteria criteria, Map<String, Object> loginDetails) {
+    BugzillaQueryBuilder(SearchCriteria criteria, Map<String, Object> loginDetails,
+                         int defaultIssueLimit) {
         this.criteria = criteria;
         this.loginDetails = loginDetails;
+        this.defaultIssueLimit = defaultIssueLimit;
     }
 
     Map<String, Object> getQueryMap() {
@@ -56,7 +58,10 @@ class BugzillaQueryBuilder {
         queryMap = new HashMap<>(loginDetails);
         queryMap.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
         queryMap.put(RESULT_PERMISSIVE_SEARCH, true);
-        queryMap.put(RESULT_LIMIT, criteria.getMaxResults().orElse(DEFAULT_MAX_RESULTS));
+
+        int limit = criteria.getMaxResults().orElse(defaultIssueLimit);
+        if (limit > 0)
+            queryMap.put(RESULT_LIMIT, limit);
 
         criteria.getStatus().ifPresent(status -> queryMap.put(STATUS, status.toString()));
         criteria.getAssignee().ifPresent(assignee -> queryMap.put(ASSIGNEE, assignee));

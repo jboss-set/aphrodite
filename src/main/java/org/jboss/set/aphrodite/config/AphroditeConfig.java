@@ -72,7 +72,8 @@ public class AphroditeConfig {
                         json.getString("url", null),
                         json.getString("username", null),
                         json.getString("password", null),
-                        json.getString("tracker", null)))
+                        json.getString("tracker", null),
+                        json.getInt("defaultIssueLimit", -1)))
                 .collect(Collectors.toList());
 
         jsonArray = jsonObject.getJsonArray("repositoryConfigs");

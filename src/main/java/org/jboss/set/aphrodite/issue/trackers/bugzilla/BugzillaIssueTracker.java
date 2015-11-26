@@ -74,7 +74,7 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
 
     @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
-        return bzClient.searchIssues(searchCriteria);
+        return bzClient.searchIssues(searchCriteria, config.getDefaultIssueLimit());
     }
 
     @Override

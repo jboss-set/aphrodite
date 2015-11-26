@@ -4,7 +4,8 @@
             "url": "https://issues.jboss.org/",
             "username": "user",
             "password": "pass",
-            "tracker": "JIRA"
+            "tracker": "JIRA",
+            "defaultIssueLimit": 1
         }
     ],
     "repositoryConfigs": [
