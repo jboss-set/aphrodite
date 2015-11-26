@@ -30,6 +30,8 @@ import net.rcarz.jiraclient.IssueLink;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.RestException;
+import net.sf.json.JSON;
+import net.sf.json.JSONObject;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,6 +55,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.*;
 
@@ -64,6 +67,7 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.*;
 public class JiraIssueTracker extends AbstractIssueTracker {
 
     private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
+    private static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("filter=([^&]+)");
 
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private JiraClient jiraClient;
@@ -82,7 +86,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             ICredentials credentials = new BasicCredentials(config.getUsername(), config.getPassword());
             jiraClient = new JiraClient(baseUrl.toString(), credentials);
             // Check if provided credentials are correct, an exception is thrown if they aren't
-            jiraClient.getRestClient().get("/rest/api/2/myself");
+            jiraClient.getRestClient().get(API_AUTHENTICATION_PATH);
         } catch (IOException | URISyntaxException e) {
             Utils.logException(LOG, e);
             return false;
@@ -115,10 +119,13 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
-        List<Issue> issues = new ArrayList<>();
         String jql = new JiraQueryBuilder(searchCriteria).getJQLString();
-
         int maxResults = searchCriteria.getMaxResults().orElse(JiraQueryBuilder.DEFAULT_MAX_RESULTS);
+        return searchIssues(jql, maxResults);
+    }
+
+    public List<Issue> searchIssues(String jql, int maxResults) {
+        List<Issue> issues = new ArrayList<>();
         try {
             net.rcarz.jiraclient.Issue.SearchResult sr = jiraClient.searchIssues(jql, maxResults);
             sr.issues.forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
@@ -130,7 +137,19 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
-        throw new NotFoundException("Method not yet implemented");
+        String jql = getJQLFromFilter(filterUrl);
+        return searchIssues(jql, JiraQueryBuilder.DEFAULT_MAX_RESULTS);
+    }
+
+    private String getJQLFromFilter(URL filterUrl) throws NotFoundException {
+        String filterId = Utils.getParamaterFromUrl(FILTER_NAME_PARAM_PATTERN, filterUrl);
+        try {
+            JSON jsonResponse = jiraClient.getRestClient().get(API_FILTER_PATH + filterId);
+            JSONObject jsonObject = (JSONObject) jsonResponse;
+            return (String) jsonObject.get("jql");
+        } catch (IOException | RestException | URISyntaxException e) {
+            throw new NotFoundException("Unable to retrieve filter with id:=" + filterId, e);
+        }
     }
 
     /**

@@ -36,6 +36,8 @@ import org.jboss.set.aphrodite.spi.AphroditeException;
 class JiraFields {
 
     static final String API_BASE_PATH = "/rest/api/2/";
+    static final String API_FILTER_PATH = API_BASE_PATH + "filter/";
+    static final String API_AUTHENTICATION_PATH = API_BASE_PATH + "myself";
     static final String API_ISSUE_PATH = API_BASE_PATH + "issue/";
     static final String BROWSE_ISSUE_PATH = "/browse/";
 
