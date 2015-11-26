@@ -9,7 +9,7 @@ Add aphrodite to your pom:
     <dependency>
       <groupId>org.jboss.set</groupId>
       <artifactId>aphrodite</artifactId>
-      <version>0.1.1</version>
+      <version>0.2.1</version>
     </dependency>
 ```
 
