@@ -43,13 +43,13 @@ import java.util.List;
  */
 public abstract class AbstractRepositoryService implements RepositoryService {
 
-    protected final String REPOSITORY_TYPE;
+    protected final RepositoryType REPOSITORY_TYPE;
     protected RepositoryConfig config;
     protected URL baseUrl;
 
     protected abstract Log getLog();
 
-    public AbstractRepositoryService(String REPOSITORY_TYPE) {
+    public AbstractRepositoryService(RepositoryType REPOSITORY_TYPE) {
         this.REPOSITORY_TYPE = REPOSITORY_TYPE;
     }
 
@@ -58,7 +58,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         Iterator<RepositoryConfig> i = aphroditeConfig.getRepositoryConfigs().iterator();
         while (i.hasNext()) {
             RepositoryConfig config = i.next();
-            if (config.getType().equalsIgnoreCase(REPOSITORY_TYPE)) {
+            if ( config.getType() == REPOSITORY_TYPE ) {
                 i.remove(); // Remove so that this service cannot be instantiated twice
                 return init(config);
             }

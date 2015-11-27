@@ -41,6 +41,7 @@ import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
+import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.io.IOException;
@@ -59,7 +60,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     private GitHubClient gitHubClient;
 
     public GitHubRepositoryService() {
-        super("github");
+        super(RepositoryType.GITHUB);
     }
 
     @Override

@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
@@ -48,7 +49,7 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     private BugzillaClient bzClient;
 
     public BugzillaIssueTracker() {
-        super("bugzilla");
+        super(TrackerType.BUGZILLA);
     }
 
     @Override

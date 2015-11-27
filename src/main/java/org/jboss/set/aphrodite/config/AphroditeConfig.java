@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 
+import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
+
 /**
  * @author Ryan Emerson
  */
@@ -92,7 +94,7 @@ public class AphroditeConfig {
                         json.getString("url", null),
                         json.getString("username", null),
                         json.getString("password", null),
-                        json.getString("tracker", null),
+                        TrackerType.valueOf(json.getString("tracker", null)),
                         json.getInt("defaultIssueLimit", -1)))
                 .collect(Collectors.toList());
 
@@ -106,7 +108,7 @@ public class AphroditeConfig {
                                 json.getString("url", null),
                                 json.getString("username", null),
                                 json.getString("password", null),
-                                json.getString("type", null)))
+                                RepositoryType.valueOf(json.getString("type", null))))
                 .collect(Collectors.toList());
 
         return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);

@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
@@ -73,7 +74,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     private JiraClient jiraClient;
 
     public JiraIssueTracker() {
-        super("jira");
+        super(TrackerType.JIRA);
     }
 
     @Override
