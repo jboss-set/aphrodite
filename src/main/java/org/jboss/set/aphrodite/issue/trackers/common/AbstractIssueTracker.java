@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
@@ -48,13 +49,13 @@ import java.util.regex.Pattern;
 public abstract class AbstractIssueTracker implements IssueTrackerService {
     public static final Pattern URL_REGEX = Pattern.compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?");
 
-    protected final String TRACKER_TYPE;
+    protected final TrackerType TRACKER_TYPE;
     protected IssueTrackerConfig config;
     protected URL baseUrl;
 
     protected abstract Log getLog();
 
-    public AbstractIssueTracker(String TRACKER_TYPE) {
+    public AbstractIssueTracker(TrackerType TRACKER_TYPE) {
         this.TRACKER_TYPE = TRACKER_TYPE;
     }
 
@@ -63,7 +64,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         Iterator<IssueTrackerConfig> i = aphroditeConfig.getIssueTrackerConfigs().iterator();
         while (i.hasNext()) {
             IssueTrackerConfig config = i.next();
-            if (config.getTracker().equalsIgnoreCase(TRACKER_TYPE)) {
+            if (config.getTracker() == TRACKER_TYPE) {
                 i.remove(); // Remove so that this service cannot be instantiated twice
                 return init(config);
             }

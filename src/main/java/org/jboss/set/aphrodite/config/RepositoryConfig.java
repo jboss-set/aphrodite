@@ -24,21 +24,23 @@ package org.jboss.set.aphrodite.config;
 
 import java.util.Objects;
 
+import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
+
 /**
  * @author Ryan Emerson
  */
 public class RepositoryConfig extends AbstractServiceConfig {
 
-    private final String type;
+    private final RepositoryType type;
 
-    public RepositoryConfig(String url, String username, String password, String type) {
+    public RepositoryConfig(String url, String username, String password, RepositoryType type) {
         super(url, username, password);
 
         Objects.requireNonNull(type, "A 'type' must be specified for each repository.");
         this.type = type;
     }
 
-    public String getType() {
+    public RepositoryType getType() {
         return type;
     }
 

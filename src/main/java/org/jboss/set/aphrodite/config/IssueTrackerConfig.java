@@ -28,10 +28,10 @@ import java.util.Objects;
  * @author Ryan Emerson
  */
 public class IssueTrackerConfig extends AbstractServiceConfig {
-    private final String tracker;
+    private final TrackerType tracker;
     private final int defaultIssueLimit;
 
-    public IssueTrackerConfig(String url, String username, String password, String tracker,
+    public IssueTrackerConfig(String url, String username, String password, TrackerType tracker,
                               int defaultIssueLimit) {
         super(url, username, password);
 
@@ -40,7 +40,7 @@ public class IssueTrackerConfig extends AbstractServiceConfig {
         this.defaultIssueLimit = defaultIssueLimit;
     }
 
-    public String getTracker() {
+    public TrackerType getTracker() {
         return tracker;
     }
 
