@@ -23,5 +23,5 @@
 package org.jboss.set.aphrodite.domain;
 
 public enum IssueStatus {
-    UNDEFINED, NEW, ASSIGNED, POST, MODIFIED, ON_QA, VERIFIED, CLOSED
+    UNDEFINED, NEW, ASSIGNED, POST, MODIFIED, ON_QA, VERIFIED, RELEASE_PENDING, CLOSED;
 }

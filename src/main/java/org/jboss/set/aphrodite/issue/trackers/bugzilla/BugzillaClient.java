@@ -22,6 +22,48 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.API_URL;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT_BODY;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT_FIELDS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT_ID;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT_IS_PRIVATE;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ESTIMATED_TIME;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FILTER_SHARER_ID;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ID;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISSUE_IDS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.LOGIN;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_ADD_COMMENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_FILTER_SEARCH;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_GET_BUG;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_GET_COMMENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_SEARCH;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_UPDATE_BUG;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_USER_LOGIN;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.NAME;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PASSWORD;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIVATE_COMMENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_BUGS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_FIELDS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_INCLUDE_FIELDS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_PERMISSIVE_SEARCH;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.STATUS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_RELEASE;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.UPDATE_FIELDS;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xmlrpc.XmlRpcException;
@@ -35,20 +77,6 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.spi.NotFoundException;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
 
 /**
  * @author Ryan Emerson
@@ -135,6 +163,57 @@ public class BugzillaClient {
         return getCommentsForIssue(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, issue.getURL()));
     }
 
+    public Map<String, List<Comment>> getCommentsForIssues(Map<String, Issue> issues) {
+        if (issues == null || issues.isEmpty())
+            throw new IllegalArgumentException("Provided list of issues instance can't be null neither empty");
+
+        Map<String, Object> params = new HashMap<>(loginDetails);
+        params.put(ISSUE_IDS, extractIssueIdsList(issues.values()));
+        params.put(RESULT_INCLUDE_FIELDS, COMMENT_FIELDS);
+
+        return buildMapOfCommentsIndexedByBugId(executeRequest(XMLRPC.RPC_STRUCT, METHOD_GET_COMMENT, params));
+    }
+
+    private Map<String, List<Comment>> buildMapOfCommentsIndexedByBugId(Map<String, Object> results) {
+        Map<String, List<Comment>> commentsMap = new HashMap<String, List<Comment>>(0);
+        if (results != null && !results.isEmpty() && results.containsKey(RESULT_BUGS)) {
+            for (Map<String, Object> comments : XMLRPC.iterable(XMLRPC.RPC_STRUCT, results.values())) {
+                for (Entry<String, Object> comment : comments.entrySet()) {
+                    final String bugId = comment.getKey();
+                    commentsMap.put(
+                            bugId,
+                            buildCommentsForBug(
+                                    bugId,
+                                    XMLRPC.cast(XMLRPC.RPC_ARRAY,
+                                            XMLRPC.cast(XMLRPC.RPC_STRUCT, comment.getValue()).get("comments"))));
+                }
+            }
+        }
+        return commentsMap;
+    }
+
+    private List<Comment> buildCommentsForBug(final String bugId, final Object[] commentObjArray) {
+        List<Comment> comments = new ArrayList<>(commentObjArray.length);
+        for (Object o : commentObjArray) {
+            comments.add(buildComment(XMLRPC.cast(XMLRPC.RPC_STRUCT, o)));
+        }
+        return comments;
+    }
+
+    private Comment buildComment(Map<String, Object> comment) {
+        String id = String.valueOf(comment.get(COMMENT_ID));
+        String body = (String) comment.get(COMMENT_BODY);
+        boolean isPrivate = (Boolean) comment.get(COMMENT_IS_PRIVATE);
+        return new Comment(id, body, isPrivate);
+    }
+
+    private Object[] extractIssueIdsList(Collection<Issue> collection) {
+        List<String> ids = new ArrayList<>(collection.size());
+        for (Issue issue : collection)
+            ids.add(issue.getTrackerId().get());
+        return ids.toArray();
+    }
+
     public List<Comment> getCommentsForIssue(String trackerId) {
         Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(ISSUE_IDS, trackerId);
@@ -168,24 +247,35 @@ public class BugzillaClient {
     }
 
     public List<Issue> searchIssues(SearchCriteria criteria, int defaultIssueLimit) {
-        Map<String, Object> queryMap =
-                new BugzillaQueryBuilder(criteria, loginDetails, defaultIssueLimit).getQueryMap();
+        Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, loginDetails, defaultIssueLimit).getQueryMap();
         return searchIssues(queryMap);
     }
 
     private List<Issue> searchIssues(Map<String, Object> queryMap) {
-        List<Issue> issues = new ArrayList<>();
+        List<Issue> issueList = new ArrayList<>(0);
         Map<String, ?> resultMap = executeRequest(XMLRPC.RPC_STRUCT, METHOD_SEARCH, queryMap);
         if (resultMap != null && !resultMap.isEmpty()) {
-            final Object[] bugs = XMLRPC.cast(XMLRPC.RPC_ARRAY, resultMap.get(RESULT_BUGS));
-            for (Map<String, Object> struct : XMLRPC.iterable(XMLRPC.RPC_STRUCT, bugs)) {
-                try {
-                    Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURL);
-                    setCommentsForIssue(issue);
-                    issues.add(issue);
-                } catch (MalformedURLException e) {
-                    Utils.logException(LOG, "Unable to create Issue Object.", e);
-                }
+            Map<String, Issue> issues = fetchAllIssues(XMLRPC.cast(XMLRPC.RPC_ARRAY, resultMap.get(RESULT_BUGS)));
+            Map<String, List<Comment>> comments = getCommentsForIssues(issues);
+            for (String issueId : issues.keySet())
+                issueList.add(associateCommentsToIssue(issues.get(issueId), comments));
+        }
+        return issueList;
+    }
+
+    private Issue associateCommentsToIssue(Issue issue, Map<String, List<Comment>> comments) {
+        issue.setComments(comments.get(issue.getTrackerId()));
+        return issue;
+    }
+
+    private Map<String, Issue> fetchAllIssues(final Object[] bugs) {
+        Map<String, Issue> issues = new HashMap<String, Issue>();
+        for (Map<String, Object> struct : XMLRPC.iterable(XMLRPC.RPC_STRUCT, bugs)) {
+            try {
+                Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURL);
+                issues.put(issue.getTrackerId().get(), issue);
+            } catch (MalformedURLException e) {
+                Utils.logException(LOG, "Unable to create Issue Object.", e);
             }
         }
         return issues;
@@ -230,7 +320,7 @@ public class BugzillaClient {
         Map<String, String> updates = new HashMap<>();
         updates.put(NAME, name);
         updates.put(STATUS, flagStatus);
-        Object[] updateArray = {updates};
+        Object[] updateArray = { updates };
 
         Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(ISSUE_IDS, ids);
@@ -240,17 +330,11 @@ public class BugzillaClient {
         return runCommand(METHOD_UPDATE_BUG, params);
     }
 
-    @SuppressWarnings("unchecked")
-    private List<Comment> getCommentList(Map<String, Object> issue) {
+    private List<Comment> getCommentList(Map<String, Object> issues) {
         List<Comment> issueComments = new ArrayList<>();
-        // Get all comments associated with issue
-        for (Object[] comments : XMLRPC.iterable(XMLRPC.RPC_ARRAY, issue.values())) {
-            // Iterate each comment and retrieve relevant fields
+        for (Object[] comments : XMLRPC.iterable(XMLRPC.RPC_ARRAY, issues.values())) {
             for (Map<String, Object> comment : XMLRPC.iterable(XMLRPC.RPC_STRUCT, comments)) {
-                String id = String.valueOf(comment.get(COMMENT_ID));
-                String body = (String) comment.get(COMMENT_BODY);
-                boolean isPrivate = (Boolean) comment.get(COMMENT_IS_PRIVATE);
-                issueComments.add(new Comment(id, body, isPrivate));
+                issueComments.add(buildComment(comment));
             }
         }
         return issueComments;
