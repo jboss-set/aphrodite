@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -141,6 +142,7 @@ public class Issue {
     }
 
     public void setStage(Stage stage) {
+        Objects.requireNonNull(stage, "An Issue's stage cannot be set to null");
         this.stage = stage;
     }
 
@@ -149,6 +151,7 @@ public class Issue {
     }
 
     public void setStatus(IssueStatus status) {
+        Objects.requireNonNull(status, "An Issue's status cannot be set to null");
         this.status = status;
     }
 
@@ -157,6 +160,7 @@ public class Issue {
     }
 
     public void setType(IssueType type) {
+        Objects.requireNonNull(type, "An Issue's Type cannot be set to null");
         this.type = type;
     }
 
@@ -165,6 +169,7 @@ public class Issue {
     }
 
     public void setRelease(Release release) {
+        Objects.requireNonNull(release, "An Issue's Release cannot be set to null");
         this.release = release;
     }
 
@@ -173,6 +178,7 @@ public class Issue {
     }
 
     public void setStreamStatus(Map<String, FlagStatus> streamStatus) {
+        Objects.requireNonNull(streamStatus, "An Issue's StreamStatus cannot be set to null");
         this.streamStatus = streamStatus;
     }
 
@@ -181,6 +187,7 @@ public class Issue {
     }
 
     public void setDependsOn(List<URL> dependsOn) {
+        Objects.requireNonNull(dependsOn, "An Issue's DependsOn List cannot be set to null");
         this.dependsOn = dependsOn;
     }
 
@@ -189,6 +196,7 @@ public class Issue {
     }
 
     public void setBlocks(List<URL> blocks) {
+        Objects.requireNonNull(blocks, "An Issue's Blocks List cannot be set to null");
         this.blocks = blocks;
     }
 
@@ -205,6 +213,7 @@ public class Issue {
     }
 
     public void setComments(List<Comment> comments) {
+        Objects.requireNonNull(comments, "An Issue's Comments cannot be set to null");
         this.comments = comments;
     }
 
