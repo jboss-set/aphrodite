@@ -247,10 +247,11 @@ public class BugzillaClient {
         for (Object[] comments : XMLRPC.iterable(XMLRPC.RPC_ARRAY, issue.values())) {
             // Iterate each comment and retrieve relevant fields
             for (Map<String, Object> comment : XMLRPC.iterable(XMLRPC.RPC_STRUCT, comments)) {
+                String bugId = String.valueOf(comment.get(COMMENT_BUG_ID));
                 String id = String.valueOf(comment.get(COMMENT_ID));
                 String body = (String) comment.get(COMMENT_BODY);
                 boolean isPrivate = (Boolean) comment.get(COMMENT_IS_PRIVATE);
-                issueComments.add(new Comment(id, body, isPrivate));
+                issueComments.add(new Comment(bugId, id, body, isPrivate));
             }
         }
         return issueComments;

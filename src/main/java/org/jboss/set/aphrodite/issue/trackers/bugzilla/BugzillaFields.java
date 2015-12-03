@@ -43,6 +43,7 @@ class BugzillaFields {
     static final String COMMENT_ID = "id";
     static final String COMMENT_IS_PRIVATE = "is_private";
     static final String COMMENT_BODY = "text";
+    static final String COMMENT_BUG_ID = "bug_id";
     static final String COMPONENT = "component";
     static final String DEPENDS_ON = "depends_on";
     static final String DESCRIPTION = "description";
@@ -94,7 +95,7 @@ class BugzillaFields {
                                             PRODUCT, REPORTER, STATUS, TARGET_MILESTONE,
                                             TARGET_RELEASE, VERSION };
 
-    static final Object[] COMMENT_FIELDS = {COMMENT_ID, COMMENT_BODY, COMMENT_IS_PRIVATE};
+    static final Object[] COMMENT_FIELDS = {COMMENT_BUG_ID, COMMENT_ID, COMMENT_BODY, COMMENT_IS_PRIVATE};
 
     static Optional<Flag> getAphroditeFlag(String bzFlag) {
         switch (bzFlag) {

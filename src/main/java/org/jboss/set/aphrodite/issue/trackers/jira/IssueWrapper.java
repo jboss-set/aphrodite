@@ -203,7 +203,7 @@ class IssueWrapper {
 
     private void setIssueComments(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
         List<Comment> comments = new ArrayList<>();
-        jiraIssue.getComments().forEach(c -> comments.add(new Comment(c.getId(), c.getBody(), false)));
+        jiraIssue.getComments().forEach(c -> comments.add(new Comment(issue.getTrackerId().get(), c.getId(), c.getBody(), false)));
         issue.getComments().addAll(comments);
     }
 

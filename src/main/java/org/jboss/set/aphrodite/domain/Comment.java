@@ -26,22 +26,31 @@ import java.util.Optional;
 
 public class Comment {
 
+    private final String parentIssueId;
+
     private final String id;
 
     private final String body;
 
     private final boolean isPrivate;
 
-    public Comment(String id, String body, boolean isPrivate) {
+    public Comment(String parentIssueId, String id, String body, boolean isPrivate) {
+        this.parentIssueId = parentIssueId;
         this.id = id;
         this.body = body;
         this.isPrivate = isPrivate;
     }
 
+    public Comment(String id, String body, boolean isPrivate) {
+        this(null, id, body, isPrivate);
+    }
+
     public Comment(String body, boolean isPrivate) {
-        this.id = null;
-        this.body = body;
-        this.isPrivate = isPrivate;
+        this(null, null, body, isPrivate);
+    }
+
+    public Optional<String> getParentIssueId() {
+        return Optional.ofNullable(parentIssueId);
     }
 
     public Optional<String> getId() {
@@ -59,7 +68,8 @@ public class Comment {
     @Override
     public String toString() {
         return "Comment{" +
-                "id='" + id + '\'' +
+                "parentIssueId='" + parentIssueId + '\'' +
+                ", id='" + id + '\'' +
                 ", body='" + body + '\'' +
                 ", isPrivate=" + isPrivate +
                 '}';
