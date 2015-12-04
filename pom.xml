@@ -35,7 +35,9 @@
         <commons.beanutils.version>1.9.2</commons.beanutils.version>
         <javax.json.version>1.0.4</javax.json.version>
         <jira.client.version>0.5</jira.client.version>
+        <junit.version>4.12</junit.version>
         <org.eclipse.egit.github.core.version>2.1.5</org.eclipse.egit.github.core.version>
+        <org.mockito.version>1.10.19</org.mockito.version>
         <org.wildfly.checkstyle-config.version>1.0.4.Final</org.wildfly.checkstyle-config.version>
         <xmlrpc.client.version>3.1.3</xmlrpc.client.version>
     </properties>
@@ -154,10 +156,6 @@
                     <executions>
                         <execution>
                             <id>default-test</id>
-                            <!-- to override default configuration - in fact: unit tests -->
-                            <configuration>
-                                <excludedGroups>connection</excludedGroups>
-                            </configuration>
                         </execution>
                     </executions>
                 </plugin>
@@ -212,6 +210,16 @@
                     <artifactId>commons-beanutils</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${org.mockito.version}</version>
         </dependency>
     </dependencies>
 
