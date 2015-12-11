@@ -44,6 +44,8 @@ import org.jboss.set.aphrodite.domain.Stage;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,10 +70,22 @@ class IssueWrapper {
         return jiraIssueToIssue(url, jiraIssue);
     }
 
+    private void setCreationDate(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+        final String JIRA_DATE_STRING_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ";
+        final String CREATED_FIELD = "created";
+        final String dateAsString = (String) jiraIssue.getField(CREATED_FIELD);
+        try {
+            issue.setCreationTime(new SimpleDateFormat(JIRA_DATE_STRING_FORMAT).parse(dateAsString));
+        } catch (ParseException e) {
+            throw new IllegalStateException("Failed to deserialized date:" + dateAsString, e);
+        }
+    }
+
     Issue jiraIssueToIssue(URL url, net.rcarz.jiraclient.Issue jiraIssue) {
         Issue issue = new Issue(url);
 
         issue.setTrackerId(jiraIssue.getKey());
+        issue.setSummary(jiraIssue.getSummary());
         issue.setDescription(jiraIssue.getDescription());
         issue.setStatus(getAphroditeStatus(jiraIssue.getStatus().getName()));
 
@@ -83,11 +97,13 @@ class IssueWrapper {
         setIssueComponent(issue, jiraIssue);
         setIssueAssignee(issue, jiraIssue);
         setIssueReporter(issue, jiraIssue);
+
         setIssueStage(issue, jiraIssue);
         setIssueType(issue, jiraIssue);
         setIssueRelease(issue, jiraIssue);
         setIssueDependencies(url, issue, jiraIssue.getIssueLinks());
         setIssueComments(issue, jiraIssue);
+        setCreationDate(issue, jiraIssue);
 
         return issue;
     }

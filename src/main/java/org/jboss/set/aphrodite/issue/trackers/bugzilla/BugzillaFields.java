@@ -45,6 +45,7 @@ class BugzillaFields {
     static final String COMMENT_BODY = "text";
     static final String COMMENT_BUG_ID = "bug_id";
     static final String COMPONENT = "component";
+    static final String CREATION_TIME = "creation_time";
     static final String DEPENDS_ON = "depends_on";
     static final String DESCRIPTION = "description";
     static final String ESTIMATED_TIME = "estimated_time";
@@ -64,6 +65,7 @@ class BugzillaFields {
     static final String PRIVATE_COMMENT = "private";
     static final String PRODUCT = "product";
     static final String REPORTER = "creator";
+    static final String SUMMARY = "summary";
     static final String STATUS = "status";
     static final String TARGET_MILESTONE = "target_milestone";
     static final String TARGET_RELEASE = "target_release";
@@ -90,9 +92,9 @@ class BugzillaFields {
     static final String SEARCH_OPTION = "o";
     static final String SEARCH_VALUE = "v";
 
-    static final Object[] RESULT_FIELDS = { ASSIGNEE, BLOCKS, COMPONENT, DEPENDS_ON, DESCRIPTION,
-                                            ESTIMATED_TIME, FLAGS, HOURS_WORKED, ID, ISSUE_TYPE,
-                                            PRODUCT, REPORTER, STATUS, TARGET_MILESTONE,
+    static final Object[] RESULT_FIELDS = { ASSIGNEE, BLOCKS, COMPONENT, CREATION_TIME, DEPENDS_ON,
+                                            SUMMARY, DESCRIPTION, ESTIMATED_TIME, FLAGS, HOURS_WORKED,
+                                            ID, ISSUE_TYPE, PRODUCT, REPORTER, STATUS, TARGET_MILESTONE,
                                             TARGET_RELEASE, VERSION };
 
     static final Object[] COMMENT_FIELDS = {COMMENT_BUG_ID, COMMENT_ID, COMMENT_BODY, COMMENT_IS_PRIVATE};

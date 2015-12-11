@@ -37,6 +37,7 @@ import org.jboss.set.aphrodite.domain.Stage;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,8 @@ class IssueWrapper {
         issue.setTrackerId(id.toString());
         issue.setAssignee((String) bug.get(ASSIGNEE));
         issue.setReporter((String) bug.get(REPORTER));
+        issue.setCreationTime((Date)bug.get(CREATION_TIME));
+        issue.setSummary((String)bug.get(SUMMARY));
         issue.setDescription((String) bug.get(DESCRIPTION));
         issue.setStatus(IssueStatus.valueOf((String) bug.get(STATUS)));
         issue.setComponent((String) ((Object[]) bug.get(COMPONENT))[0]);
