@@ -264,7 +264,7 @@ public class BugzillaClient {
     }
 
     private Issue associateCommentsToIssue(Issue issue, Map<String, List<Comment>> comments) {
-        issue.setComments(comments.get(issue.getTrackerId()));
+        issue.setComments(comments.get(issue.getTrackerId().get()));
         return issue;
     }
 
