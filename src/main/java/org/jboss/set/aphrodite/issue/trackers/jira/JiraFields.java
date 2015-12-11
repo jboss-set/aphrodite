@@ -41,6 +41,8 @@ class JiraFields {
     static final String API_ISSUE_PATH = API_BASE_PATH + "issue/";
     static final String BROWSE_ISSUE_PATH = "/browse/";
 
+    static final String CREATED_FIELD = "created";
+    static final String DATE_STRING_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ";
     static final String JSON_CUSTOM_FIELD = "customfield_";
     static final String JQL_CUSTOM_TEMPLATE = "cf[%s]";
 

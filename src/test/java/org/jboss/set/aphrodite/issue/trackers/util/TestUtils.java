@@ -41,6 +41,8 @@ public class TestUtils {
     public static void assertDeepEqualsIssue(Issue expected, Issue other) {
         assertEquals("issue tracker id mismatch", expected.getTrackerId(), other.getTrackerId());
         assertEquals("issue assignee mismatch", expected.getAssignee(), other.getAssignee());
+        assertEquals("issue summary mismatch", expected.getSummary(), other.getSummary());
+        assertEquals("issue creation time mismatch", expected.getCreationTime(), expected.getCreationTime());
         assertEquals("issue description mismatch", expected.getDescription(), other.getDescription());
         assertEquals("issue status mismatch", expected.getStatus(), other.getStatus());
         assertEquals("issue component mismatch", expected.getComponent(), other.getComponent());

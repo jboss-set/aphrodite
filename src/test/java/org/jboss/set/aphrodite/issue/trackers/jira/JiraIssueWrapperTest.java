@@ -49,6 +49,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 
 import static org.junit.Assert.assertNotNull;
@@ -75,13 +77,13 @@ public class JiraIssueWrapperTest {
     private Issue issue01;
 
     @Before
-    public void setUp() throws MalformedURLException {
+    public void setUp() throws MalformedURLException, ParseException {
         issueWrapper = new IssueWrapper();
 
         jiraURL = new URL(JIRA_URL);
         mockJiraIssue01();
 
-        issue01 =createTestIssue01(jiraURL);
+        issue01 = createTestIssue01(jiraURL);
     }
 
     @Test
@@ -115,6 +117,7 @@ public class JiraIssueWrapperTest {
         Status statusMock = mock(Status.class);
         when(statusMock.getName()).thenReturn("open");
 
+        when(jiraIssue01.getSummary()).thenReturn("Test Issue");
         when(jiraIssue01.getStatus()).thenReturn(statusMock);
         when(jiraIssue01.getTimeEstimate()).thenReturn(8);
         when(jiraIssue01.getTimeSpent()).thenReturn(8);
@@ -134,6 +137,8 @@ public class JiraIssueWrapperTest {
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.PM_ACK)).thenReturn("+");
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.DEV_ACK)).thenReturn("+");
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.QE_ACK)).thenReturn("+");
+
+        when(jiraIssue01.getField(JiraFields.CREATED_FIELD)).thenReturn("2013-01-17T00:12:31.000-0500");
 
         JSONObject release = new JSONObject();
         release.put("name", "---");
@@ -155,10 +160,13 @@ public class JiraIssueWrapperTest {
         when(jiraIssue01.getComments()).thenReturn(Collections.singletonList(commentMock));
     }
 
-    private Issue createTestIssue01(URL url) throws MalformedURLException {
+    private Issue createTestIssue01(URL url) throws ParseException {
         Issue result = new Issue(url);
 
         result.setTrackerId("1111111");
+        result.setSummary("Test Issue");
+        result.setCreationTime(new SimpleDateFormat(JiraFields.DATE_STRING_FORMAT)
+                .parse("2013-01-17T00:12:31.000-0500"));
         result.setAssignee("jboss-set@redhat.com");
         result.setDescription("Test jira");
         result.setStatus(IssueStatus.NEW);

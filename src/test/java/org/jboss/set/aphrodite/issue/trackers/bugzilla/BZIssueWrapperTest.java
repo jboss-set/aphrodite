@@ -39,7 +39,11 @@ import org.junit.rules.ExpectedException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +73,7 @@ public class BZIssueWrapperTest {
     private IssueWrapper wrapper = new IssueWrapper();
 
     @Before
-    public void setUp() throws MalformedURLException {
+    public void setUp() throws MalformedURLException, ParseException {
         bugzillaURL = new URL(BUGZILLA_URL);
         bz01URL = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=1111111");
 
@@ -109,6 +113,7 @@ public class BZIssueWrapperTest {
     @Test
     public void validIssueToBZTest() {
         Map<String, Object> result = wrapper.issueToBugzillaBug(issue01, loginMap);
+        result.put(BugzillaFields.CREATION_TIME, getCreationDate());
 
         assertNotNull(result);
         assertDeepEqualsBZ(bz01, result);
@@ -135,6 +140,8 @@ public class BZIssueWrapperTest {
 
         result.put(BugzillaFields.ID, 1111111);
         result.put(BugzillaFields.ASSIGNEE, "jboss-set@redhat.com");
+        result.put(BugzillaFields.CREATION_TIME, getCreationDate());
+        result.put(BugzillaFields.SUMMARY, "Test Issue");
         result.put(BugzillaFields.DESCRIPTION, "Test bugzilla");
         result.put(BugzillaFields.STATUS, "NEW");
         result.put(BugzillaFields.COMPONENT, new String[]{"CLI"});
@@ -167,11 +174,13 @@ public class BZIssueWrapperTest {
         return result;
     }
 
-    private Issue createTestIssue01(URL url) throws MalformedURLException {
+    private Issue createTestIssue01(URL url) throws MalformedURLException, ParseException {
         Issue result = new Issue(url);
 
         result.setTrackerId("1111111");
         result.setAssignee("jboss-set@redhat.com");
+        result.setCreationTime(getCreationDate());
+        result.setSummary("Test Issue");
         result.setDescription("Test bugzilla");
         result.setStatus(IssueStatus.NEW);
         result.setComponent("CLI");
@@ -200,6 +209,9 @@ public class BZIssueWrapperTest {
         assertEquals("bug tracker id mismatch", expected.get(BugzillaFields.ID), Integer.parseInt((String) other.get(BugzillaFields.ISSUE_IDS)));
         assertEquals("bug assignee mismatch", expected.get(BugzillaFields.ASSIGNEE), other.get(BugzillaFields.ASSIGNEE));
         assertEquals("bug status mismatch", expected.get(BugzillaFields.STATUS), other.get(BugzillaFields.STATUS));
+
+        // Ignore creation time, as this is not added to map in issueToBugzillaBug()
+        assertEquals("bug summary mismatch", expected.get(BugzillaFields.SUMMARY), other.get(BugzillaFields.SUMMARY));
 
         Object expectedComponents[] = (Object []) expected.get(BugzillaFields.COMPONENT);
         assertEquals("bug component mismatch", expectedComponents[0], other.get(BugzillaFields.COMPONENT));
@@ -268,5 +280,11 @@ public class BZIssueWrapperTest {
                 streams.put(name, status);
             }
         }
+    }
+
+    private Date getCreationDate() {
+        Calendar calendar = new GregorianCalendar();
+        calendar.set(2012, Calendar.MAY, 29, 4, 7, 0);
+        return calendar.getTime();
     }
 }
