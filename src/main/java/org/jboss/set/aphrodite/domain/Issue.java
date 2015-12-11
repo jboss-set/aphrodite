@@ -24,6 +24,7 @@ package org.jboss.set.aphrodite.domain;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,8 @@ public class Issue {
 
     private String component; // E.g Clustering
 
+    private String summary;
+
     private String description;
 
     private String assignee;
@@ -64,6 +67,8 @@ public class Issue {
     private List<URL> dependsOn;
 
     private List<URL> blocks;
+
+    private Date creationTime;
 
     private IssueEstimation estimation;
 
@@ -110,6 +115,14 @@ public class Issue {
 
     public void setComponent(String component) {
         this.component = component;
+    }
+
+    public Optional<String> getSummary() {
+        return Optional.ofNullable(summary);
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
     }
 
     public Optional<String> getDescription() {
@@ -192,6 +205,14 @@ public class Issue {
         this.blocks = blocks;
     }
 
+    public Optional<Date> getCreationTime() {
+        return Optional.ofNullable(creationTime);
+    }
+
+    public void setCreationTime(Date creationTime) {
+        this.creationTime = creationTime;
+    }
+
     public Optional<IssueEstimation> getEstimation() {
         return Optional.ofNullable(estimation);
     }
@@ -215,6 +236,7 @@ public class Issue {
                 ", trackerId='" + trackerId + '\'' +
                 ", product='" + product + '\'' +
                 ", component='" + component + '\'' +
+                ", summary='" + summary + '\'' +
                 ", description='" + getPrintableDescription() + '\'' +
                 ", assignee='" + assignee + '\'' +
                 ", reporter='" + reporter + '\'' +
@@ -225,6 +247,7 @@ public class Issue {
                 ", streamStatus=" + streamStatus +
                 ", dependsOn=" + dependsOn +
                 ", blocks=" + blocks +
+                ", creationDate=" + creationTime +
                 ", estimation=" + estimation +
                 ", #comments=" + comments.size() +
                 "}\n";
