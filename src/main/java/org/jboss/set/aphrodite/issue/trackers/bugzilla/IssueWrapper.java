@@ -95,6 +95,7 @@ class IssueWrapper {
 
         Map<String, Object> params = new HashMap<>(loginDetails);
         issue.getTrackerId().ifPresent(trackerId -> params.put(ISSUE_IDS, trackerId));
+        issue.getSummary().ifPresent(summary -> params.put(SUMMARY, summary));
         issue.getProduct().ifPresent(product -> params.put(PRODUCT, product));
         issue.getComponent().ifPresent(component -> params.put(COMPONENT, component));
         issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee));

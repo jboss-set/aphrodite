@@ -47,9 +47,12 @@ import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.CREATED_FIELD;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DATE_STRING_FORMAT;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
@@ -71,11 +74,10 @@ class IssueWrapper {
     }
 
     private void setCreationDate(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
-        final String JIRA_DATE_STRING_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ";
-        final String CREATED_FIELD = "created";
         final String dateAsString = (String) jiraIssue.getField(CREATED_FIELD);
         try {
-            issue.setCreationTime(new SimpleDateFormat(JIRA_DATE_STRING_FORMAT).parse(dateAsString));
+            Date creationDate = new SimpleDateFormat(DATE_STRING_FORMAT).parse(dateAsString);
+            issue.setCreationTime(creationDate);
         } catch (ParseException e) {
             throw new IllegalStateException("Failed to deserialized date:" + dateAsString, e);
         }
@@ -111,6 +113,7 @@ class IssueWrapper {
     net.rcarz.jiraclient.Issue.FluentUpdate issueToFluentUpdate(Issue issue, net.rcarz.jiraclient.Issue.FluentUpdate update) {
         checkUnsupportedUpdateFields(issue);
 
+        issue.getSummary().ifPresent(summary -> update.field(Field.SUMMARY, summary));
         issue.getComponent().ifPresent(component -> update.field(Field.COMPONENTS, new ArrayList<String>() {{ add(component); }} ));
         issue.getDescription().ifPresent(description -> update.field(Field.DESCRIPTION, description));
         issue.getAssignee().ifPresent(assignee -> update.field(Field.ASSIGNEE, assignee));
@@ -219,7 +222,7 @@ class IssueWrapper {
 
     private void setIssueComments(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
         List<Comment> comments = new ArrayList<>();
-        jiraIssue.getComments().forEach(c -> comments.add(new Comment(c.getId(), c.getBody(), false)));
+        jiraIssue.getComments().forEach(c -> comments.add(new Comment(issue.getTrackerId().get(), c.getId(), c.getBody(), false)));
         issue.getComments().addAll(comments);
     }
 
