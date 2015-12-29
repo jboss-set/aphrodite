@@ -60,8 +60,9 @@ class IssueWrapper {
         issue.setTrackerId(id.toString());
         issue.setAssignee((String) bug.get(ASSIGNEE));
         issue.setReporter((String) bug.get(REPORTER));
-        issue.setCreationTime((Date)bug.get(CREATION_TIME));
-        issue.setSummary((String)bug.get(SUMMARY));
+        issue.setCreationTime((Date) bug.get(CREATION_TIME));
+        issue.setLastUpdated((Date) bug.get(LAST_UPDATED));
+        issue.setSummary((String) bug.get(SUMMARY));
         issue.setDescription((String) bug.get(DESCRIPTION));
         issue.setStatus(IssueStatus.valueOf((String) bug.get(STATUS)));
         issue.setComponent((String) ((Object[]) bug.get(COMPONENT))[0]);
