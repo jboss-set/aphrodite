@@ -135,6 +135,14 @@ public class BZIssueWrapperTest {
         assertNull(result);
     }
 
+    @Test
+    public void noFlagShouldStillLeadToAProperStateMap() throws MalformedURLException {
+        bz01.remove(BugzillaFields.FLAGS);
+        Issue result = wrapper.bugzillaBugToIssue(bz01, bugzillaURL);
+        for ( Flag f : Flag.values() )
+            assertNotNull(result.getStage().getStateMap().get(f));
+    }
+
     private Map<String,Object> createTestBZ01() {
         Map<String, Object> result = new HashMap<>();
 
@@ -199,6 +207,8 @@ public class BZIssueWrapperTest {
 
         Stage issueStage = new Stage();
         issueStage.setStatus(Flag.DEV, FlagStatus.ACCEPTED);
+        issueStage.setStatus(Flag.PM, FlagStatus.NO_SET);
+        issueStage.setStatus(Flag.QE, FlagStatus.NO_SET);
 
         result.setStage(issueStage);
 

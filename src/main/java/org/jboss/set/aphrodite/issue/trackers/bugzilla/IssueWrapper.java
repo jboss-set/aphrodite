@@ -162,24 +162,35 @@ class IssueWrapper {
     private void extractStageAndStreams(Map<String, Object> bug, Issue issue) {
         Stage issueStage = new Stage();
         Map<String,FlagStatus> streams = new HashMap<>();
-        for (Object object : (Object[]) bug.get(FLAGS)) {
-            @SuppressWarnings("unchecked") // Necessary evil
-            Map<String, Object> flagMap = (Map<String, Object>) object;
-            String name = (String) flagMap.get(FLAG_NAME);
+        Object flagsMap = (Object[]) bug.get(FLAGS);
+        if ( flagsMap != null ) {
+            for (Object object : (Object[]) bug.get(FLAGS)) {
+                @SuppressWarnings("unchecked") // Necessary evil
+                Map<String, Object> flagMap = (Map<String, Object>) object;
+                String name = (String) flagMap.get(FLAG_NAME);
 
-            if (name.contains("_ack")) { // If Flag
-                Optional<Flag> flag = getAphroditeFlag(name);
-                if (!flag.isPresent())
-                    continue;
+                if (name.contains("_ack")) { // If Flag
+                    Optional<Flag> flag = getAphroditeFlag(name);
+                    if (!flag.isPresent())
+                        continue;
 
-                FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
-                issueStage.setStatus(flag.get(), status);
-            } else { // Else Stream
-                FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
-                streams.put(name, status);
+                    FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
+                    issueStage.setStatus(flag.get(), status);
+                } else { // Else Stream
+                    FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
+                    streams.put(name, status);
+                }
             }
         }
-        issue.setStage(issueStage);
+        issue.setStage(ensureStageMapIsComplete(issueStage));
         issue.setStreamStatus(streams);
+    }
+
+    // Ensure all missing flag, if any are set to NO_SET
+    private static Stage ensureStageMapIsComplete(Stage issue) {
+        for ( Flag flag: Flag.values() )
+            if ( issue.getStateMap().get(flag) == null )
+                issue.getStateMap().put(flag, FlagStatus.NO_SET);
+        return issue;
     }
 }
