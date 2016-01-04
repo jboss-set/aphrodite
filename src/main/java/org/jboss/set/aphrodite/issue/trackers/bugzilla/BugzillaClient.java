@@ -62,7 +62,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -175,7 +177,7 @@ public class BugzillaClient {
     }
 
     private Map<String, List<Comment>> buildMapOfCommentsIndexedByBugId(Map<String, Object> results) {
-        Map<String, List<Comment>> commentsMap = new HashMap<String, List<Comment>>(0);
+        Map<String, List<Comment>> commentsMap = new HashMap<>();
         if (results != null && !results.isEmpty() && results.containsKey(RESULT_BUGS)) {
             for (Map<String, Object> comments : XMLRPC.iterable(XMLRPC.RPC_STRUCT, results.values())) {
                 for (Entry<String, Object> comment : comments.entrySet()) {
@@ -183,7 +185,6 @@ public class BugzillaClient {
                     commentsMap.put(
                             bugId,
                             buildCommentsForBug(
-                                    bugId,
                                     XMLRPC.cast(XMLRPC.RPC_ARRAY,
                                             XMLRPC.cast(XMLRPC.RPC_STRUCT, comment.getValue()).get("comments"))));
                 }
@@ -192,7 +193,7 @@ public class BugzillaClient {
         return commentsMap;
     }
 
-    private List<Comment> buildCommentsForBug(final String bugId, final Object[] commentObjArray) {
+    private List<Comment> buildCommentsForBug(final Object[] commentObjArray) {
         List<Comment> comments = new ArrayList<>(commentObjArray.length);
         for (Object o : commentObjArray) {
             comments.add(buildComment(XMLRPC.cast(XMLRPC.RPC_STRUCT, o)));
@@ -208,10 +209,11 @@ public class BugzillaClient {
     }
 
     private Object[] extractIssueIdsList(Collection<Issue> collection) {
-        List<String> ids = new ArrayList<>(collection.size());
-        for (Issue issue : collection)
-            ids.add(issue.getTrackerId().get());
-        return ids.toArray();
+        return collection.stream()
+                .filter(Objects::nonNull)
+                .map(issue -> issue.getTrackerId().get())
+                .collect(Collectors.toList())
+                .toArray();
     }
 
     public List<Comment> getCommentsForIssue(String trackerId) {
@@ -257,8 +259,11 @@ public class BugzillaClient {
         if (resultMap != null && !resultMap.isEmpty()) {
             Map<String, Issue> issues = fetchAllIssues(XMLRPC.cast(XMLRPC.RPC_ARRAY, resultMap.get(RESULT_BUGS)));
             Map<String, List<Comment>> comments = getCommentsForIssues(issues);
-            for (String issueId : issues.keySet())
-                issueList.add(associateCommentsToIssue(issues.get(issueId), comments));
+
+            issueList = issues.keySet().stream()
+                    .filter(Objects::nonNull)
+                    .map(id -> associateCommentsToIssue(issues.get(id), comments))
+                    .collect(Collectors.toList());
         }
         return issueList;
     }
@@ -269,7 +274,7 @@ public class BugzillaClient {
     }
 
     private Map<String, Issue> fetchAllIssues(final Object[] bugs) {
-        Map<String, Issue> issues = new HashMap<String, Issue>();
+        Map<String, Issue> issues = new HashMap<>();
         for (Map<String, Object> struct : XMLRPC.iterable(XMLRPC.RPC_STRUCT, bugs)) {
             try {
                 Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURL);
