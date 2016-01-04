@@ -134,6 +134,9 @@ public class JiraIssueWrapperTest {
         when(assigneeMock.getEmail()).thenReturn("jboss-set@redhat.com");
         when(jiraIssue01.getAssignee()).thenReturn(assigneeMock);
 
+        when(jiraIssue01.getField("created")).thenReturn("2015-12-29T15:16:50.946+0100");
+        when(jiraIssue01.getField("updated")).thenReturn("2015-12-29T15:16:50.946+0100");
+
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.PM_ACK)).thenReturn("+");
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.DEV_ACK)).thenReturn("+");
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.QE_ACK)).thenReturn("+");

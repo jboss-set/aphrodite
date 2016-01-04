@@ -71,6 +71,8 @@ public class Issue {
 
     private Date creationTime;
 
+    private Date lastUpdated;
+
     private IssueEstimation estimation;
 
     private List<Comment> comments;
@@ -221,6 +223,14 @@ public class Issue {
         this.creationTime = creationTime;
     }
 
+    public Optional<Date> getLastUpdated() {
+        return Optional.ofNullable(lastUpdated);
+    }
+
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
     public Optional<IssueEstimation> getEstimation() {
         return Optional.ofNullable(estimation);
     }
@@ -257,6 +267,7 @@ public class Issue {
                 ", dependsOn=" + dependsOn +
                 ", blocks=" + blocks +
                 ", creationDate=" + creationTime +
+                ", lastUpdated=" + lastUpdated +
                 ", estimation=" + estimation +
                 ", #comments=" + comments.size() +
                 "}\n";

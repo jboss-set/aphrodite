@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
@@ -186,6 +187,20 @@ public class Aphrodite {
             }
         }
         throw new NotFoundException("No issues found which correspond to the provided url.");
+    }
+
+    public boolean postCommentOnIssue(Issue issue, Comment comment) {
+        checkIssueTrackerExists();
+
+        for (IssueTrackerService trackerService : issueTrackers) {
+            try {
+                return trackerService.addCommentToIssue(issue, comment);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("Issue not found at IssueTrackerService: " + trackerService.getClass().getName());
+            }
+        }
+        throw new IllegalStateException("No tracker service found for issue:" + issue);
     }
 
     public List<Issue> getIssuesAssociatedWith(Patch patch) {

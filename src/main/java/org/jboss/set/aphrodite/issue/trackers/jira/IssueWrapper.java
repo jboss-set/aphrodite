@@ -52,6 +52,7 @@ import java.util.List;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.CREATED_FIELD;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.UPDATED_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DATE_STRING_FORMAT;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
@@ -73,14 +74,21 @@ class IssueWrapper {
         return jiraIssueToIssue(url, jiraIssue);
     }
 
-    private void setCreationDate(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
-        final String dateAsString = (String) jiraIssue.getField(CREATED_FIELD);
+    private void setCreationTime(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+        issue.setCreationTime(getDateField(jiraIssue, CREATED_FIELD));
+    }
+
+    private Date getDateField(net.rcarz.jiraclient.Issue jiraIssue, String fieldName) {
+        final String dateAsString = (String) jiraIssue.getField(fieldName);
         try {
-            Date creationDate = new SimpleDateFormat(DATE_STRING_FORMAT).parse(dateAsString);
-            issue.setCreationTime(creationDate);
+            return new SimpleDateFormat(DATE_STRING_FORMAT).parse(dateAsString);
         } catch (ParseException e) {
             throw new IllegalStateException("Failed to deserialized date:" + dateAsString, e);
         }
+    }
+
+    private void setLastUpdated(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+        issue.setLastUpdated(getDateField(jiraIssue, UPDATED_FIELD));
     }
 
     Issue jiraIssueToIssue(URL url, net.rcarz.jiraclient.Issue jiraIssue) {
@@ -105,7 +113,8 @@ class IssueWrapper {
         setIssueRelease(issue, jiraIssue);
         setIssueDependencies(url, issue, jiraIssue.getIssueLinks());
         setIssueComments(issue, jiraIssue);
-        setCreationDate(issue, jiraIssue);
+        setCreationTime(issue, jiraIssue);
+        setLastUpdated(issue, jiraIssue);
 
         return issue;
     }
