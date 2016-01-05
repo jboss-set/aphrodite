@@ -63,6 +63,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -91,6 +94,7 @@ public class BugzillaClient {
     static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("namedcmd=([^&]+)");
     static final Pattern SHARER_ID_PARAM_PATTERN = Pattern.compile("sharer_id=([^&]+)");
 
+    private final int MAX_THREADS = 10; // TODO expose this in the configuration
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private final URL baseURL;
     private final Map<String, Object> loginDetails;
@@ -318,6 +322,43 @@ public class BugzillaClient {
         params.put(COMMENT, comment);
         params.put(PRIVATE_COMMENT, isPrivate);
         return runCommand(METHOD_ADD_COMMENT, params);
+    }
+
+    // Posts comments in parallel as a bulk method is not possible with BZ
+    public boolean postComment(Map<Issue, Comment> commentMap) {
+        int numberOfThreads = commentMap.size() > MAX_THREADS ? MAX_THREADS : commentMap.size();
+
+        List<Callable<Boolean>> futures = new ArrayList<>();
+        commentMap.forEach((issue, comment) ->
+                futures.add(() -> {
+                    try {
+                        return postComment(issue, comment);
+                    } catch (NotFoundException e) {
+                        if (LOG.isWarnEnabled())
+                            LOG.warn(e);
+                        return false;
+                    }
+                }));
+
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        try {
+            return executorService.invokeAll(futures)
+                    .stream()
+                    .map(future -> {
+                        try {
+                            return future.get();
+                        } catch (Exception e) {
+                            throw new IllegalStateException(e);
+                        }
+                    })
+                    .allMatch(result -> result.equals(true));
+        } catch (InterruptedException e) {
+            if (LOG.isWarnEnabled())
+                LOG.warn(e);
+            return false;
+        } finally {
+            executorService.shutdown();
+        }
     }
 
     public boolean updateFlags(int ids, String name, FlagStatus status) {

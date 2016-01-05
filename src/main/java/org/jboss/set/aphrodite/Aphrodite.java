@@ -43,6 +43,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
@@ -189,7 +190,7 @@ public class Aphrodite {
         throw new NotFoundException("No issues found which correspond to the provided url.");
     }
 
-    public boolean postCommentOnIssue(Issue issue, Comment comment) {
+    public boolean addCommentToIssue(Issue issue, Comment comment) {
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
@@ -197,10 +198,22 @@ public class Aphrodite {
                 return trackerService.addCommentToIssue(issue, comment);
             } catch (NotFoundException e) {
                 if (LOG.isInfoEnabled())
-                    LOG.info("Issue not found at IssueTrackerService: " + trackerService.getClass().getName());
+                    LOG.info("IssueTrackerService: " + trackerService.getClass().getName() +
+                            ": " + e);
             }
         }
-        throw new IllegalStateException("No tracker service found for issue:" + issue);
+        throw new IllegalStateException("Unable to add comment to issue: " + issue.getURL());
+    }
+
+    public boolean addCommentToIssue(Map<Issue, Comment> commentMap) {
+        checkIssueTrackerExists();
+
+        boolean isSuccess = true;
+        for (IssueTrackerService trackerService : issueTrackers) {
+            if (!trackerService.addCommentToIssue(commentMap))
+                isSuccess = false;
+        }
+        return isSuccess;
     }
 
     public List<Issue> getIssuesAssociatedWith(Patch patch) {

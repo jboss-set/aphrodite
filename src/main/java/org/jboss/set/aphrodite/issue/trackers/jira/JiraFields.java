@@ -40,6 +40,7 @@ class JiraFields {
     static final String API_AUTHENTICATION_PATH = API_BASE_PATH + "myself";
     static final String API_ISSUE_PATH = API_BASE_PATH + "issue/";
     static final String BROWSE_ISSUE_PATH = "/browse/";
+    static final String COMMENT_ISSUE_PATH = "/comment/";
 
     static final String CREATED_FIELD = "created";
     static final String UPDATED_FIELD = "updated";

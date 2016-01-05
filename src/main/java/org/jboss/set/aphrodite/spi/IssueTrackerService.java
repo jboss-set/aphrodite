@@ -31,6 +31,7 @@ import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 public interface IssueTrackerService {
 
@@ -115,4 +116,13 @@ public interface IssueTrackerService {
      * @throws NotFoundException if the provided <code>Issue</code> cannot be found at the IssueTracker.
      */
     boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException;
+
+    /**
+     * Adds the <code>Comment</code> to the associated <code>Issue</code> object for all Issue/Comment
+     * pairs in the <code>Map</code>. Null comments are ignored.
+     *
+     * @param commentMap the map containing all Issues that are to be updated and the associated comments.
+     * @return true if all comments are successfully added to their associated Issue, otherwise false.
+     */
+    boolean addCommentToIssue(Map<Issue, Comment> commentMap);
 }

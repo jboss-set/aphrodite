@@ -55,10 +55,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.*;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_AUTHENTICATION_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_FILTER_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.COMMENT_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.hasSameIssueStatus;
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the JIRA issue tracker.
@@ -70,6 +81,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
     private static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("filter=([^&]+)");
 
+    private final int MAX_THREADS = 10; // TODO expose this in the tracker's configuration
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private JiraClient jiraClient;
 
@@ -227,17 +239,72 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     @Override
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         super.addCommentToIssue(issue, comment);
+        return postComment(issue, comment, false);
+    }
 
+    private boolean postComment(Issue issue, Comment comment, boolean parallelRequest) throws NotFoundException {
         if (comment.isPrivate())
             Utils.logWarnMessage(LOG, "Private comments are not currently supported by " + getClass().getName());
 
+        String trackerId = issue.getTrackerId().orElse(getIssueKey(issue.getURL()));
+        String restURI = API_ISSUE_PATH + trackerId + COMMENT_ISSUE_PATH;
+        JSONObject req = new JSONObject();
+        req.put("body", comment.getBody());
         try {
-            // TODO make so that a comment is added directly to issue without retrieving issue first?
-            getIssue(issue).addComment(comment.getBody());
+            // A new JiraClient is created here to allow for comments to be posted in parallel
+            // The underlying JiraClient is not thread-safe, hence it is necessary to create a new
+            // JiraClient object for each request.
+            if (parallelRequest) {
+                ICredentials credentials = new BasicCredentials(config.getUsername(), config.getPassword());
+                new JiraClient(baseUrl.toString(), credentials).getRestClient().post(restURI, req);
+            } else {
+                jiraClient.getRestClient().post(restURI, req);
+            }
+        } catch (Exception ex) {
+            throw new NotFoundException("Failed to add comment to issue " + issue.getURL(), ex);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean addCommentToIssue(Map<Issue, Comment> commentMap) {
+        commentMap = filterIssuesByHost(commentMap);
+        if (commentMap.isEmpty())
             return true;
-        } catch (JiraException e) {
-            Utils.logException(LOG, e);
+
+        // Comments are sent in parallel in order to reduce latency
+        int numberOfThreads = commentMap.size() > MAX_THREADS ? MAX_THREADS : commentMap.size();
+
+        List<Callable<Boolean>> futures = new ArrayList<>();
+        commentMap.forEach((issue, comment) ->
+                futures.add(() -> {
+                    try {
+                        return postComment(issue, comment, true);
+                    } catch (NotFoundException e) {
+                        if (LOG.isWarnEnabled())
+                            LOG.warn(e);
+                        return false;
+                    }
+                }));
+
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        try {
+            return executorService.invokeAll(futures)
+                    .stream()
+                    .map(future -> {
+                        try {
+                            return future.get();
+                        } catch (Exception e) {
+                            throw new IllegalStateException(e);
+                        }
+                    })
+                    .allMatch(result -> result.equals(true));
+        } catch (InterruptedException e) {
+            if (LOG.isWarnEnabled())
+                LOG.warn(e);
             return false;
+        } finally {
+            executorService.shutdown();
         }
     }
 

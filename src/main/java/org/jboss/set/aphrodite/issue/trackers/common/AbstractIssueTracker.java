@@ -38,8 +38,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * An abstract IssueTracker which provides logic common to all issue trackers.
@@ -112,6 +115,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
 
     @Override
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
+        checkHost(issue.getURL());
         comment.getId().ifPresent(id ->
                         Utils.logWarnMessage(getLog(), "ID: " + id + "ignored when posting comments " +
                                 "as this is set by the issue tracker.")
@@ -120,8 +124,21 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     }
 
     protected void checkHost(URL url) throws NotFoundException {
-        if (!url.getHost().equals(baseUrl.getHost()))
+        if (!issueExistsAtHost(url))
             throw new NotFoundException("The requested entity cannot be found at this tracker as " +
                     "the specified host domain is different from this service.");
+    }
+
+    protected boolean issueExistsAtHost(URL url) {
+        return url.getHost().equals(baseUrl.getHost());
+    }
+
+    protected Map<Issue, Comment> filterIssuesByHost(Map<Issue, Comment> commentMap) {
+        Objects.requireNonNull(commentMap);
+
+        return commentMap.entrySet()
+                .stream()
+                .filter(entry -> entry.getKey() != null && issueExistsAtHost(entry.getKey().getURL()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

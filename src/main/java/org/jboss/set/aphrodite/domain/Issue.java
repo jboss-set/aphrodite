@@ -281,4 +281,20 @@ public class Issue {
             return description + "... ";
         return description.substring(0, 10) + "... ";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Issue issue = (Issue) o;
+
+        return url.equals(issue.url);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return url.hashCode();
+    }
 }

@@ -36,6 +36,7 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the Bugzilla issue tracker.
@@ -94,6 +95,12 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         super.addCommentToIssue(issue, comment);
         return bzClient.postComment(issue, comment);
+    }
+
+    @Override
+    public boolean addCommentToIssue(Map<Issue, Comment> commentMap) {
+        commentMap = filterIssuesByHost(commentMap);
+        return commentMap.isEmpty() || bzClient.postComment(commentMap);
     }
 
     public BugzillaClient getBzClient() {
