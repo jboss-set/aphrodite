@@ -36,6 +36,7 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -140,5 +141,13 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
                 .stream()
                 .filter(entry -> entry.getKey() != null && issueExistsAtHost(entry.getKey().getURL()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    protected Collection<Issue> filterIssuesByHost(Collection<Issue> issues) {
+        Objects.requireNonNull(issues);
+
+        return issues.stream()
+                .filter(i -> i != null && issueExistsAtHost(i.getURL()))
+                .collect(Collectors.toList());
     }
 }

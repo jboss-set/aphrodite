@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_AUTHENTICATION_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_FILTER_PATH;
@@ -272,21 +274,28 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         if (commentMap.isEmpty())
             return true;
 
-        // Comments are sent in parallel in order to reduce latency
-        int numberOfThreads = commentMap.size() > MAX_THREADS ? MAX_THREADS : commentMap.size();
+        List<CommentFuture> futures = commentMap.entrySet().stream()
+                .map(entry -> new CommentFuture(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
 
-        List<Callable<Boolean>> futures = new ArrayList<>();
-        commentMap.forEach((issue, comment) ->
-                futures.add(() -> {
-                    try {
-                        return postComment(issue, comment, true);
-                    } catch (NotFoundException e) {
-                        if (LOG.isWarnEnabled())
-                            LOG.warn(e);
-                        return false;
-                    }
-                }));
+        return executeCommentFutures(futures);
+    }
 
+    @Override
+    public boolean addCommentToIssue(Collection<Issue> issues, Comment comment) {
+        issues = filterIssuesByHost(issues);
+        if (issues.isEmpty())
+            return true;
+
+        List<CommentFuture> futures = issues.stream()
+                .map(issue -> new CommentFuture(issue, comment))
+                .collect(Collectors.toList());
+
+        return executeCommentFutures(futures);
+    }
+
+    private boolean executeCommentFutures(List<CommentFuture> futures) {
+        int numberOfThreads = futures.size() > MAX_THREADS ? MAX_THREADS : futures.size();
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         try {
             return executorService.invokeAll(futures)
@@ -347,5 +356,26 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             return String.format(template, val, "issues in project", optional.get());
         else
             return String.format(template, val, "issue at ", url);
+    }
+
+    private class CommentFuture implements Callable<Boolean> {
+        final Issue issue;
+        final Comment comment;
+
+        public CommentFuture(Issue issue, Comment comment) {
+            this.issue = issue;
+            this.comment = comment;
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+            try {
+                return postComment(issue, comment, true);
+            } catch (NotFoundException e) {
+                if (LOG.isWarnEnabled())
+                    LOG.warn(e);
+                return false;
+            }
+        }
     }
 }

@@ -325,21 +325,8 @@ public class BugzillaClient {
     }
 
     // Posts comments in parallel as a bulk method is not possible with BZ
-    public boolean postComment(Map<Issue, Comment> commentMap) {
-        int numberOfThreads = commentMap.size() > MAX_THREADS ? MAX_THREADS : commentMap.size();
-
-        List<Callable<Boolean>> futures = new ArrayList<>();
-        commentMap.forEach((issue, comment) ->
-                futures.add(() -> {
-                    try {
-                        return postComment(issue, comment);
-                    } catch (NotFoundException e) {
-                        if (LOG.isWarnEnabled())
-                            LOG.warn(e);
-                        return false;
-                    }
-                }));
-
+    private boolean executeCommentFutures(List<CommentFuture> futures) {
+        int numberOfThreads = futures.size() > MAX_THREADS ? MAX_THREADS : futures.size();
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         try {
             return executorService.invokeAll(futures)
@@ -359,6 +346,22 @@ public class BugzillaClient {
         } finally {
             executorService.shutdown();
         }
+    }
+
+    public boolean postComment(Map<Issue, Comment> commentMap) {
+        List<CommentFuture> futures = commentMap.entrySet().stream()
+                .map(entry -> new CommentFuture(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+
+        return executeCommentFutures(futures);
+    }
+
+    public boolean postComment(Collection<Issue> issues, Comment comment) {
+        List<CommentFuture> futures = issues.stream()
+                .map(issue -> new CommentFuture(issue, comment))
+                .collect(Collectors.toList());
+
+        return executeCommentFutures(futures);
     }
 
     public boolean updateFlags(int ids, String name, FlagStatus status) {
@@ -430,6 +433,27 @@ public class BugzillaClient {
             return true;
         } catch (XmlRpcException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    private class CommentFuture implements Callable<Boolean> {
+        final Issue issue;
+        final Comment comment;
+
+        public CommentFuture(Issue issue, Comment comment) {
+            this.issue = issue;
+            this.comment = comment;
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+            try {
+                return postComment(issue, comment);
+            } catch (NotFoundException e) {
+                if (LOG.isWarnEnabled())
+                    LOG.warn(e);
+                return false;
+            }
         }
     }
 

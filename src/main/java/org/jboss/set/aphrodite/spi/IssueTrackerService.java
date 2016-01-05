@@ -30,6 +30,7 @@ import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -125,4 +126,13 @@ public interface IssueTrackerService {
      * @return true if all comments are successfully added to their associated Issue, otherwise false.
      */
     boolean addCommentToIssue(Map<Issue, Comment> commentMap);
+
+    /**
+     * Adds the <code>Comment</code> to all of the provided <code>Issue</code> objects.
+     *
+     * @param issues a collection of all issues that the comment should be added to.
+     * @param comment the comment to be added to all issues.
+     * @return true if the comment is successfully added to all issues.
+     */
+    boolean addCommentToIssue(Collection<Issue> issues, Comment comment);
 }

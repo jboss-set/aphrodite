@@ -224,6 +224,19 @@ public class Aphrodite {
         return isSuccess;
     }
 
+    public boolean addCommentToIssue(Collection<Issue> issues, Comment comment) {
+        checkIssueTrackerExists();
+        Objects.requireNonNull(issues, "issues collection cannot be null");
+        Objects.requireNonNull(comment, "comment cannot be null");
+
+        boolean isSuccess = true;
+        for (IssueTrackerService trackerService : issueTrackers) {
+            if (!trackerService.addCommentToIssue(issues, comment))
+                isSuccess = false;
+        }
+        return isSuccess;
+    }
+
     public List<Issue> getIssuesAssociatedWith(Patch patch) {
         checkIssueTrackerExists();
         Objects.requireNonNull(patch, "patch cannot be null");
