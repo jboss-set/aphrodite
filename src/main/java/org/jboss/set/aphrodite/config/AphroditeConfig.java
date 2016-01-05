@@ -78,10 +78,8 @@ public class AphroditeConfig {
 
     @Override
     public String toString() {
-        return "AphroditeConfig{" +
-                "issueTrackerConfigs=" + issueTrackerConfigs +
-                ", repositoryConfigs=" + repositoryConfigs +
-                '}';
+        return "AphroditeConfig{" + "issueTrackerConfigs=" + issueTrackerConfigs + ", repositoryConfigs=" + repositoryConfigs
+                + '}';
     }
 
     public static AphroditeConfig fromJson(JsonObject jsonObject) {
@@ -90,27 +88,51 @@ public class AphroditeConfig {
         List<IssueTrackerConfig> issueTrackerConfigs = jsonArray
                 .stream()
                 .map(JsonObject.class::cast)
-                .map(json -> new IssueTrackerConfig(
-                        json.getString("url", null),
-                        json.getString("username", null),
-                        json.getString("password", null),
-                        TrackerType.valueOf(json.getString("tracker", null)),
-                        json.getInt("defaultIssueLimit", -1)))
-                .collect(Collectors.toList());
+                .map(json -> new IssueTrackerConfig(json.getString("url", null), json.getString("username", null), json
+                        .getString("password", null), TrackerType.valueOf(json.getString("tracker", null)), json.getInt(
+                        "defaultIssueLimit", -1))).collect(Collectors.toList());
 
         jsonArray = jsonObject.getJsonArray("repositoryConfigs");
         Objects.requireNonNull(jsonArray, "repositoryConfigs array must be specified");
         List<RepositoryConfig> repositoryConfigs = jsonArray
                 .stream()
                 .map(JsonObject.class::cast)
-                .map(json ->
-                        new RepositoryConfig(
-                                json.getString("url", null),
-                                json.getString("username", null),
-                                json.getString("password", null),
-                                RepositoryType.valueOf(json.getString("type", null))))
+                .map(json -> new RepositoryConfig(json.getString("url", null), json.getString("username", null), json
+                        .getString("password", null), RepositoryType.valueOf(json.getString("type", null))))
                 .collect(Collectors.toList());
 
         return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((issueTrackerConfigs == null) ? 0 : issueTrackerConfigs.hashCode());
+        result = prime * result + ((repositoryConfigs == null) ? 0 : repositoryConfigs.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AphroditeConfig other = (AphroditeConfig) obj;
+        if (issueTrackerConfigs == null) {
+            if (other.issueTrackerConfigs != null)
+                return false;
+        } else if (!issueTrackerConfigs.equals(other.issueTrackerConfigs))
+            return false;
+        if (repositoryConfigs == null) {
+            if (other.repositoryConfigs != null)
+                return false;
+        } else if (!repositoryConfigs.equals(other.repositoryConfigs))
+            return false;
+        return true;
+    }
+
 }
