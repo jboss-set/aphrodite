@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,7 @@ public class Aphrodite {
 
     /**
      * Get an instance of the Aphrodite service. If the service has not yet been initialised, then
-     * a new service is created using the provided config. If the service has already been initialised
+     * a new service is created using config. If the service has already been initialised
      * then an <code>IllegalStateException</code> is thrown.
      *
      * @param config an <code>AphroditeConfig</code> object containing all configuration data.
@@ -140,6 +141,7 @@ public class Aphrodite {
     }
 
     public Issue getIssue(URL url) throws NotFoundException {
+        Objects.requireNonNull(url, "url cannot be null");
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
@@ -150,10 +152,11 @@ public class Aphrodite {
                     LOG.info("Issue not found at IssueTrackerService: " + trackerService.getClass().getName());
             }
         }
-        throw new NotFoundException("No issues found which correspond to the provided url.");
+        throw new NotFoundException("No issues found which correspond to url.");
     }
 
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
+        Objects.requireNonNull(searchCriteria, "searchCriteria cannot be null");
         checkIssueTrackerExists();
 
         List<Issue> issues = new ArrayList<>();
@@ -162,6 +165,7 @@ public class Aphrodite {
     }
 
     public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
+        Objects.requireNonNull(filterUrl, "filterUrl cannot be null");
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
@@ -173,10 +177,11 @@ public class Aphrodite {
                             trackerService.getClass().getName() + ":" + e);
             }
         }
-        throw new NotFoundException("No filter found which correspond to the provided url.");
+        throw new NotFoundException("No filter found which correspond to url.");
     }
 
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
+        Objects.requireNonNull(issue, "issue cannot be null");
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
@@ -187,10 +192,12 @@ public class Aphrodite {
                     LOG.info("Issue not found at IssueTrackerService: " + trackerService.getClass().getName());
             }
         }
-        throw new NotFoundException("No issues found which correspond to the provided url.");
+        throw new NotFoundException("No issues found which correspond to url.");
     }
 
     public boolean addCommentToIssue(Issue issue, Comment comment) {
+        Objects.requireNonNull(issue, "issue cannot be null");
+        Objects.requireNonNull(comment, "comment cannot be null");
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
@@ -207,6 +214,7 @@ public class Aphrodite {
 
     public boolean addCommentToIssue(Map<Issue, Comment> commentMap) {
         checkIssueTrackerExists();
+        Objects.requireNonNull(commentMap, "commentMap cannot be null");
 
         boolean isSuccess = true;
         for (IssueTrackerService trackerService : issueTrackers) {
@@ -218,6 +226,7 @@ public class Aphrodite {
 
     public List<Issue> getIssuesAssociatedWith(Patch patch) {
         checkIssueTrackerExists();
+        Objects.requireNonNull(patch, "patch cannot be null");
 
         return issueTrackers.stream()
                 .map(service -> service.getIssuesAssociatedWith(patch))
@@ -227,6 +236,7 @@ public class Aphrodite {
 
     public Repository getRepository(URL url) throws NotFoundException {
         checkRepositoryServiceExists();
+        Objects.requireNonNull(url, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             try {
@@ -236,11 +246,12 @@ public class Aphrodite {
                     LOG.info("Repository not found at RepositoryService: " + repositoryService.getClass().getName(), e);
             }
         }
-        throw new NotFoundException("No repositories found which correspond to the provided url.");
+        throw new NotFoundException("No repositories found which correspond to url.");
     }
 
     public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
         checkRepositoryServiceExists();
+        Objects.requireNonNull(issue, "issue cannot be null");
 
         List<Patch> patches = new ArrayList<>();
         for (RepositoryService repositoryService : repositories) {
@@ -256,6 +267,8 @@ public class Aphrodite {
 
     public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) {
         checkRepositoryServiceExists();
+        Objects.requireNonNull(repository, "repository cannot be null");
+        Objects.requireNonNull(status, "status cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             try {
@@ -270,6 +283,7 @@ public class Aphrodite {
 
     public Patch getPatch(URL url) throws NotFoundException {
         checkRepositoryServiceExists();
+        Objects.requireNonNull(url, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             try {
@@ -279,11 +293,13 @@ public class Aphrodite {
                     LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
             }
         }
-        throw new NotFoundException("No patch found which corresponds to the provided patch.");
+        throw new NotFoundException("No patch found which corresponds to patch.");
     }
 
     public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
         checkRepositoryServiceExists();
+        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(comment, "comment cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             try {
@@ -294,11 +310,13 @@ public class Aphrodite {
                     LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
             }
         }
-        throw new NotFoundException("No patch found which corresponds to the provided patch.");
+        throw new NotFoundException("No patch found which corresponds to patch.");
     }
 
     public void addLabelToPatch(Patch patch, String labelName) {
         checkRepositoryServiceExists();
+        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(labelName, "labelName cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             try {
