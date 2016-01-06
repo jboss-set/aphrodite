@@ -71,7 +71,7 @@ class JiraQueryBuilder {
                         .filter(entry -> entry.getValue() != FlagStatus.NO_SET)
                         .forEach(entry ->
                                 addCriteriaToJQL(CUSTOM_FIELD_MAP.get(entry.getKey().toString()) + " = ",
-                                entry.getValue().getSymbol(), sb)));
+                                        entry.getValue().getSymbol(), sb)));
 
         jql = sb.toString();
         return jql;

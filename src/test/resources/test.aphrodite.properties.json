@@ -1,18 +1,18 @@
 {
-    "issueTrackerConfigs": [
-        {
-            "url": "https://issues.jboss.org/",
-            "username": "user",
-            "password": "pass",
-            "tracker": "JIRA"
-        }
-    ],
-    "repositoryConfigs": [
-        {
-            "url": "https://github.com/",
-            "username": "user",
-            "password": "pass",
-            "type": "GITHUB"
-        }
-    ]
+  "issueTrackerConfigs": [
+    {
+      "url": "https://issues.jboss.org/",
+      "username": "user",
+      "password": "pass",
+      "tracker": "JIRA"
+    }
+  ],
+  "repositoryConfigs": [
+    {
+      "url": "https://github.com/",
+      "username": "user",
+      "password": "pass",
+      "type": "GITHUB"
+    }
+  ]
 }

@@ -45,7 +45,7 @@ class BugzillaQueryBuilder {
     private Map<String, Object> queryMap;
 
     BugzillaQueryBuilder(SearchCriteria criteria, Map<String, Object> loginDetails,
-                         int defaultIssueLimit) {
+            int defaultIssueLimit) {
         this.criteria = criteria;
         this.loginDetails = loginDetails;
         this.defaultIssueLimit = defaultIssueLimit;

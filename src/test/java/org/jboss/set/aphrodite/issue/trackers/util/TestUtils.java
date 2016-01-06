@@ -59,11 +59,11 @@ public class TestUtils {
         assertEquals("issue blocks list mismatch", expected.getBlocks().size(), other.getBlocks().size());
         assertEquals("issue blocks list mismatch", expected.getBlocks(), other.getBlocks());
 
-
         Optional<IssueEstimation> expectedEst = expected.getEstimation();
         Optional<IssueEstimation> otherEst = other.getEstimation();
         assertEquals("issue estimation mismatch", expectedEst.isPresent(), otherEst.isPresent());
-        assertEquals("issue estimation mismatch", expectedEst.get().getInitialEstimate(), otherEst.get().getInitialEstimate(), DELTA);
+        assertEquals("issue estimation mismatch", expectedEst.get().getInitialEstimate(), otherEst.get().getInitialEstimate(),
+                DELTA);
         assertEquals("issue estimation mismatch", expectedEst.get().getHoursWorked(), otherEst.get().getHoursWorked(), DELTA);
 
         Stage expectedStage = expected.getStage();

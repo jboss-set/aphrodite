@@ -32,7 +32,7 @@ public class IssueTrackerConfig extends AbstractServiceConfig {
     private final int defaultIssueLimit;
 
     public IssueTrackerConfig(String url, String username, String password, TrackerType tracker,
-                              int defaultIssueLimit) {
+            int defaultIssueLimit) {
         super(url, username, password);
 
         Objects.requireNonNull(tracker, "The 'tracker' field must be set for all IssueTrackers");

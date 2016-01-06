@@ -51,7 +51,8 @@ import java.util.stream.Collectors;
  * @author Ryan Emerson
  */
 public abstract class AbstractIssueTracker implements IssueTrackerService {
-    public static final Pattern URL_REGEX = Pattern.compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?");
+    public static final Pattern URL_REGEX = Pattern
+            .compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?");
 
     protected final TrackerType TRACKER_TYPE;
     protected IssueTrackerConfig config;
@@ -118,8 +119,8 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         checkHost(issue.getURL());
         comment.getId().ifPresent(id ->
-                        Utils.logWarnMessage(getLog(), "ID: " + id + "ignored when posting comments " +
-                                "as this is set by the issue tracker.")
+                Utils.logWarnMessage(getLog(), "ID: " + id + "ignored when posting comments " +
+                        "as this is set by the issue tracker.")
         );
         return false;
     }

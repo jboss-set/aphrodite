@@ -123,7 +123,9 @@ class IssueWrapper {
         checkUnsupportedUpdateFields(issue);
 
         issue.getSummary().ifPresent(summary -> update.field(Field.SUMMARY, summary));
-        issue.getComponent().ifPresent(component -> update.field(Field.COMPONENTS, new ArrayList<String>() {{ add(component); }} ));
+        issue.getComponent().ifPresent(component -> update.field(Field.COMPONENTS, new ArrayList<String>() {{
+            add(component);
+        }}));
         issue.getDescription().ifPresent(description -> update.field(Field.DESCRIPTION, description));
         issue.getAssignee().ifPresent(assignee -> update.field(Field.ASSIGNEE, assignee));
 
@@ -135,9 +137,9 @@ class IssueWrapper {
 
         issue.getRelease().getMilestone().ifPresent(milestone -> update.field(JSON_CUSTOM_FIELD + TARGET_RELEASE, milestone));
         issue.getRelease().getVersion().ifPresent(version ->
-            update.field(Field.VERSIONS, new ArrayList<String>() {{
-                add(version);
-            }}));
+                update.field(Field.VERSIONS, new ArrayList<String>() {{
+                    add(version);
+                }}));
 
         // TODO implement streams when it is in JIRA
 
@@ -211,7 +213,6 @@ class IssueWrapper {
         issue.setRelease(release);
     }
 
-
     private void setIssueDependencies(URL originalUrl, Issue issue, List<IssueLink> links) {
         if (links == null || links.isEmpty())
             return;
@@ -231,7 +232,8 @@ class IssueWrapper {
 
     private void setIssueComments(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
         List<Comment> comments = new ArrayList<>();
-        jiraIssue.getComments().forEach(c -> comments.add(new Comment(issue.getTrackerId().get(), c.getId(), c.getBody(), false)));
+        jiraIssue.getComments()
+                .forEach(c -> comments.add(new Comment(issue.getTrackerId().get(), c.getId(), c.getBody(), false)));
         issue.getComments().addAll(comments);
     }
 

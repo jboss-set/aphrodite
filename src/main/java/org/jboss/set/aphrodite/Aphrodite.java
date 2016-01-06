@@ -87,7 +87,8 @@ public class Aphrodite {
      */
     public static synchronized Aphrodite instance(AphroditeConfig config) throws AphroditeException {
         if (instance != null) {
-            if (instance.config.equals(config) ) return instance;
+            if (instance.config.equals(config))
+                return instance;
             throw new IllegalStateException("Cannot create a new instance of " +
                     Aphrodite.class.getName() + " as it is a singleton which has already been initialised.");
         }

@@ -192,7 +192,8 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
     }
 
-    private void removeOldIssueLinks(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) throws JiraException, NotFoundException {
+    private void removeOldIssueLinks(Issue issue, net.rcarz.jiraclient.Issue jiraIssue)
+            throws JiraException, NotFoundException {
         Set<String> ids = new HashSet<>();
         for (URL url : Iterables.concat(issue.getBlocks(), issue.getDependsOn()))
             ids.add(getIssueKey(url));

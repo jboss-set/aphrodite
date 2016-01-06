@@ -29,7 +29,7 @@ public class Stage {
 
     private Map<Flag, FlagStatus> state;
 
-    public Stage () {
+    public Stage() {
         this.state = new HashMap<>();
     }
 

@@ -31,7 +31,8 @@ public class IssueEstimation {
     private double initialEstimate = 0.0;
     private double hoursWorked = 0.0;
 
-    public IssueEstimation(){}
+    public IssueEstimation() {
+    }
 
     public IssueEstimation(double initialEstimate) {
         this.initialEstimate = initialEstimate;

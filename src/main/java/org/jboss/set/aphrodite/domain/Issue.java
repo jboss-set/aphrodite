@@ -63,7 +63,7 @@ public class Issue {
 
     private Release release;
 
-    private Map<String,FlagStatus> streamStatus;
+    private Map<String, FlagStatus> streamStatus;
 
     private List<URL> dependsOn;
 
@@ -284,8 +284,10 @@ public class Issue {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         Issue issue = (Issue) o;
 

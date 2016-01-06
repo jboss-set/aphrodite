@@ -149,7 +149,8 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForAssignedStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
+    private static String transitionsForAssignedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+            throws AphroditeException {
         switch (newStatus) {
             case NEW:
                 return "Stop Progress";
@@ -170,7 +171,8 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForModifiedStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
+    private static String transitionsForModifiedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+            throws AphroditeException {
         switch (newStatus) {
             case NEW:
             case ASSIGNED:
@@ -185,7 +187,8 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForON_QAStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
+    private static String transitionsForON_QAStatus(IssueStatus currentStatus, IssueStatus newStatus)
+            throws AphroditeException {
         switch (newStatus) {
             case NEW:
             case ASSIGNED:
@@ -200,7 +203,8 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForVerifiedStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
+    private static String transitionsForVerifiedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+            throws AphroditeException {
         switch (newStatus) {
             case NEW:
             case ASSIGNED:
@@ -215,7 +219,8 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForClosedStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
+    private static String transitionsForClosedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+            throws AphroditeException {
         switch (newStatus) {
             case NEW:
             case ASSIGNED:

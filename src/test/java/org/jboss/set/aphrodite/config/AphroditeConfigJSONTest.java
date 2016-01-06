@@ -66,7 +66,7 @@ public class AphroditeConfigJSONTest {
     }
 
     @Test
-    public void issueTrackerValidJSONTest(){
+    public void issueTrackerValidJSONTest() {
 
         AphroditeConfig result = AphroditeConfig.fromJson(jr.readObject());
         assertNotNull("cannot create configuration from valid JSON file", result);

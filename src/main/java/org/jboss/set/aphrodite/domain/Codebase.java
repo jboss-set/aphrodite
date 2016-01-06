@@ -22,7 +22,6 @@
 
 package org.jboss.set.aphrodite.domain;
 
-
 // represents a branch
 public class Codebase {
 
@@ -38,8 +37,10 @@ public class Codebase {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         Codebase codebase = (Codebase) o;
         return name.equals(codebase.name);

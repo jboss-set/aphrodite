@@ -464,8 +464,7 @@ public class BugzillaClient {
 
         final Class<T> cls;
 
-        @SuppressWarnings("unchecked")
-        XMLRPC(final Class<?> cls) {
+        @SuppressWarnings("unchecked") XMLRPC(final Class<?> cls) {
             this.cls = (Class<T>) cls;
         }
 

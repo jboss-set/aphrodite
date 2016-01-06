@@ -58,7 +58,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         Iterator<RepositoryConfig> i = aphroditeConfig.getRepositoryConfigs().iterator();
         while (i.hasNext()) {
             RepositoryConfig config = i.next();
-            if ( config.getType() == REPOSITORY_TYPE ) {
+            if (config.getType() == REPOSITORY_TYPE) {
                 i.remove(); // Remove so that this service cannot be instantiated twice
                 return init(config);
             }

@@ -22,7 +22,6 @@
 
 package org.jboss.set.aphrodite.repository.services.github;
 
-
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.jboss.set.aphrodite.domain.Codebase;

@@ -20,7 +20,6 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
 import org.jboss.set.aphrodite.domain.Flag;
@@ -139,11 +138,11 @@ public class BZIssueWrapperTest {
     public void noFlagShouldStillLeadToAProperStateMap() throws MalformedURLException {
         bz01.remove(BugzillaFields.FLAGS);
         Issue result = wrapper.bugzillaBugToIssue(bz01, bugzillaURL);
-        for ( Flag f : Flag.values() )
+        for (Flag f : Flag.values())
             assertNotNull(result.getStage().getStateMap().get(f));
     }
 
-    private Map<String,Object> createTestBZ01() {
+    private Map<String, Object> createTestBZ01() {
         Map<String, Object> result = new HashMap<>();
 
         result.put(BugzillaFields.ID, 1111111);
@@ -152,16 +151,16 @@ public class BZIssueWrapperTest {
         result.put(BugzillaFields.SUMMARY, "Test Issue");
         result.put(BugzillaFields.DESCRIPTION, "Test bugzilla");
         result.put(BugzillaFields.STATUS, "NEW");
-        result.put(BugzillaFields.COMPONENT, new String[]{"CLI"});
+        result.put(BugzillaFields.COMPONENT, new String[] { "CLI" });
         result.put(BugzillaFields.PRODUCT, "EAP");
         result.put(BugzillaFields.ISSUE_TYPE, "BUG");
-        result.put(BugzillaFields.VERSION, new String[]{"6.4.4"});
+        result.put(BugzillaFields.VERSION, new String[] { "6.4.4" });
         result.put(BugzillaFields.TARGET_MILESTONE, "---");
-        result.put(BugzillaFields.DEPENDS_ON, new String[]{
+        result.put(BugzillaFields.DEPENDS_ON, new String[] {
                 "1111112",
                 "1111113"
         });
-        result.put(BugzillaFields.BLOCKS, new String[]{
+        result.put(BugzillaFields.BLOCKS, new String[] {
                 "1111114",
                 "1111115"
         });
@@ -173,9 +172,9 @@ public class BZIssueWrapperTest {
         develFlag.put(BugzillaFields.FLAG_STATUS, FlagStatus.ACCEPTED);
 
         Map<String, Object> flags = new HashMap<>();
-        flags.put(BugzillaFields.FLAG_NAME , BugzillaFields.FLAG_ACK_DEVEL);
+        flags.put(BugzillaFields.FLAG_NAME, BugzillaFields.FLAG_ACK_DEVEL);
         flags.put(BugzillaFields.FLAG_STATUS, FlagStatus.ACCEPTED.getSymbol());
-        result.put(BugzillaFields.FLAGS, new Object[]{
+        result.put(BugzillaFields.FLAGS, new Object[] {
                 flags
         });
 
@@ -216,26 +215,27 @@ public class BZIssueWrapperTest {
     }
 
     private void assertDeepEqualsBZ(Map<String, Object> expected, Map<String, Object> other) {
-        assertEquals("bug tracker id mismatch", expected.get(BugzillaFields.ID), Integer.parseInt((String) other.get(BugzillaFields.ISSUE_IDS)));
+        assertEquals("bug tracker id mismatch", expected.get(BugzillaFields.ID),
+                Integer.parseInt((String) other.get(BugzillaFields.ISSUE_IDS)));
         assertEquals("bug assignee mismatch", expected.get(BugzillaFields.ASSIGNEE), other.get(BugzillaFields.ASSIGNEE));
         assertEquals("bug status mismatch", expected.get(BugzillaFields.STATUS), other.get(BugzillaFields.STATUS));
 
         // Ignore creation time, as this is not added to map in issueToBugzillaBug()
         assertEquals("bug summary mismatch", expected.get(BugzillaFields.SUMMARY), other.get(BugzillaFields.SUMMARY));
 
-        Object expectedComponents[] = (Object []) expected.get(BugzillaFields.COMPONENT);
+        Object expectedComponents[] = (Object[]) expected.get(BugzillaFields.COMPONENT);
         assertEquals("bug component mismatch", expectedComponents[0], other.get(BugzillaFields.COMPONENT));
 
         assertEquals("bug product mismatch", expected.get(BugzillaFields.PRODUCT), other.get(BugzillaFields.PRODUCT));
         assertEquals("bug type mismatch", expected.get(BugzillaFields.ISSUE_TYPE), other.get(BugzillaFields.ISSUE_TYPE));
 
-        Object expectedVersions[] = (Object []) expected.get(BugzillaFields.VERSION);
+        Object expectedVersions[] = (Object[]) expected.get(BugzillaFields.VERSION);
         assertEquals("bug version mismatch", expectedVersions[0], other.get(BugzillaFields.VERSION));
 
-        assertEquals("bug milestone mismatch", expected.get(BugzillaFields.TARGET_MILESTONE), other.get(BugzillaFields.TARGET_MILESTONE));
+        assertEquals("bug milestone mismatch", expected.get(BugzillaFields.TARGET_MILESTONE),
+                other.get(BugzillaFields.TARGET_MILESTONE));
 
-
-        String expectedDependsOn[] = (String []) expected.get(BugzillaFields.DEPENDS_ON);
+        String expectedDependsOn[] = (String[]) expected.get(BugzillaFields.DEPENDS_ON);
 
         List<String> otherDependsOn = getBZList(other, BugzillaFields.DEPENDS_ON);
         assertEquals("bug depends on list mismatch", expectedDependsOn.length, otherDependsOn.size());
@@ -243,7 +243,7 @@ public class BZIssueWrapperTest {
             assertTrue("bug depends on list mismatch", otherDependsOn.contains(dependency));
         }
 
-        String expectedBlocks[] = (String []) expected.get(BugzillaFields.BLOCKS);
+        String expectedBlocks[] = (String[]) expected.get(BugzillaFields.BLOCKS);
 
         List<String> otherBlocks = getBZList(other, BugzillaFields.BLOCKS);
         assertEquals("bug blocks list mismatch", expectedBlocks.length, otherBlocks.size());
@@ -251,15 +251,17 @@ public class BZIssueWrapperTest {
             assertTrue("bug blocks list mismatch", otherBlocks.contains(dependency));
         }
 
-        assertEquals("bug estimation mismatch", expected.get(BugzillaFields.ESTIMATED_TIME), other.get(BugzillaFields.ESTIMATED_TIME));
-        assertEquals("bug estimation mismatch", expected.get(BugzillaFields.HOURS_WORKED), other.get(BugzillaFields.HOURS_WORKED));
+        assertEquals("bug estimation mismatch", expected.get(BugzillaFields.ESTIMATED_TIME),
+                other.get(BugzillaFields.ESTIMATED_TIME));
+        assertEquals("bug estimation mismatch", expected.get(BugzillaFields.HOURS_WORKED),
+                other.get(BugzillaFields.HOURS_WORKED));
 
         Stage expectedStage = new Stage();
-        Map<String,FlagStatus> expectedStreams = new HashMap<>();
+        Map<String, FlagStatus> expectedStreams = new HashMap<>();
         getStageAndStreams(expected, expectedStage, expectedStreams);
 
         Stage otherStage = new Stage();
-        Map<String,FlagStatus> otherStreams = new HashMap<>();
+        Map<String, FlagStatus> otherStreams = new HashMap<>();
         getStageAndStreams(expected, otherStage, otherStreams);
 
         assertEquals("bug stage mismatch", expectedStage.getStateMap(), otherStage.getStateMap());
@@ -275,7 +277,7 @@ public class BZIssueWrapperTest {
     private void getStageAndStreams(Map<String, Object> expected, Stage stage, Map<String, FlagStatus> streams) {
         for (Object object : (Object[]) expected.get(BugzillaFields.FLAGS)) {
             @SuppressWarnings("unchecked")
-                    Map<String, Object> flagMap = (Map<String, Object>) object;
+            Map<String, Object> flagMap = (Map<String, Object>) object;
             String name = (String) flagMap.get(BugzillaFields.FLAG_NAME);
 
             if (name.contains("_ack")) {

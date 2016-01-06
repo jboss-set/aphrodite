@@ -123,7 +123,7 @@ class IssueWrapper {
             LOG.debug("Bugzilla does not support updating the reporter field, field ignored.");
     }
 
-    private List<Map<String, Object>> getStageAndStreamsMap(Map<String,FlagStatus> streams, Map<Flag, FlagStatus> stateMap) {
+    private List<Map<String, Object>> getStageAndStreamsMap(Map<String, FlagStatus> streams, Map<Flag, FlagStatus> stateMap) {
         List<Map<String, Object>> flags = new ArrayList<>();
         for (Map.Entry<String, FlagStatus> stream : streams.entrySet()) {
             Map<String, Object> flagMap = new HashMap<>();
@@ -161,11 +161,11 @@ class IssueWrapper {
 
     private void extractStageAndStreams(Map<String, Object> bug, Issue issue) {
         Stage issueStage = new Stage();
-        Map<String,FlagStatus> streams = new HashMap<>();
+        Map<String, FlagStatus> streams = new HashMap<>();
         Object flagsMap = (Object[]) bug.get(FLAGS);
-        if ( flagsMap != null ) {
+        if (flagsMap != null) {
             for (Object object : (Object[]) bug.get(FLAGS)) {
-                @SuppressWarnings("unchecked") // Necessary evil
+                @SuppressWarnings("unchecked")
                 Map<String, Object> flagMap = (Map<String, Object>) object;
                 String name = (String) flagMap.get(FLAG_NAME);
 
@@ -188,8 +188,8 @@ class IssueWrapper {
 
     // Ensure all missing flag, if any are set to NO_SET
     private static Stage ensureStageMapIsComplete(Stage issue) {
-        for ( Flag flag: Flag.values() )
-            if ( issue.getStateMap().get(flag) == null )
+        for (Flag flag : Flag.values())
+            if (issue.getStateMap().get(flag) == null)
                 issue.getStateMap().put(flag, FlagStatus.NO_SET);
         return issue;
     }

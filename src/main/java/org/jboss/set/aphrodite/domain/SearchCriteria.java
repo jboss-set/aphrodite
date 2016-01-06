@@ -45,8 +45,8 @@ public class SearchCriteria {
     private final Integer maxResults;
 
     private SearchCriteria(IssueStatus status, String assignee, String reporter, String product,
-                           String component, Stage stage, Release release, Map<Stream, FlagStatus> streams,
-                           LocalDate lastUpdated, Integer maxResults) {
+            String component, Stage stage, Release release, Map<Stream, FlagStatus> streams,
+            LocalDate lastUpdated, Integer maxResults) {
         this.status = status;
         this.assignee = assignee;
         this.reporter = reporter;
@@ -111,7 +111,7 @@ public class SearchCriteria {
         private String component;
         private Stage stage;
         private Release release;
-        private Map<Stream,FlagStatus> streams;
+        private Map<Stream, FlagStatus> streams;
         private LocalDate startDate;
         private Integer maxResults;
 

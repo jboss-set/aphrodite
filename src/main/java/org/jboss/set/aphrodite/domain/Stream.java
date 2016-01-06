@@ -22,7 +22,6 @@
 
 package org.jboss.set.aphrodite.domain;
 
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,8 +84,10 @@ public class Stream {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         Stream stream = (Stream) o;
 

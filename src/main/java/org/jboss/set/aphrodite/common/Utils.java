@@ -44,7 +44,7 @@ public class Utils {
     public static String decodeURLParam(String parameter) {
         try {
             return URLDecoder.decode(parameter, "UTF-8");
-        } catch (UnsupportedEncodingException e){
+        } catch (UnsupportedEncodingException e) {
             return null;
         }
     }

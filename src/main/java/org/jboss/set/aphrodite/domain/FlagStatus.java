@@ -30,7 +30,7 @@ public enum FlagStatus {
 
     private final String symbol;
 
-    FlagStatus (String symbol) {
+    FlagStatus(String symbol) {
         this.symbol = symbol;
     }
 

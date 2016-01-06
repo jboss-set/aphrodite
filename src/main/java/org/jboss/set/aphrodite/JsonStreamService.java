@@ -148,6 +148,6 @@ public class JsonStreamService implements StreamService {
     private void checkStreamsLoaded() {
         if (!streamsAreLoaded)
             Utils.logWarnMessage(LOG, "Stream data has not yet been loaded, you must call " +
-                "'JsonStreamService.loadStreamData()' before calling StreamService methods.");
+                    "'JsonStreamService.loadStreamData()' before calling StreamService methods.");
     }
 }

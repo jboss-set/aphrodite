@@ -26,7 +26,6 @@ import java.util.Optional;
 
 public class Release {
 
-
     private String version;
     private String milestone;
 
