@@ -78,7 +78,7 @@ public class Aphrodite {
     /**
      * Get an instance of the Aphrodite service. If the service has not yet been initialised, then
      * a new service is created using config. If the service has already been initialised
-     * then an <code>IllegalStateException</code> is thrown.
+     * then an <code>IllegalStateException</code> is thrown if a different <code>AphroditeConfig</code> object is passed.
      *
      * @param config an <code>AphroditeConfig</code> object containing all configuration data.
      * @return instance the singleton instance of the Aphrodite service.
@@ -143,6 +143,14 @@ public class Aphrodite {
                     + " does not exist.");
     }
 
+    /**
+     * Retrieve an issue object associated with the given <code>URL</code>.
+     *
+     * @param url the <code>URL</code> of the issue to be retrieved.
+     * @return the <code>Issue</code> associated with the provided <code>URK</code>.
+     * @throws NotFoundException if the provided <code>URL</code> is not associated with an issue at any of the active issue
+     * trackers.
+     */
     public Issue getIssue(URL url) throws NotFoundException {
         Objects.requireNonNull(url, "url cannot be null");
         checkIssueTrackerExists();
@@ -158,6 +166,14 @@ public class Aphrodite {
         throw new NotFoundException("No issues found which correspond to url.");
     }
 
+    /**
+     * Retrieve all issues associated with the provided URLs. This method simply logs any issue URLs
+     * that cannot be retrieved from a <code>IssueTrackerServer</code>. If the provided URLs
+     * collection is empty, or no issues are found, then an empty List is returned.
+     *
+     * @param urls a collection of issue URLs.
+     * @return a list of <code>Issue</code> objects associated with the provided urls.
+     */
     public List<Issue> getIssues(Collection<URL> urls) {
         Objects.requireNonNull(urls, "the collection of urls cannot be null");
 
@@ -172,6 +188,13 @@ public class Aphrodite {
         return issues;
     }
 
+    /**
+     * Return all issues, across all Issue Trackers, which match the passed <code>SearchCriteria</code>.
+     *
+     * @param searchCriteria all set fields will be search for.
+     * @return a list of all <code>Issue</code> objects which match the specified searchCriteria,
+     *         or an empty list if no issues match the searched criteria.
+     */
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
         Objects.requireNonNull(searchCriteria, "searchCriteria cannot be null");
         checkIssueTrackerExists();
@@ -181,6 +204,13 @@ public class Aphrodite {
         return issues;
     }
 
+    /**
+     * Return all issues which match the provided filter.
+     *
+     * @param filterUrl the url of the issue tracker filtered to be applied.
+     * @return a list of all <code>Issue</code> objects which are returned by the provided filter.
+     * @throws NotFoundException if the filterURL is not associated with any filters at any of the Issue Trackers.
+     */
     public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
         Objects.requireNonNull(filterUrl, "filterUrl cannot be null");
         checkIssueTrackerExists();
@@ -197,6 +227,18 @@ public class Aphrodite {
         throw new NotFoundException("No filter found which correspond to url.");
     }
 
+    /**
+     * Update a specific <code>Issue</code> at the remote issue tracker service.
+     *
+     * Note, this does not update issue comments or an issues description.
+     * To add a new comment, use {@link #addCommentToIssue(Issue, Comment)}
+     *
+     * @param issue the issue to be updated at the associated <code>IssueTrackerService</code>
+     * @return true if the issue was successfully updated, false otherwise.
+     * @throws NotFoundException if the provided <code>Issue</code> cannot be found at the IssueTracker.
+     * @throws AphroditeException if the user credentials supplied for this issue track do not have
+     *                               permission to update this issue, or a field within this issue.
+     */
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
         Objects.requireNonNull(issue, "issue cannot be null");
         checkIssueTrackerExists();
@@ -212,6 +254,13 @@ public class Aphrodite {
         throw new NotFoundException("No issues found which correspond to url.");
     }
 
+    /**
+     * Adds a new comment to the specified issue.
+     *
+     * @param issue the issue to add a new comment to.
+     * @param comment the comment to be added to the issue.
+     * @return true if the comment was successfully added to the issue, false otherwise.
+     */
     public boolean addCommentToIssue(Issue issue, Comment comment) {
         Objects.requireNonNull(issue, "issue cannot be null");
         Objects.requireNonNull(comment, "comment cannot be null");
@@ -229,6 +278,13 @@ public class Aphrodite {
         throw new IllegalStateException("Unable to add comment to issue: " + issue.getURL());
     }
 
+    /**
+     * Adds the <code>Comment</code> to the associated <code>Issue</code> object for all Issue/Comment
+     * pairs in the <code>Map</code>. Null comments are ignored.
+     *
+     * @param commentMap the map containing all Issues that are to be updated and the associated comments.
+     * @return true if all comments are successfully added to their associated Issue, otherwise false.
+     */
     public boolean addCommentToIssue(Map<Issue, Comment> commentMap) {
         checkIssueTrackerExists();
         Objects.requireNonNull(commentMap, "commentMap cannot be null");
@@ -241,6 +297,13 @@ public class Aphrodite {
         return isSuccess;
     }
 
+    /**
+     * Adds the <code>Comment</code> to all of the provided <code>Issue</code> objects.
+     *
+     * @param issues a collection of all issues that the comment should be added to.
+     * @param comment the comment to be added to all issues.
+     * @return true if the comment is successfully added to all issues.
+     */
     public boolean addCommentToIssue(Collection<Issue> issues, Comment comment) {
         checkIssueTrackerExists();
         Objects.requireNonNull(issues, "issues collection cannot be null");
@@ -254,6 +317,14 @@ public class Aphrodite {
         return isSuccess;
     }
 
+    /**
+     * Retrieve all Issues associated with the provided patch object.
+     * Implementations of this method assume that the urls of the related issues are present in the
+     * patch's description field.
+     *
+     * @param patch the <code>Patch</code> object whoms associated Issues should be returned.
+     * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
+     */
     public List<Issue> getIssuesAssociatedWith(Patch patch) {
         checkIssueTrackerExists();
         Objects.requireNonNull(patch, "patch cannot be null");
@@ -264,6 +335,13 @@ public class Aphrodite {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get the repository located at the provided <code>URL</code>.
+     *
+     * @param url the <code>URL</code> of the repository to be retrieved.
+     * @return the <code>Repository</code> object.
+     * @throws NotFoundException if a <code>Repository</code> cannot be found at the provided base url.
+     */
     public Repository getRepository(URL url) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(url, "url cannot be null");
@@ -279,7 +357,13 @@ public class Aphrodite {
         throw new NotFoundException("No repositories found which correspond to url.");
     }
 
-    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+    /**
+     * Retrieve all Patches associated with the provided <code>Issue</code> object
+     *
+     * @param issue the <code>Issue</code> object whose associated Patches should be returned.
+     * @return a list of all <code>Patch</code> objects, or an empty list if no patches can be found.
+     */
+    public List<Patch> getPatchesAssociatedWith(Issue issue) {
         checkRepositoryServiceExists();
         Objects.requireNonNull(issue, "issue cannot be null");
 
@@ -295,6 +379,14 @@ public class Aphrodite {
         return patches;
     }
 
+    /**
+     * Retrieve all Patches associated with the provided <code>Repository</code> object, which have a
+     * status that matches the provided <code>PatchStatus</code> object.
+     *
+     * @param repository the <code>Repository</code> object whose associated Patches should be returned.
+     * @param status the <code>PatchStatus</code> which the returned <code>Patch</code> objects must have.
+     * @return a list of all matching <code>Patch</code> objects, or an empty list if no patches can be found.
+     */
     public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) {
         checkRepositoryServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
@@ -311,6 +403,13 @@ public class Aphrodite {
         return new ArrayList<>();
     }
 
+    /**
+     * Get the <code>Patch</code> located at the provided <code>URL</code>.
+     *
+     * @param url the <code>URL</code> of the patch to be retrieved.
+     * @return the <code>Patch</code> object.
+     * @throws NotFoundException if a <code>Patch</code> cannot be found at the provided base url.
+     */
     public Patch getPatch(URL url) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(url, "url cannot be null");
@@ -326,6 +425,14 @@ public class Aphrodite {
         throw new NotFoundException("No patch found which corresponds to patch.");
     }
 
+    /**
+     * Add a <code>Comment</code> to the specified <code>Patch</code> object, and propagate the changes
+     * to the remote repository.
+     *
+     * @param patch the <code>Patch</code> on which the comment will be made.
+     * @param comment the new <code>Comment</code>.
+     * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
+     */
     public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(patch, "patch cannot be null");
@@ -343,6 +450,14 @@ public class Aphrodite {
         throw new NotFoundException("No patch found which corresponds to patch.");
     }
 
+    /**
+     * Attach a label to the specified patch.  Note the label must already exist at remote repository,
+     * otherwise it will not be applied. If the specified label is already
+     * associated with the provided patch then no further action is taken.
+     *
+     * @param patch the <code>Patch</code> to which the label will be applied.
+     * @param labelName the name of the label to be applied.
+     */
     public void addLabelToPatch(Patch patch, String labelName) {
         checkRepositoryServiceExists();
         Objects.requireNonNull(patch, "patch cannot be null");
