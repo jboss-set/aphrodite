@@ -113,4 +113,36 @@ public class AphroditeConfig {
 
         return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((issueTrackerConfigs == null) ? 0 : issueTrackerConfigs.hashCode());
+        result = prime * result + ((repositoryConfigs == null) ? 0 : repositoryConfigs.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AphroditeConfig other = (AphroditeConfig) obj;
+        if (issueTrackerConfigs == null) {
+            if (other.issueTrackerConfigs != null)
+                return false;
+        } else if (!issueTrackerConfigs.equals(other.issueTrackerConfigs))
+            return false;
+        if (repositoryConfigs == null) {
+            if (other.repositoryConfigs != null)
+                return false;
+        } else if (!repositoryConfigs.equals(other.repositoryConfigs))
+            return false;
+        return true;
+    }
+
 }

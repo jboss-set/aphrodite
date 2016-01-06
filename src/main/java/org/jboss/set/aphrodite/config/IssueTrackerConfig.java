@@ -58,4 +58,30 @@ public class IssueTrackerConfig extends AbstractServiceConfig {
                 ", defaultIssueLimit='" + defaultIssueLimit + '\'' +
                 '}';
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + defaultIssueLimit;
+        result = prime * result + ((tracker == null) ? 0 : tracker.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        IssueTrackerConfig other = (IssueTrackerConfig) obj;
+        if (defaultIssueLimit != other.defaultIssueLimit)
+            return false;
+        if (tracker != other.tracker)
+            return false;
+        return true;
+    }
+
 }
