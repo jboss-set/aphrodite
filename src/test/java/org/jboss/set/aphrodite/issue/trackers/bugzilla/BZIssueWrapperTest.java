@@ -102,14 +102,6 @@ public class BZIssueWrapperTest {
     }
 
     @Test
-    public void nullURLBZROIssueTest() throws MalformedURLException {
-        expectedException.expect(MalformedURLException.class);
-
-        Issue result = wrapper.bugzillaBugToIssue(bz01, null);
-        assertNull(result);
-    }
-
-    @Test
     public void validIssueToBZTest() {
         Map<String, Object> result = wrapper.issueToBugzillaBug(issue01, loginMap);
         result.put(BugzillaFields.CREATION_TIME, getCreationDate());

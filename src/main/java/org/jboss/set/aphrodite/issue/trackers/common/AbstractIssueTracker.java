@@ -151,4 +151,12 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
                 .filter(i -> i != null && issueExistsAtHost(i.getURL()))
                 .collect(Collectors.toList());
     }
+
+    protected Collection<URL> filterUrlsByHost(Collection<URL> urls) {
+        Objects.requireNonNull(urls);
+
+        return urls.stream()
+                .filter(url -> url != null && issueExistsAtHost(url))
+                .collect(Collectors.toList());
+    }
 }

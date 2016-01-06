@@ -129,15 +129,39 @@ public class BugzillaClient {
         if (bugs.length == 1) {
             @SuppressWarnings("unchecked")
             Map<String, Object> results = (Map<String, Object>) bugs[0];
-            try {
-                return WRAPPER.bugzillaBugToIssue(results, baseURL);
-            } catch (MalformedURLException e) {
-                Utils.logException(LOG, "Unable to create Issue Object.", e);
-            }
+            return WRAPPER.bugzillaBugToIssue(results, baseURL);
         } else {
             Utils.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
         }
         throw new NotFoundException();
+    }
+
+    public List<Issue> getIssues(Collection<URL> urls) {
+        List<String> ids = new ArrayList<>();
+        for (URL url : urls) {
+            try {
+                ids.add(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, url));
+            } catch (NotFoundException e) {
+                if (LOG.isWarnEnabled())
+                    LOG.warn("Unable to extract trackerId from: " + url);
+            }
+        }
+
+        Map<String, Object> params = new HashMap<>(loginDetails);
+        params.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
+        params.put(ISSUE_IDS, ids.toArray());
+        params.put(RESULT_PERMISSIVE_SEARCH, true);
+
+        Map<String, ?> resultMap = executeRequest(XMLRPC.RPC_STRUCT, METHOD_GET_BUG, params);
+        Object[] bugs = (Object[]) resultMap.get(RESULT_BUGS);
+
+        List<Issue> issues = new ArrayList<>();
+        for (Object bugObject : bugs) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> bug = (Map<String, Object>) bugObject;
+            issues.add(WRAPPER.bugzillaBugToIssue(bug, baseURL));
+        }
+        return issues;
     }
 
     public Issue getIssueWithComments(URL url) throws NotFoundException {
@@ -280,12 +304,8 @@ public class BugzillaClient {
     private Map<String, Issue> fetchAllIssues(final Object[] bugs) {
         Map<String, Issue> issues = new HashMap<>();
         for (Map<String, Object> struct : XMLRPC.iterable(XMLRPC.RPC_STRUCT, bugs)) {
-            try {
-                Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURL);
-                issues.put(issue.getTrackerId().get(), issue);
-            } catch (MalformedURLException e) {
-                Utils.logException(LOG, "Unable to create Issue Object.", e);
-            }
+            Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURL);
+            issues.put(issue.getTrackerId().get(), issue);
         }
         return issues;
     }

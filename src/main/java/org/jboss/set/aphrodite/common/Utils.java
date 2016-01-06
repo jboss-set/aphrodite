@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -73,6 +74,14 @@ public class Utils {
         String path = url.getPath();
         String[] components = path.split("/");
         return components[components.length - 1];
+    }
+
+    public static URL createURL(String path) {
+        try {
+            return new URL(path);
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public static void logWarnMessage(Log log, String message) {

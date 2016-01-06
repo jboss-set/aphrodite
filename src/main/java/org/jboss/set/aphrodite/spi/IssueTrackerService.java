@@ -77,6 +77,16 @@ public interface IssueTrackerService {
     Issue getIssue(URL url) throws NotFoundException;
 
     /**
+     * Retrieve all issues associated with the provided URLs. This method simply logs any issue URLs
+     * that cannot be retrieved from this <code>IssueTrackerServer</code>. If the provided URLs
+     * collection is empty, or no issues are found, then an empty List is returned.
+     *
+     * @param urls a collection of issue URLs.
+     * @return a list of <code>Issue</code> objects associated with the provided urls.
+     */
+    List<Issue> getIssues(Collection<URL> urls);
+
+    /**
      * Return all issues which match the passed <code>SearchCriteria</code>.
      *
      * @param searchCriteria all set fields will be search for.

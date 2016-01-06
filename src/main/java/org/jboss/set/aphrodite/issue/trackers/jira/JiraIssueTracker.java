@@ -85,6 +85,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     private final int MAX_THREADS = 10; // TODO expose this in the tracker's configuration
     private final IssueWrapper WRAPPER = new IssueWrapper();
+    private final JiraQueryBuilder queryBuilder = new JiraQueryBuilder();
     private JiraClient jiraClient;
 
     public JiraIssueTracker() {
@@ -133,8 +134,27 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
+    public List<Issue> getIssues(Collection<URL> urls) {
+        urls = filterUrlsByHost(urls);
+        if (urls.isEmpty())
+            return new ArrayList<>();
+
+        List<String> ids = new ArrayList<>();
+        for (URL url : urls) {
+            try {
+                ids.add(getIssueKey(url));
+            } catch (NotFoundException e) {
+                if (LOG.isWarnEnabled())
+                    LOG.warn("Unable to extract trackerId from: " + url);
+            }
+        }
+        String jql = queryBuilder.getMultipleIssueJQL(ids);
+        return searchIssues(jql, ids.size());
+    }
+
+    @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
-        String jql = new JiraQueryBuilder(searchCriteria).getJQLString();
+        String jql = queryBuilder.getSearchJQL(searchCriteria);
         int maxResults = searchCriteria.getMaxResults().orElse(config.getDefaultIssueLimit());
         return searchIssues(jql, maxResults);
     }

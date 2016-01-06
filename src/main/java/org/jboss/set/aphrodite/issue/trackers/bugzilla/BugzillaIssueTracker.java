@@ -35,6 +35,7 @@ import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,15 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     public Issue getIssue(URL url) throws NotFoundException {
         checkHost(url);
         return bzClient.getIssueWithComments(url);
+    }
+
+    @Override
+    public List<Issue> getIssues(Collection<URL> urls) {
+        urls = filterUrlsByHost(urls);
+        if (urls.isEmpty())
+            return new ArrayList<>();
+
+        return bzClient.getIssues(urls);
     }
 
     @Override

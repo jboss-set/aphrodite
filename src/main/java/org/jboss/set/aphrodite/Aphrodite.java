@@ -158,6 +158,20 @@ public class Aphrodite {
         throw new NotFoundException("No issues found which correspond to url.");
     }
 
+    public List<Issue> getIssues(Collection<URL> urls) {
+        Objects.requireNonNull(urls, "the collection of urls cannot be null");
+
+        List<Issue> issues = new ArrayList<>();
+        if (urls.isEmpty())
+            return issues;
+
+        issues = issueTrackers.stream()
+                .map(tracker -> tracker.getIssues(urls))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        return issues;
+    }
+
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
         Objects.requireNonNull(searchCriteria, "searchCriteria cannot be null");
         checkIssueTrackerExists();

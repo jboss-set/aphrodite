@@ -26,6 +26,7 @@ import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.CUSTOM_FIELD_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
@@ -37,32 +38,22 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraStat
  */
 class JiraQueryBuilder {
 
-    private final SearchCriteria criteria;
-    private String jql;
-
-    JiraQueryBuilder(SearchCriteria criteria) {
-        this.criteria = criteria;
-    }
-
     // TODO add streams query support when implemented in JIRA
-    String getJQLString() {
-        if (jql != null)
-            return jql;
-
+    String getSearchJQL(SearchCriteria criteria) {
         StringBuilder sb = new StringBuilder();
-        criteria.getStatus().ifPresent(status -> addCriteriaToJQL("status = ", getJiraStatus(status), sb));
-        criteria.getAssignee().ifPresent(assignee -> addCriteriaToJQL("assignee = ", assignee, sb));
-        criteria.getReporter().ifPresent(reporter -> addCriteriaToJQL("reporter = ", reporter, sb));
-        criteria.getComponent().ifPresent(component -> addCriteriaToJQL("component = ", component, sb));
-        criteria.getProduct().ifPresent(product -> addCriteriaToJQL("project = ", product, sb));
+        criteria.getStatus().ifPresent(status -> addCriteriaToJQL("status = ", getJiraStatus(status), " AND ", sb));
+        criteria.getAssignee().ifPresent(assignee -> addCriteriaToJQL("assignee = ", assignee, " AND ", sb));
+        criteria.getReporter().ifPresent(reporter -> addCriteriaToJQL("reporter = ", reporter, " AND ", sb));
+        criteria.getComponent().ifPresent(component -> addCriteriaToJQL("component = ", component, " AND ", sb));
+        criteria.getProduct().ifPresent(product -> addCriteriaToJQL("project = ", product, " AND ", sb));
         criteria.getLastUpdated().ifPresent(date -> {
             String formattedDate = date.atStartOfDay().format((DateTimeFormatter.ISO_LOCAL_DATE));
-            addCriteriaToJQL("updated >= ", formattedDate, sb);
+            addCriteriaToJQL("updated >= ", formattedDate, " AND ", sb);
         });
 
         criteria.getRelease().ifPresent(release -> {
-            addCriteriaToJQL("fixVersion = ", release.getVersion().orElse(null), sb);
-            addCriteriaToJQL(getJQLField(TARGET_RELEASE) + " = ", release.getMilestone().orElse(null), sb);
+            addCriteriaToJQL("fixVersion = ", release.getVersion().orElse(null), " AND ", sb);
+            addCriteriaToJQL(getJQLField(TARGET_RELEASE) + " = ", release.getMilestone().orElse(null), " AND ", sb);
         });
 
         criteria.getStage().ifPresent(
@@ -71,18 +62,23 @@ class JiraQueryBuilder {
                         .filter(entry -> entry.getValue() != FlagStatus.NO_SET)
                         .forEach(entry ->
                                 addCriteriaToJQL(CUSTOM_FIELD_MAP.get(entry.getKey().toString()) + " = ",
-                                        entry.getValue().getSymbol(), sb)));
+                                        entry.getValue().getSymbol(), " AND ", sb)));
 
-        jql = sb.toString();
-        return jql;
+        return sb.toString();
     }
 
-    private void addCriteriaToJQL(String criteria, Object value, StringBuilder sb) {
+    String getMultipleIssueJQL(List<String> ids) {
+        StringBuilder sb = new StringBuilder();
+        ids.forEach(id -> addCriteriaToJQL("id = ", id, " OR ", sb));
+        return sb.toString();
+    }
+
+    private void addCriteriaToJQL(String criteria, Object value, String connector, StringBuilder sb) {
         if (criteria == null || value == null)
             return;
 
-        if (sb.length() != 0)
-            sb.append(" AND ");
+        if (connector != null && sb.length() != 0)
+            sb.append(connector);
 
         sb.append(criteria);
         sb.append("'");

@@ -34,7 +34,6 @@ import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -53,9 +52,9 @@ class IssueWrapper {
 
     private static final Log LOG = LogFactory.getLog(BugzillaIssueTracker.class);
 
-    Issue bugzillaBugToIssue(Map<String, Object> bug, URL baseURL) throws MalformedURLException {
+    Issue bugzillaBugToIssue(Map<String, Object> bug, URL baseURL) {
         Integer id = (Integer) bug.get(ID);
-        URL url = new URL(baseURL + ID_QUERY + id);
+        URL url = Utils.createURL(baseURL + ID_QUERY + id);
         Issue issue = new Issue(url);
         issue.setTrackerId(id.toString());
         issue.setAssignee((String) bug.get(ASSIGNEE));
@@ -151,11 +150,11 @@ class IssueWrapper {
         params.put(flag, map);
     }
 
-    private List<URL> getListOfURlsFromIds(Map<String, Object> bug, URL baseURL, String field) throws MalformedURLException {
+    private List<URL> getListOfURlsFromIds(Map<String, Object> bug, URL baseURL, String field) {
         List<URL> list = new ArrayList<>();
         Object[] ids = (Object[]) bug.get(field);
         for (Object id : ids)
-            list.add(new URL(baseURL + BugzillaFields.ID_QUERY + id));
+            list.add(Utils.createURL(baseURL + BugzillaFields.ID_QUERY + id));
         return list;
     }
 
