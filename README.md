@@ -67,3 +67,7 @@ patches = aphrodite.getPatchesByStatus(repository, PatchStatus.OPEN);
 // Add a comment to a patch
 aphrodite.addCommentToPatch(patch, "Example Comment");
 ```
+
+# Contributing
+------------
+Contributions welcome, but make sure your code passes checkstyle and respects the [formatting style](https://github.com/jboss-set/aphrodite/blob/master/ide-configs/eclipse/formatter.xml) before submitting a PR.  Furthermore, all new files must contain the JBOSS copyright notice, templates for different IDEs can be found [here](https://github.com/jboss-set/aphrodite/tree/master/ide-configs).
