@@ -98,9 +98,7 @@ class IssueWrapper {
         issue.setSummary(jiraIssue.getSummary());
         issue.setDescription(jiraIssue.getDescription());
         issue.setStatus(getAphroditeStatus(jiraIssue.getStatus().getName()));
-
-        if (jiraIssue.getTimeEstimate() > 0 || jiraIssue.getTimeSpent() > 0)
-            issue.setEstimation(new IssueEstimation(jiraIssue.getTimeEstimate(), jiraIssue.getTimeSpent()));
+        issue.setEstimation(new IssueEstimation(jiraIssue.getTimeEstimate(), jiraIssue.getTimeSpent()));
 
         // TODO implement streams when it is in JIRA
         setIssueProject(issue, jiraIssue);
