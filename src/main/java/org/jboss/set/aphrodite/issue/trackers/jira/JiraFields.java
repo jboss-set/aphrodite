@@ -81,6 +81,7 @@ class JiraFields {
         IssueStatus issueStatus = STATUS_MAP.get(status);
         if (issueStatus == null) {
             switch (status) {
+                case "new":
                 case "reopened":
                     return IssueStatus.NEW;
                 case "qa in progress":
