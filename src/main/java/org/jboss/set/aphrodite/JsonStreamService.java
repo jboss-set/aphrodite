@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -150,4 +151,26 @@ public class JsonStreamService implements StreamService {
             Utils.logWarnMessage(LOG, "Stream data has not yet been loaded, you must call " +
                     "'JsonStreamService.loadStreamData()' before calling StreamService methods.");
     }
+
+	@Override
+	public List<URL> findAllRepositories() {
+		List<URL> repositories = new ArrayList<URL>();
+
+		List<Stream> streams = getStreams();
+		for (Stream stream : streams) {
+			repositories.addAll(findAllRepositoriesInStream(stream.getName()).stream()
+					.filter(e -> !repositories.contains(e))
+					.collect(Collectors.toList()));
+		}
+
+		return repositories;
+	}
+
+	@Override
+	public List<URL> findAllRepositoriesInStream(String streamName) {
+		return getStream(streamName).getAllComponents().stream()
+				.map((e) -> e.getRepository().getURL())
+				.collect(Collectors.<URL> toList());
+	}
+	
 }

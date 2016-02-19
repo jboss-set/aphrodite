@@ -109,6 +109,9 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         } catch (RestException e) {
             Utils.logException(LOG, "Authentication failed for IssueTrackerService: " + this.getClass().getName(), e);
             return false;
+        } catch (Exception e) {
+            Utils.logException(LOG, e);
+            return false;
         }
         return true;
     }
