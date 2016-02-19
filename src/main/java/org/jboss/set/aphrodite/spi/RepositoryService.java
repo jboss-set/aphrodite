@@ -22,15 +22,15 @@
 
 package org.jboss.set.aphrodite.spi;
 
+import java.net.URL;
+import java.util.List;
+
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
-
-import java.net.URL;
-import java.util.List;
 
 public interface RepositoryService {
 
@@ -113,4 +113,13 @@ public interface RepositoryService {
      * @throws NotFoundException if the specified labelName has not been defined at the remote repository.
      */
     void addLabelToPatch(Patch patch, String labelName) throws NotFoundException;
+    
+    /**
+     * Find all the patches related to the given patch. 
+     * 
+     * @param patch the <code>Patch</code> on which patches related are being searched
+     * @return list of patches related. 
+     * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
+     */
+    List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException;
 }
