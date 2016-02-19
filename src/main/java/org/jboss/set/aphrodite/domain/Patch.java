@@ -31,7 +31,7 @@ public class Patch {
     private final Codebase codebase;
     private PatchStatus status;
     private String description;
-	private Repository repository;
+    private Repository repository;
 
     public Patch(String id, URL url, Repository repository, Codebase codebase, PatchStatus status, String description) {
         this.id = id;
@@ -74,14 +74,14 @@ public class Patch {
         this.description = description;
     }
 
-	public Repository getRepository() {
-		return repository;
-	}
-	
-	public void setRepository(Repository repository) {
-		this.repository = repository;
-	}
-    
+    public Repository getRepository() {
+        return repository;
+    }
+
+    public void setRepository(Repository repository) {
+        this.repository = repository;
+    }
+
     @Override
     public String toString() {
         return "Patch{" +

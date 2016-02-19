@@ -214,62 +214,60 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         throw new NotFoundException("No label exists with the name '" + labelName +
                 "' at repository '" + repositoryId + "'");
     }
-    
-	private static final Pattern RELATED_PR_PATTERN = Pattern.compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern ABBREVIATED_RELATED_PR_PATTERN = Pattern.compile("([a-zA-Z_0-9-//]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO = Pattern.compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
 
-	@Override
-	public List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException {
-		try {
-			List<URL> urls = getPRFromDescription(patch.getURL(), patch.getDescription());
-			List<Patch> related = new ArrayList<Patch>();
-			for(URL url : urls) {
-				try {
-					related.add(getPatch(url));
-				} catch (NotFoundException e) {
-					Utils.logException(LOG, url + " in patch related " + patch.getURL() + " is not a valid url", e);
-				}
-			}
-			return related;
-		} catch(MalformedURLException | URISyntaxException e) {
-			Utils.logException(LOG, "something went wrong while trying to get related patches to " + patch.getURL(), e);
-			return Collections.emptyList();
-		}
-	}
-	
-	private List<URL> getPRFromDescription(URL url, String content) throws MalformedURLException, URISyntaxException {
-		String []paths = url.getPath().split("/");
-		Matcher matcher = RELATED_PR_PATTERN.matcher(content);
-		List<URL> relatedPullRequests = new ArrayList<URL>();
-		while(matcher.find()) {
-			if (matcher.groupCount() == 3) {
-				URL relatedPullRequest = new URI("https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pulls/" + matcher.group(3) ).toURL();
-				relatedPullRequests.add(relatedPullRequest);
-			}
-		}
-		Matcher abbreviatedMatcher = ABBREVIATED_RELATED_PR_PATTERN.matcher(content);
-		while (abbreviatedMatcher.find()) {
-			String match = abbreviatedMatcher.group();
-			Matcher abbreviatedExternalMatcher = ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO.matcher(match);
-			if (abbreviatedExternalMatcher.find()) {
+    private static final Pattern RELATED_PR_PATTERN = Pattern.compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ABBREVIATED_RELATED_PR_PATTERN = Pattern.compile("([a-zA-Z_0-9-//]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO = Pattern.compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
 
-				if (abbreviatedExternalMatcher.groupCount() == 3) {
-					URL relatedPullRequest = new URI("https://github.com/" 
-							+ abbreviatedExternalMatcher.group(1) + "/" 
-							+ abbreviatedExternalMatcher.group(2) + "/pulls/" 
-							+ abbreviatedExternalMatcher.group(3) ).toURL();					
-					
-					relatedPullRequests.add(relatedPullRequest);
-					continue;
-				}
-			}
+    @Override
+    public List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException {
+        try {
+            List<URL> urls = getPRFromDescription(patch.getURL(), patch.getDescription());
+            List<Patch> related = new ArrayList<Patch>();
+            for(URL url : urls) {
+                try {
+                    related.add(getPatch(url));
+                } catch (NotFoundException e) {
+                    Utils.logException(LOG, url + " in patch related " + patch.getURL() + " is not a valid url", e);
+                }
+            }
+            return related;
+        } catch(MalformedURLException | URISyntaxException e) {
+            Utils.logException(LOG, "something went wrong while trying to get related patches to " + patch.getURL(), e);
+            return Collections.emptyList();
+        }
+    }
 
-			if (abbreviatedMatcher.groupCount() == 2) {
-				URL relatedPullRequest = new URI("https://github.com/" + paths[1] + "/" + paths[2] + "/" + "/pulls/" + abbreviatedMatcher.group(2)).toURL();
-				relatedPullRequests.add(relatedPullRequest);
-			}
-		}
-		return relatedPullRequests;
-	}
+    private List<URL> getPRFromDescription(URL url, String content) throws MalformedURLException, URISyntaxException {
+        String []paths = url.getPath().split("/");
+        Matcher matcher = RELATED_PR_PATTERN.matcher(content);
+        List<URL> relatedPullRequests = new ArrayList<URL>();
+        while(matcher.find()) {
+            if (matcher.groupCount() == 3) {
+                URL relatedPullRequest = new URI("https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pulls/" + matcher.group(3) ).toURL();
+                relatedPullRequests.add(relatedPullRequest);
+            }
+        }
+        Matcher abbreviatedMatcher = ABBREVIATED_RELATED_PR_PATTERN.matcher(content);
+        while (abbreviatedMatcher.find()) {
+            String match = abbreviatedMatcher.group();
+            Matcher abbreviatedExternalMatcher = ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO.matcher(match);
+            if (abbreviatedExternalMatcher.find()) {
+                if (abbreviatedExternalMatcher.groupCount() == 3) {
+                    URL relatedPullRequest = new URI("https://github.com/"
+                            + abbreviatedExternalMatcher.group(1) + "/"
+                            + abbreviatedExternalMatcher.group(2) + "/pulls/"
+                            + abbreviatedExternalMatcher.group(3) ).toURL();
+                    relatedPullRequests.add(relatedPullRequest);
+                    continue;
+                }
+            }
+
+            if (abbreviatedMatcher.groupCount() == 2) {
+                URL relatedPullRequest = new URI("https://github.com/" + paths[1] + "/" + paths[2] + "/" + "/pulls/" + abbreviatedMatcher.group(2)).toURL();
+                relatedPullRequests.add(relatedPullRequest);
+            }
+        }
+        return relatedPullRequests;
+    }
 }

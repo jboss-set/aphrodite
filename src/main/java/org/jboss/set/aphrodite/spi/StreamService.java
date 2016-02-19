@@ -4,7 +4,6 @@ import java.net.URL;
 import java.util.List;
 
 import org.jboss.set.aphrodite.domain.Codebase;
-import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Stream;
 
@@ -30,28 +29,28 @@ public interface StreamService {
      * Find all the url repositories stored in all streams
      * @return list of unique url point to the repositories
      */
-	List<URL> findAllRepositories();
+    List<URL> findAllRepositories();
 
-	/**
-	 * Find all the url repositories in the give streams
-	 * @param streamName the name of the <code>Stream</code> to be returned.
-	 * @return
-	 */
-	List<URL> findAllRepositoriesInStream(String streamName);
-	
-	/**
-	 * Find all the streams associated to the given repository and codebase
-	 * @param repository
-	 * @param codebase
-	 * @return a list of named streams 
-	 */
-	List<Stream> getStreamBy(Repository repository, Codebase codebase); 
-	
-	/**
-	 * Get the component name based on the given repository and codebase.
-	 * @param repository
-	 * @param codebase
-	 * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
-	 */
-	String getComponentNameBy(Repository repository, Codebase codebase);
+    /**
+     * Find all the url repositories in the give streams
+     * @param streamName the name of the <code>Stream</code> to be returned.
+     * @return
+     */
+    List<URL> findAllRepositoriesInStream(String streamName);
+
+    /**
+     * Find all the streams associated to the given repository and codebase
+     * @param repository
+     * @param codebase
+     * @return a list of named streams
+     */
+    List<Stream> findStreamsBy(Repository repository, Codebase codebase);
+
+    /**
+     * Get the component name based on the given repository and codebase.
+     * @param repository
+     * @param codebase
+     * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
+     */
+    String findComponentNameBy(Repository repository, Codebase codebase);
 }

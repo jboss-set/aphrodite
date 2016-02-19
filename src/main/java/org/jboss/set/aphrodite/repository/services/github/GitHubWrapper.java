@@ -64,11 +64,11 @@ class GitHubWrapper {
             String title = pullRequest.getTitle().replaceFirst("\\u2026", "");
             String body = pullRequest.getBody().replaceFirst("\\u2026", "");
             String description = title + body;
-            
+
             String urlString = url.toString();
             int idx = urlString.indexOf("pull");
             if(idx >= 0) {
-            	urlString = urlString.substring(0, idx);
+                urlString = urlString.substring(0, idx);
             }
             Repository repo = new Repository(URI.create(urlString).toURL());
             return new Patch(id, url, repo, codebase, status, description);

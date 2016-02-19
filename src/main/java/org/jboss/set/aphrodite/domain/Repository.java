@@ -46,13 +46,21 @@ public class Repository {
 
     @Override
     public boolean equals(Object obj) {
-    	if(obj instanceof Repository) {
-    		Repository that = (Repository) obj;
-    		return this.url.toString().equals(that.url.toString());
-    	}
-    	return false;
+        if(obj instanceof Repository) {
+            Repository that = (Repository) obj;
+            return this.url.toString().equals(that.url.toString());
+        }
+        return false;
     }
-    
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        return result;
+    }
+
     @Override
     public String toString() {
         return "Repository{" +

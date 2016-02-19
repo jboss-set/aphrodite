@@ -474,10 +474,10 @@ public class Aphrodite {
         }
     }
 
-	public List<Patch> findPatchesRelatedTo(Patch patch) {
+    public List<Patch> findPatchesRelatedTo(Patch patch) {
         checkRepositoryServiceExists();
         Objects.requireNonNull(patch, "patch cannot be null");
-        
+
         List<Patch> patches = new ArrayList<Patch>();
         for (RepositoryService repositoryService : repositories) {
             try {
@@ -488,8 +488,8 @@ public class Aphrodite {
             }
         }
         return patches;
-	}
-	
+    }
+
     private void checkIssueTrackerExists() {
         if (issueTrackers.isEmpty())
             throw new IllegalStateException("Unable to retrieve issues as a valid " +

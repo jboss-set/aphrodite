@@ -113,12 +113,12 @@ public interface RepositoryService {
      * @throws NotFoundException if the specified labelName has not been defined at the remote repository.
      */
     void addLabelToPatch(Patch patch, String labelName) throws NotFoundException;
-    
+
     /**
-     * Find all the patches related to the given patch. 
-     * 
+     * Find all the patches related to the given patch.
+     *
      * @param patch the <code>Patch</code> on which patches related are being searched
-     * @return list of patches related. 
+     * @return list of patches related.
      * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
      */
     List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException;
