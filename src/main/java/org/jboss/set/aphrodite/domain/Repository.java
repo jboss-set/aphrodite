@@ -48,7 +48,7 @@ public class Repository {
     public boolean equals(Object obj) {
     	if(obj instanceof Repository) {
     		Repository that = (Repository) obj;
-    		return this.url.equals(that.url);
+    		return this.url.toString().equals(that.url.toString());
     	}
     	return false;
     }

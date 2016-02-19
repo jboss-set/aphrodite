@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.List;
 
 import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Stream;
 
@@ -39,9 +40,18 @@ public interface StreamService {
 	List<URL> findAllRepositoriesInStream(String streamName);
 	
 	/**
-	 * Find all the streams associated to the given URL repository and codebase
-	 * @param patch
-	 * @return
+	 * Find all the streams associated to the given repository and codebase
+	 * @param repository
+	 * @param codebase
+	 * @return a list of named streams 
 	 */
-	List<Stream> getStreamBy(Repository repository, Codebase branchName); 
+	List<Stream> getStreamBy(Repository repository, Codebase codebase); 
+	
+	/**
+	 * Get the component name based on the given repository and codebase.
+	 * @param repository
+	 * @param codebase
+	 * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
+	 */
+	String getComponentNameBy(Repository repository, Codebase codebase);
 }

@@ -25,6 +25,8 @@ package org.jboss.set.aphrodite;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +46,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
@@ -175,16 +178,32 @@ public class JsonStreamService implements StreamService {
 
 	@Override
 	public List<Stream> getStreamBy(Repository repository, Codebase codebase) {
-		List<Stream> streams = new ArrayList<>();
+		List<Stream> streams = new ArrayList<Stream>();
 		for(Stream stream : getStreams()) {
 			for(StreamComponent sc : stream.getAllComponents()) {
 				if(sc.getRepository().equals(repository) && sc.getCodebase().equals(codebase)) {
-					streams.add(stream);
+					if(!streams.contains(stream)) {
+						streams.add(stream);
+					}
 				}
 			}
 		}
 		
+		
 		return streams;
 	}
 	
+	@Override
+	public String getComponentNameBy(Repository repository, Codebase codebase) {
+		
+		for(Stream stream : getStreams()) {
+			for(StreamComponent sc : stream.getAllComponents()) {
+				if(sc.getRepository().equals(repository) && codebase.equals(sc.getCodebase())) {
+					return sc.getName();
+				}
+			}
+		}
+		
+		return repository.getURL().toString();
+	}
 }
