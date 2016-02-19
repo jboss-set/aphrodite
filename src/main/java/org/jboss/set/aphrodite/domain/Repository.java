@@ -45,6 +45,15 @@ public class Repository {
     }
 
     @Override
+    public boolean equals(Object obj) {
+    	if(obj instanceof Repository) {
+    		Repository that = (Repository) obj;
+    		return this.url.equals(that.url);
+    	}
+    	return false;
+    }
+    
+    @Override
     public String toString() {
         return "Repository{" +
                 "url=" + url +

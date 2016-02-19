@@ -22,16 +22,6 @@
 
 package org.jboss.set.aphrodite;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.domain.Codebase;
-import org.jboss.set.aphrodite.domain.Repository;
-import org.jboss.set.aphrodite.domain.Stream;
-import org.jboss.set.aphrodite.domain.StreamComponent;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-import org.jboss.set.aphrodite.spi.StreamService;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -49,6 +39,16 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.domain.Stream;
+import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.jboss.set.aphrodite.spi.StreamService;
 
 /**
  * A stream service which reads stream date from the specified JSON file.  This implementation
@@ -171,6 +171,20 @@ public class JsonStreamService implements StreamService {
 		return getStream(streamName).getAllComponents().stream()
 				.map((e) -> e.getRepository().getURL())
 				.collect(Collectors.<URL> toList());
+	}
+
+	@Override
+	public List<Stream> getStreamBy(Repository repository, Codebase codebase) {
+		List<Stream> streams = new ArrayList<>();
+		for(Stream stream : getStreams()) {
+			for(StreamComponent sc : stream.getAllComponents()) {
+				if(sc.getRepository().equals(repository) && sc.getCodebase().equals(codebase)) {
+					streams.add(stream);
+				}
+			}
+		}
+		
+		return streams;
 	}
 	
 }

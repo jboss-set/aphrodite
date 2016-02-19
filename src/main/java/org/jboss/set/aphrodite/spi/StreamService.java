@@ -3,6 +3,8 @@ package org.jboss.set.aphrodite.spi;
 import java.net.URL;
 import java.util.List;
 
+import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Stream;
 
 public interface StreamService {
@@ -35,4 +37,11 @@ public interface StreamService {
 	 * @return
 	 */
 	List<URL> findAllRepositoriesInStream(String streamName);
+	
+	/**
+	 * Find all the streams associated to the given URL repository and codebase
+	 * @param patch
+	 * @return
+	 */
+	List<Stream> getStreamBy(Repository repository, Codebase branchName); 
 }
