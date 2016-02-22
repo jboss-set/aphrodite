@@ -22,16 +22,6 @@
 
 package org.jboss.set.aphrodite;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.domain.Codebase;
-import org.jboss.set.aphrodite.domain.Repository;
-import org.jboss.set.aphrodite.domain.Stream;
-import org.jboss.set.aphrodite.domain.StreamComponent;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-import org.jboss.set.aphrodite.spi.StreamService;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -41,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -48,6 +39,16 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.domain.Stream;
+import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.jboss.set.aphrodite.spi.StreamService;
 
 /**
  * A stream service which reads stream date from the specified JSON file.  This implementation
@@ -149,5 +150,56 @@ public class JsonStreamService implements StreamService {
         if (!streamsAreLoaded)
             Utils.logWarnMessage(LOG, "Stream data has not yet been loaded, you must call " +
                     "'JsonStreamService.loadStreamData()' before calling StreamService methods.");
+    }
+
+    @Override
+    public List<URL> findAllRepositories() {
+        List<URL> repositories = new ArrayList<URL>();
+
+        List<Stream> streams = getStreams();
+        for (Stream stream : streams) {
+            repositories.addAll(findAllRepositoriesInStream(stream.getName()).stream()
+                .filter(e -> !repositories.contains(e))
+                .collect(Collectors.toList()));
+        }
+
+        return repositories;
+    }
+
+    @Override
+    public List<URL> findAllRepositoriesInStream(String streamName) {
+        return getStream(streamName).getAllComponents().stream()
+            .map((e) -> e.getRepository().getURL())
+            .collect(Collectors.<URL> toList());
+    }
+
+    @Override
+    public List<Stream> findStreamsBy(Repository repository, Codebase codebase) {
+        List<Stream> streams = new ArrayList<Stream>();
+        for(Stream stream : getStreams()) {
+            for(StreamComponent sc : stream.getAllComponents()) {
+                if(sc.getRepository().equals(repository) && sc.getCodebase().equals(codebase)) {
+                    if(!streams.contains(stream)) {
+                        streams.add(stream);
+                    }
+                }
+            }
+        }
+
+        return streams;
+    }
+
+    @Override
+    public String findComponentNameBy(Repository repository, Codebase codebase) {
+
+        for(Stream stream : getStreams()) {
+            for(StreamComponent sc : stream.getAllComponents()) {
+                if(sc.getRepository().equals(repository) && codebase.equals(sc.getCodebase())) {
+                    return sc.getName();
+                }
+            }
+        }
+
+        return repository.getURL().toString();
     }
 }

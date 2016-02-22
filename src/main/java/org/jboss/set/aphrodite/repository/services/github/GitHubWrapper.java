@@ -30,6 +30,7 @@ import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,7 +65,13 @@ class GitHubWrapper {
             String body = pullRequest.getBody().replaceFirst("\\u2026", "");
             String description = title + body;
 
-            return new Patch(id, url, codebase, status, description);
+            String urlString = url.toString();
+            int idx = urlString.indexOf("pull");
+            if(idx >= 0) {
+                urlString = urlString.substring(0, idx);
+            }
+            Repository repo = new Repository(URI.create(urlString).toURL());
+            return new Patch(id, url, repo, codebase, status, description);
         } catch (MalformedURLException e) {
             return null;
         }

@@ -22,6 +22,20 @@
 
 package org.jboss.set.aphrodite;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ServiceLoader;
+import java.util.stream.Collectors;
+
+import javax.json.Json;
+import javax.json.JsonReader;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
@@ -36,20 +50,6 @@ import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ServiceLoader;
-import java.util.stream.Collectors;
-
-import javax.json.Json;
-import javax.json.JsonReader;
 
 public class Aphrodite {
 
@@ -474,6 +474,22 @@ public class Aphrodite {
         }
     }
 
+    public List<Patch> findPatchesRelatedTo(Patch patch) {
+        checkRepositoryServiceExists();
+        Objects.requireNonNull(patch, "patch cannot be null");
+
+        List<Patch> patches = new ArrayList<Patch>();
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                patches.addAll(repositoryService.findPatchesRelatedTo(patch));
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
+        return patches;
+    }
+
     private void checkIssueTrackerExists() {
         if (issueTrackers.isEmpty())
             throw new IllegalStateException("Unable to retrieve issues as a valid " +
@@ -485,4 +501,6 @@ public class Aphrodite {
             throw new IllegalStateException("Unable to find any repository data as a valid " +
                     RepositoryService.class.getName() + " has not been created.");
     }
+
+
 }

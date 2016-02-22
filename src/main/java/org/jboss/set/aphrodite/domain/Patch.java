@@ -31,17 +31,19 @@ public class Patch {
     private final Codebase codebase;
     private PatchStatus status;
     private String description;
+    private Repository repository;
 
-    public Patch(String id, URL url, Codebase codebase, PatchStatus status, String description) {
+    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchStatus status, String description) {
         this.id = id;
         this.url = url;
         this.codebase = codebase;
         this.status = status;
         this.description = description;
+        this.repository = repository;
     }
 
-    public Patch(String id, URL url, Codebase codebase, PatchStatus status) {
-        this(id, url, codebase, status, null);
+    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchStatus status) {
+        this(id, url, repository, codebase, status, null);
     }
 
     public String getId() {
@@ -72,6 +74,14 @@ public class Patch {
         this.description = description;
     }
 
+    public Repository getRepository() {
+        return repository;
+    }
+
+    public void setRepository(Repository repository) {
+        this.repository = repository;
+    }
+
     @Override
     public String toString() {
         return "Patch{" +
@@ -81,4 +91,5 @@ public class Patch {
                 ", codebase=" + codebase +
                 '}';
     }
+
 }
