@@ -30,20 +30,25 @@ public class Patch {
     private final URL url;
     private final Codebase codebase;
     private PatchStatus status;
+    private String title;
+    private String body;
     private String description;
     private Repository repository;
 
-    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchStatus status, String description) {
+    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchStatus status, String title, String body) {
         this.id = id;
         this.url = url;
         this.codebase = codebase;
         this.status = status;
-        this.description = description;
+        this.title = title;
+        this.body = body;
+        this.description = body + title;
         this.repository = repository;
     }
 
     public Patch(String id, URL url, Repository repository, Codebase codebase, PatchStatus status) {
-        this(id, url, repository, codebase, status, null);
+        this(id, url, repository, codebase, status, null, null);
+
     }
 
     public String getId() {
@@ -52,6 +57,7 @@ public class Patch {
 
     public URL getURL() {
         return url;
+
     }
 
     public Codebase getCodebase() {
@@ -64,6 +70,23 @@ public class Patch {
 
     public void setStatus(PatchStatus status) {
         this.status = status;
+    }
+
+    public String getTitle() {
+        return title;
+
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 
     public String getDescription() {
@@ -87,6 +110,8 @@ public class Patch {
         return "Patch{" +
                 "url=" + url +
                 ", status=" + status +
+                ", title='" + title + '\'' +
+                ", body='" + body + '\'' +
                 ", description='" + description + '\'' +
                 ", codebase=" + codebase +
                 '}';
