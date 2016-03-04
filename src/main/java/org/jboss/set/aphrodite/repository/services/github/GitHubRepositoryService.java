@@ -222,7 +222,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     @Override
     public List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException {
         try {
-            List<URL> urls = getPRFromDescription(patch.getURL(), patch.getDescription());
+            List<URL> urls = getPRFromDescription(patch.getURL(), patch.getTitle() + patch.getBody());
             List<Patch> related = new ArrayList<Patch>();
             for(URL url : urls) {
                 try {
