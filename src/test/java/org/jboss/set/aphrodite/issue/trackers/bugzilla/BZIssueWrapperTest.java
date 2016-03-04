@@ -41,6 +41,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -182,7 +184,7 @@ public class BZIssueWrapperTest {
         result.setSummary("Test Issue");
         result.setDescription("Test bugzilla");
         result.setStatus(IssueStatus.NEW);
-        result.setComponent("CLI");
+        result.setComponents(Collections.singletonList("CLI"));
         result.setProduct("EAP");
         result.setType(IssueType.BUG);
         result.setRelease(new Release("6.4.4", "---"));
@@ -215,8 +217,7 @@ public class BZIssueWrapperTest {
         // Ignore creation time, as this is not added to map in issueToBugzillaBug()
         assertEquals("bug summary mismatch", expected.get(BugzillaFields.SUMMARY), other.get(BugzillaFields.SUMMARY));
 
-        Object expectedComponents[] = (Object[]) expected.get(BugzillaFields.COMPONENT);
-        assertEquals("bug component mismatch", expectedComponents[0], other.get(BugzillaFields.COMPONENT));
+        assertArrayEquals("bug component mismatch", (String[]) expected.get(BugzillaFields.COMPONENT), (String[]) other.get(BugzillaFields.COMPONENT));
 
         assertEquals("bug product mismatch", expected.get(BugzillaFields.PRODUCT), other.get(BugzillaFields.PRODUCT));
         assertEquals("bug type mismatch", expected.get(BugzillaFields.ISSUE_TYPE), other.get(BugzillaFields.ISSUE_TYPE));
@@ -277,10 +278,10 @@ public class BZIssueWrapperTest {
                 if (!flag.isPresent())
                     continue;
 
-                FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(BugzillaFields.FLAG_STATUS));
+                FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(BugzillaFields.FLAG_STATUS));
                 stage.setStatus(flag.get(), status);
             } else {
-                FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(BugzillaFields.FLAG_STATUS));
+                FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(BugzillaFields.FLAG_STATUS));
                 streams.put(name, status);
             }
         }

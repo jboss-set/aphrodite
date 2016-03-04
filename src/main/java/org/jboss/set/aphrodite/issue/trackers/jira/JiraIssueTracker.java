@@ -22,16 +22,25 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import com.google.common.collect.Iterables;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
 
-import net.rcarz.jiraclient.BasicCredentials;
-import net.rcarz.jiraclient.ICredentials;
-import net.rcarz.jiraclient.IssueLink;
-import net.rcarz.jiraclient.JiraClient;
-import net.rcarz.jiraclient.JiraException;
-import net.rcarz.jiraclient.RestException;
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
+
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,32 +55,19 @@ import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
+import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.Filter;
+import com.atlassian.jira.rest.client.api.domain.IssueLink;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
+import com.atlassian.jira.rest.client.api.domain.input.LinkIssuesInput;
+import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_AUTHENTICATION_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_FILTER_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.COMMENT_ISSUE_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.hasSameIssueStatus;
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the JIRA issue tracker.
@@ -83,10 +79,9 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
     private static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("filter=([^&]+)");
 
-    private final int MAX_THREADS = 10; // TODO expose this in the tracker's configuration
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private final JiraQueryBuilder queryBuilder = new JiraQueryBuilder();
-    private JiraClient jiraClient;
+    private JiraRestClient restClient ;
 
     public JiraIssueTracker() {
         super(TrackerType.JIRA);
@@ -99,16 +94,9 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             return false;
 
         try {
-            ICredentials credentials = new BasicCredentials(config.getUsername(), config.getPassword());
-            jiraClient = new JiraClient(baseUrl.toString(), credentials);
-            // Check if provided credentials are correct, an exception is thrown if they aren't
-            jiraClient.getRestClient().get(API_AUTHENTICATION_PATH);
-        } catch (IOException | URISyntaxException e) {
-            Utils.logException(LOG, e);
-            return false;
-        } catch (RestException e) {
-            Utils.logException(LOG, "Authentication failed for IssueTrackerService: " + this.getClass().getName(), e);
-            return false;
+            JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+            URI jiraServerUri = baseUrl.toURI();
+            restClient = factory.createWithBasicHttpAuthentication(jiraServerUri, config.getUsername(), config.getPassword());
         } catch (Exception e) {
             Utils.logException(LOG, e);
             return false;
@@ -118,20 +106,28 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public Issue getIssue(URL url) throws NotFoundException {
-        checkHost(url);
-        net.rcarz.jiraclient.Issue jiraIssue = getIssue(getIssueKey(url));
-        return WRAPPER.jiraIssueToIssue(url, jiraIssue);
+        try {
+            checkHost(url);
+            com.atlassian.jira.rest.client.api.domain.Issue issue;
+            issue = restClient.getIssueClient().getIssue(getIssueKey(url)).get();
+            return WRAPPER.jiraIssueToIssue(url, issue);
+        } catch (InterruptedException e) {
+            throw new NotFoundException("something interrupted the execution ", e);
+        } catch (ExecutionException e) {
+            throw new NotFoundException("problem during execution ", e);
+        }
+
     }
 
-    private net.rcarz.jiraclient.Issue getIssue(Issue issue) throws NotFoundException {
+    private com.atlassian.jira.rest.client.api.domain.Issue getIssue(Issue issue) throws NotFoundException {
         String trackerId = issue.getTrackerId().orElse(getIssueKey(issue.getURL()));
         return getIssue(trackerId);
     }
 
-    private net.rcarz.jiraclient.Issue getIssue(String trackerId) throws NotFoundException {
+    private com.atlassian.jira.rest.client.api.domain.Issue getIssue(String trackerId) throws NotFoundException {
         try {
-            return jiraClient.getIssue(trackerId);
-        } catch (JiraException e) {
+            return restClient.getIssueClient().getIssue(trackerId).get();
+        } catch (Exception e) {
             throw new NotFoundException(e);
         }
     }
@@ -157,20 +153,22 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
-        String jql = queryBuilder.getSearchJQL(searchCriteria);
-        int maxResults = searchCriteria.getMaxResults().orElse(config.getDefaultIssueLimit());
-        return searchIssues(jql, maxResults);
+            String jql = queryBuilder.getSearchJQL(searchCriteria);
+            int maxResults = searchCriteria.getMaxResults().orElse(config.getDefaultIssueLimit());
+            return searchIssues(jql, maxResults);
     }
 
     public List<Issue> searchIssues(String jql, int maxResults) {
-        List<Issue> issues = new ArrayList<>();
         try {
-            net.rcarz.jiraclient.Issue.SearchResult sr = jiraClient.searchIssues(jql, maxResults);
-            sr.issues.forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
-        } catch (JiraException e) {
-            Utils.logException(LOG, e);
+            List<Issue> issues = new ArrayList<>();
+            SearchRestClient searchClient = restClient.getSearchClient();
+            SearchResult result = searchClient.searchJql(jql, maxResults, null, null).get();
+            result.getIssues().forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
+            return issues;
+        } catch (Exception e) {
+            LOG.error("Problem executing jql " + jql, e);
+            return Collections.emptyList();
         }
-        return issues;
     }
 
     @Override
@@ -180,13 +178,13 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     private String getJQLFromFilter(URL filterUrl) throws NotFoundException {
-        String filterId = Utils.getParamaterFromUrl(FILTER_NAME_PARAM_PATTERN, filterUrl);
         try {
-            JSON jsonResponse = jiraClient.getRestClient().get(API_FILTER_PATH + filterId);
-            JSONObject jsonObject = (JSONObject) jsonResponse;
-            return (String) jsonObject.get("jql");
-        } catch (IOException | RestException | URISyntaxException e) {
-            throw new NotFoundException("Unable to retrieve filter with id:=" + filterId, e);
+//            String filterId = Utils.getParamaterFromUrl(FILTER_NAME_PARAM_PATTERN, filterUrl);
+            SearchRestClient searchClient = restClient.getSearchClient();
+            Filter filter = searchClient.getFilter(filterUrl.toURI()).get();
+            return filter.getJql();
+        } catch (Exception e) {
+            throw new NotFoundException("Unable to retrieve filter with id:=" + filterUrl, e);
         }
     }
 
@@ -194,115 +192,100 @@ public class JiraIssueTracker extends AbstractIssueTracker {
      * Known limitations:
      * - Jira api does not allow an issue type to be update (WTF?)
      * - Jira api does not allow project to be changed
+     * @throws InterruptedException
      */
     @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
-        checkHost(issue.getURL());
-
         try {
-            net.rcarz.jiraclient.Issue jiraIssue = getIssue(issue);
-            net.rcarz.jiraclient.Issue.FluentUpdate update = WRAPPER.issueToFluentUpdate(issue, jiraIssue.update());
-            update.execute();
-            if (!hasSameIssueStatus(issue, jiraIssue)) {
+            checkHost(issue.getURL());
+
+            com.atlassian.jira.rest.client.api.domain.Issue jiraIssue = getIssue(issue);
+            IssueInput update = WRAPPER.issueToFluentUpdate(issue, jiraIssue);
+
+            restClient.getIssueClient().updateIssue(jiraIssue.getKey(), update).claim();
+            if (!JiraFields.hasSameIssueStatus(issue, jiraIssue)) {
                 String transition = getJiraTransition(issue, jiraIssue);
-                jiraIssue.transition().execute(transition);
+                Iterable<Transition> availableTransitions = restClient.getIssueClient().getTransitions(jiraIssue).get();
+                for(Transition t : availableTransitions) {
+                    if(t.getName().equals(transition)) {
+                        restClient.getIssueClient().transition(jiraIssue, new TransitionInput(t.getId())).claim();
+                    }
+                }
             }
-            addNewIssueLinks(issue, jiraIssue);
-            removeOldIssueLinks(issue, jiraIssue);
+
+            // only supports add
+            for(LinkIssuesInput linkIssuesInput : calculateNewLinks(issue, jiraIssue)) {
+                restClient.getIssueClient().linkIssue(linkIssuesInput).claim();
+            }
+
             return true;
-        } catch (JiraException e) {
+        } catch (ExecutionException | InterruptedException e) {
             throw new AphroditeException(getUpdateErrorMessage(issue, e), e);
         }
     }
 
-    private void removeOldIssueLinks(Issue issue, net.rcarz.jiraclient.Issue jiraIssue)
-            throws JiraException, NotFoundException {
-        Set<String> ids = new HashSet<>();
-        for (URL url : Iterables.concat(issue.getBlocks(), issue.getDependsOn()))
-            ids.add(getIssueKey(url));
+    private List<LinkIssuesInput> calculateNewLinks(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
 
-        for (IssueLink link : jiraIssue.getIssueLinks()) {
-            net.rcarz.jiraclient.Issue linkedIssue = link.getInwardIssue();
-            if (linkedIssue == null)
-                linkedIssue = link.getOutwardIssue();
+        List<LinkIssuesInput> links = new ArrayList<>();
 
-            if (!ids.contains(linkedIssue.getKey()))
-                link.delete();
-        }
+        Iterable<IssueLink> jiraIssueLinks  = jiraIssue.getIssueLinks();
+        List<IssueLink> tmp = new ArrayList<>();
+        jiraIssueLinks.forEach(e -> tmp.add(e));
+
+        List<String> inbound = tmp.stream().filter(
+                e -> e.getIssueLinkType().getDirection().equals(Direction.INBOUND) && e.getIssueLinkType().getName().equals("Dependency")
+           ).map(e -> e.getTargetIssueKey()).collect(Collectors.toList());
+        List<String> outbound = tmp.stream().filter(
+                e -> e.getIssueLinkType().getDirection().equals(Direction.OUTBOUND) && e.getIssueLinkType().getName().equals("Dependency")
+           ).map(e -> e.getTargetIssueKey()).collect(Collectors.toList());
+
+        issue.getBlocks().stream().map(e -> toKey(e)).filter(e -> !e.isEmpty() && !inbound.contains(e)).forEach(e -> links.add(new LinkIssuesInput(e, issue.getTrackerId().get(), "Dependency")));
+        issue.getDependsOn().stream().map(e -> toKey(e)).filter(e -> !e.isEmpty() && !outbound.contains(e)).forEach(e -> links.add(new LinkIssuesInput(issue.getTrackerId().get(), e,"Dependency")));
+        return links;
+
     }
 
-    private void addNewIssueLinks(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) throws JiraException, NotFoundException {
-        for (URL url : issue.getBlocks()) {
-            String trackerId = getIssueKey(url);
-            net.rcarz.jiraclient.Issue issueToBlock = getIssue(trackerId);
-            if (!issueLinkExists(url, issueToBlock.getIssueLinks()))
-                issueToBlock.link(jiraIssue.getKey(), "Dependency");
+    private String toKey(URL url) {
+        try {
+            return getIssueKey(url);
+        } catch (NotFoundException e) {
+            return "";
         }
-
-        for (URL url : issue.getDependsOn()) {
-            if (!issueLinkExists(url, jiraIssue.getIssueLinks())) {
-                String trackerId = getIssueKey(url);
-                jiraIssue.link(trackerId, "Dependency");
-            }
-        }
-    }
-
-    private boolean issueLinkExists(URL url, List<IssueLink> links) throws NotFoundException {
-        Predicate<IssueLink> predicate = checkIfLinkExists(url);
-        return links.stream().anyMatch(predicate);
-    }
-
-    private Predicate<IssueLink> checkIfLinkExists(URL url) throws NotFoundException {
-        String trackerId = getIssueKey(url);
-        return p -> {
-            if (p.getInwardIssue() != null)
-                return p.getInwardIssue().getKey().equals(trackerId);
-
-            return p.getOutwardIssue() != null && p.getOutwardIssue().getKey().equals(trackerId);
-        };
     }
 
     @Override
     public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         super.addCommentToIssue(issue, comment);
-        return postComment(issue, comment, false);
+        return postComment(issue, comment);
     }
 
-    private boolean postComment(Issue issue, Comment comment, boolean parallelRequest) throws NotFoundException {
+    private boolean postComment(Issue issue, Comment comment) throws NotFoundException {
         if (comment.isPrivate())
             Utils.logWarnMessage(LOG, "Private comments are not currently supported by " + getClass().getName());
+        com.atlassian.jira.rest.client.api.domain.Issue jiraIssue = getIssue(issue);
 
-        String trackerId = issue.getTrackerId().orElse(getIssueKey(issue.getURL()));
-        String restURI = API_ISSUE_PATH + trackerId + COMMENT_ISSUE_PATH;
-        JSONObject req = new JSONObject();
-        req.put("body", comment.getBody());
-        try {
-            // A new JiraClient is created here to allow for comments to be posted in parallel
-            // The underlying JiraClient is not thread-safe, hence it is necessary to create a new
-            // JiraClient object for each request.
-            if (parallelRequest) {
-                ICredentials credentials = new BasicCredentials(config.getUsername(), config.getPassword());
-                new JiraClient(baseUrl.toString(), credentials).getRestClient().post(restURI, req);
-            } else {
-                jiraClient.getRestClient().post(restURI, req);
-            }
-        } catch (Exception ex) {
-            throw new NotFoundException("Failed to add comment to issue " + issue.getURL(), ex);
-        }
+        com.atlassian.jira.rest.client.api.domain.Comment c =
+                com.atlassian.jira.rest.client.api.domain.Comment.valueOf(comment.getBody());
+        restClient.getIssueClient().addComment(jiraIssue.getCommentsUri(), c).claim();
         return true;
     }
 
     @Override
     public boolean addCommentToIssue(Map<Issue, Comment> commentMap) {
-        commentMap = filterIssuesByHost(commentMap);
-        if (commentMap.isEmpty())
+
+            commentMap = filterIssuesByHost(commentMap);
+            if (commentMap.isEmpty())
+                return true;
+
+            commentMap.entrySet().forEach(e  -> {
+                try {
+                    postComment(e.getKey(), e.getValue());
+                } catch (NotFoundException ex) {
+                    LOG.error("issue not found", ex);
+                }
+            });
             return true;
 
-        List<CommentFuture> futures = commentMap.entrySet().stream()
-                .map(entry -> new CommentFuture(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
-
-        return executeCommentFutures(futures);
     }
 
     @Override
@@ -311,34 +294,9 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         if (issues.isEmpty())
             return true;
 
-        List<CommentFuture> futures = issues.stream()
-                .map(issue -> new CommentFuture(issue, comment))
-                .collect(Collectors.toList());
-
-        return executeCommentFutures(futures);
-    }
-
-    private boolean executeCommentFutures(List<CommentFuture> futures) {
-        int numberOfThreads = futures.size() > MAX_THREADS ? MAX_THREADS : futures.size();
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        try {
-            return executorService.invokeAll(futures)
-                    .stream()
-                    .map(future -> {
-                        try {
-                            return future.get();
-                        } catch (Exception e) {
-                            throw new IllegalStateException(e);
-                        }
-                    })
-                    .allMatch(result -> result.equals(true));
-        } catch (InterruptedException e) {
-            if (LOG.isWarnEnabled())
-                LOG.warn(e);
-            return false;
-        } finally {
-            executorService.shutdown();
-        }
+        Map<Issue, Comment> data = new HashMap<>();
+        issues.stream().forEach(e -> data.put(e, comment));
+        return addCommentToIssue(data);
     }
 
     @Override
@@ -352,13 +310,12 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         boolean browse = path.contains(BROWSE_ISSUE_PATH);
 
         if (!(api || browse))
-            throw new NotFoundException("The URL path must be of the form '" + API_ISSUE_PATH +
-                    "' OR '" + BROWSE_ISSUE_PATH + "'");
+            throw new NotFoundException("The URL path must be of the form '" + API_ISSUE_PATH + "' OR '" + BROWSE_ISSUE_PATH + "'");
 
         return api ? path.substring(API_ISSUE_PATH.length()) : path.substring(BROWSE_ISSUE_PATH.length());
     }
 
-    private String getUpdateErrorMessage(Issue issue, JiraException e) {
+    private String getUpdateErrorMessage(Issue issue, Exception e) {
         String msg = e.getMessage();
         if (msg.contains("does not exist or read-only")) {
             for (Map.Entry<Flag, String> entry : FLAG_MAP.entrySet()) {
@@ -380,26 +337,5 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             return String.format(template, val, "issues in project", optional.get());
         else
             return String.format(template, val, "issue at ", url);
-    }
-
-    private class CommentFuture implements Callable<Boolean> {
-        final Issue issue;
-        final Comment comment;
-
-        public CommentFuture(Issue issue, Comment comment) {
-            this.issue = issue;
-            this.comment = comment;
-        }
-
-        @Override
-        public Boolean call() throws Exception {
-            try {
-                return postComment(issue, comment, true);
-            } catch (NotFoundException e) {
-                if (LOG.isWarnEnabled())
-                    LOG.warn(e);
-                return false;
-            }
-        }
     }
 }

@@ -22,17 +22,17 @@
 
 package org.jboss.set.aphrodite.spi;
 
+import java.net.URL;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
-
-import java.net.URL;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 public interface IssueTrackerService {
 

@@ -22,14 +22,21 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import net.rcarz.jiraclient.Comment;
-import net.rcarz.jiraclient.Component;
-import net.rcarz.jiraclient.IssueType;
-import net.rcarz.jiraclient.Project;
-import net.rcarz.jiraclient.Status;
-import net.rcarz.jiraclient.User;
-import net.rcarz.jiraclient.Version;
-import net.sf.json.JSONObject;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
@@ -38,6 +45,8 @@ import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.issue.trackers.util.TestUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,16 +55,15 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.atlassian.jira.rest.client.api.domain.Comment;
+import com.atlassian.jira.rest.client.api.domain.Component;
+import com.atlassian.jira.rest.client.api.domain.IssueField;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Project;
+import com.atlassian.jira.rest.client.api.domain.Status;
+import com.atlassian.jira.rest.client.api.domain.TimeTracking;
+import com.atlassian.jira.rest.client.api.domain.User;
+import com.atlassian.jira.rest.client.api.domain.Version;
 
 /**
  * @author Martin Stefanko (mstefank@redhat.com)
@@ -71,14 +79,34 @@ public class JiraIssueWrapperTest {
     private URL jiraURL;
 
     @Mock
-    private net.rcarz.jiraclient.Issue jiraIssue01;
+    private com.atlassian.jira.rest.client.api.domain.Issue jiraIssue01;
+    
+    @Mock
+    private TimeTracking timeTracking;
+
+    private DateTime genericDateTime;
+
+    @Mock
+    private IssueField pmAckField;
+
+    @Mock
+    private IssueField devAckField;
+
+    @Mock
+    private IssueField qaAckField;
+
+    @Mock
+    private IssueField targetField;
+
+    @Mock
+    private IssueField createdField;
 
     private Issue issue01;
 
     @Before
     public void setUp() throws MalformedURLException, ParseException {
         issueWrapper = new IssueWrapper();
-
+        genericDateTime = new DateTime(2015, 12, 29, 15, 16, 50, 946, DateTimeZone.forOffsetHours(1));
         jiraURL = new URL(JIRA_URL);
         mockJiraIssue01();
 
@@ -118,8 +146,9 @@ public class JiraIssueWrapperTest {
 
         when(jiraIssue01.getSummary()).thenReturn("Test Issue");
         when(jiraIssue01.getStatus()).thenReturn(statusMock);
-        when(jiraIssue01.getTimeEstimate()).thenReturn(8);
-        when(jiraIssue01.getTimeSpent()).thenReturn(8);
+        when(jiraIssue01.getTimeTracking()).thenReturn(timeTracking);
+        when(timeTracking.getOriginalEstimateMinutes()).thenReturn(480);
+        when(timeTracking.getTimeSpentMinutes()).thenReturn(480);
 
         Project projectMock = mock(Project.class);
         when(projectMock.getName()).thenReturn("EAP");
@@ -130,34 +159,41 @@ public class JiraIssueWrapperTest {
         when(jiraIssue01.getComponents()).thenReturn(Collections.singletonList(componentMock));
 
         User assigneeMock = mock(User.class);
-        when(assigneeMock.getEmail()).thenReturn("jboss-set@redhat.com");
+        when(assigneeMock.getName()).thenReturn("jboss-set@redhat.com");
+        when(assigneeMock.getEmailAddress()).thenReturn("jboss-set@redhat.com");
         when(jiraIssue01.getAssignee()).thenReturn(assigneeMock);
 
-        when(jiraIssue01.getField("created")).thenReturn("2015-12-29T15:16:50.946+0100");
-        when(jiraIssue01.getField("updated")).thenReturn("2015-12-29T15:16:50.946+0100");
+        when(jiraIssue01.getCreationDate()).thenReturn(genericDateTime);
+        when(jiraIssue01.getUpdateDate()).thenReturn(genericDateTime);
 
-        when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.PM_ACK)).thenReturn("+");
-        when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.DEV_ACK)).thenReturn("+");
-        when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.QE_ACK)).thenReturn("+");
 
-        when(jiraIssue01.getField(JiraFields.CREATED_FIELD)).thenReturn("2013-01-17T00:12:31.000-0500");
+        when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.PM_ACK)).thenReturn(pmAckField);
+        when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.DEV_ACK)).thenReturn(devAckField);
+        when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.QE_ACK)).thenReturn(qaAckField);
+        when(pmAckField.getValue()).thenReturn("+");
+        when(devAckField.getValue()).thenReturn("+");
+        when(qaAckField.getValue()).thenReturn("+");
 
-        JSONObject release = new JSONObject();
-        release.put("name", "---");
-        when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.TARGET_RELEASE)).thenReturn(
-                release
-        );
+
+        when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.TARGET_RELEASE)).thenReturn(targetField);
+        JSONObject targetObject = new JSONObject();
+        try {
+            targetObject.put("name", "7.0.z");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        when(targetField.getValue()).thenReturn(targetObject);
 
         Version versionMock = mock(Version.class);
         when(versionMock.getName()).thenReturn("6.4.4");
-        when(jiraIssue01.getVersions()).thenReturn(Collections.singletonList(versionMock));
+        when(jiraIssue01.getFixVersions()).thenReturn(Collections.singletonList(versionMock));
 
         IssueType issueTypeMock = mock(IssueType.class);
         when(issueTypeMock.getName()).thenReturn("bug");
         when(jiraIssue01.getIssueType()).thenReturn(issueTypeMock);
 
         Comment commentMock = mock(Comment.class);
-        when(commentMock.getId()).thenReturn("1");
+        when(commentMock.getId()).thenReturn(1L);
         when(commentMock.getBody()).thenReturn("comment body");
         when(jiraIssue01.getComments()).thenReturn(Collections.singletonList(commentMock));
     }
@@ -172,7 +208,7 @@ public class JiraIssueWrapperTest {
         result.setAssignee("jboss-set@redhat.com");
         result.setDescription("Test jira");
         result.setStatus(IssueStatus.NEW);
-        result.setComponent("CLI");
+        result.setComponents(Collections.singletonList("CLI"));
         result.setProduct("EAP");
         result.setType(org.jboss.set.aphrodite.domain.IssueType.BUG);
         result.setRelease(new Release("6.4.4", "---"));

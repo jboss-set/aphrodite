@@ -37,6 +37,10 @@ public class Release {
         this.milestone = milestone;
     }
 
+    public Release(String version) {
+        this(version, null);
+    }
+
     public void setVersion(String version) {
         this.version = version;
     }

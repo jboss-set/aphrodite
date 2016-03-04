@@ -22,13 +22,13 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
-
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.spi.AphroditeException;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 
 /**
  * @author Ryan Emerson
@@ -101,13 +101,13 @@ class JiraFields {
         return String.format(JQL_CUSTOM_TEMPLATE, field);
     }
 
-    static boolean hasSameIssueStatus(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+    static boolean hasSameIssueStatus(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         IssueStatus status = issue.getStatus();
         IssueStatus jiraStatus = getAphroditeStatus(jiraIssue.getStatus().getName());
         return status == jiraStatus;
     }
 
-    static String getJiraTransition(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) throws AphroditeException {
+    static String getJiraTransition(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) throws AphroditeException {
         IssueStatus currentStatus = getAphroditeStatus(jiraIssue.getStatus().getName());
         return getJiraTransition(currentStatus, issue.getStatus());
     }
