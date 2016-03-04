@@ -63,15 +63,14 @@ class GitHubWrapper {
             PatchStatus status = getPatchStatus(pullRequest.getState());
             String title = pullRequest.getTitle().replaceFirst("\\u2026", "");
             String body = pullRequest.getBody().replaceFirst("\\u2026", "");
-            String description = title + body;
 
             String urlString = url.toString();
             int idx = urlString.indexOf("pull");
-            if(idx >= 0) {
+            if (idx >= 0) {
                 urlString = urlString.substring(0, idx);
             }
             Repository repo = new Repository(URI.create(urlString).toURL());
-            return new Patch(id, url, repo, codebase, status, description);
+            return new Patch(id, url, repo, codebase, status, title, body);
         } catch (MalformedURLException e) {
             return null;
         }

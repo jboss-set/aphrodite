@@ -98,7 +98,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     @Override
     public List<Issue> getIssuesAssociatedWith(Patch patch) {
         List<Issue> issues = new ArrayList<>();
-        Matcher m = URL_REGEX.matcher(patch.getDescription());
+        Matcher m = URL_REGEX.matcher(patch.getTitle() + patch.getBody());
         while (m.find()) {
             String link = m.group();
             try {
