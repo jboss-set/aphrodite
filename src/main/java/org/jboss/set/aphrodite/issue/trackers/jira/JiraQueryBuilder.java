@@ -22,16 +22,16 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.CUSTOM_FIELD_MAP;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJQLField;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraStatus;
+import org.jboss.set.aphrodite.domain.FlagStatus;
+import org.jboss.set.aphrodite.domain.SearchCriteria;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import org.jboss.set.aphrodite.domain.FlagStatus;
-import org.jboss.set.aphrodite.domain.SearchCriteria;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.CUSTOM_FIELD_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJQLField;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraStatus;
 
 /**
  * @author Ryan Emerson

@@ -151,12 +151,12 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
-            String jql = queryBuilder.getSearchJQL(searchCriteria);
-            int maxResults = searchCriteria.getMaxResults().orElse(config.getDefaultIssueLimit());
-            return searchIssues(jql, maxResults);
+        String jql = queryBuilder.getSearchJQL(searchCriteria);
+        int maxResults = searchCriteria.getMaxResults().orElse(config.getDefaultIssueLimit());
+        return searchIssues(jql, maxResults);
     }
 
-    public List<Issue> searchIssues(String jql, int maxResults) {
+    private List<Issue> searchIssues(String jql, int maxResults) {
         try {
             List<Issue> issues = new ArrayList<>();
             SearchRestClient searchClient = restClient.getSearchClient();
@@ -177,7 +177,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     private String getJQLFromFilter(URL filterUrl) throws NotFoundException {
         try {
-//            String filterId = Utils.getParamaterFromUrl(FILTER_NAME_PARAM_PATTERN, filterUrl);
+            // url type example https://issues.jboss.org/rest/api/latest/filter/12322199
             SearchRestClient searchClient = restClient.getSearchClient();
             Filter filter = searchClient.getFilter(filterUrl.toURI()).get();
             return filter.getJql();
@@ -271,18 +271,18 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     @Override
     public boolean addCommentToIssue(Map<Issue, Comment> commentMap) {
 
-            commentMap = filterIssuesByHost(commentMap);
-            if (commentMap.isEmpty())
-                return true;
-
-            commentMap.entrySet().forEach(e  -> {
-                try {
-                    postComment(e.getKey(), e.getValue());
-                } catch (NotFoundException ex) {
-                    LOG.error("issue not found", ex);
-                }
-            });
+        commentMap = filterIssuesByHost(commentMap);
+        if (commentMap.isEmpty())
             return true;
+
+        commentMap.entrySet().forEach(e  -> {
+            try {
+                postComment(e.getKey(), e.getValue());
+            } catch (NotFoundException ex) {
+                LOG.error("issue not found", ex);
+            }
+        });
+        return true;
 
     }
 
