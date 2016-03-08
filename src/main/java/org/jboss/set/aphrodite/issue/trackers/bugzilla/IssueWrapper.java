@@ -84,7 +84,13 @@ class IssueWrapper {
 
         Double estimatedTime = (Double) bug.get(ESTIMATED_TIME);
         Double hoursWorked = (Double) bug.get(HOURS_WORKED);
-        issue.setEstimation(new IssueEstimation(estimatedTime, hoursWorked));
+        if (estimatedTime != null && hoursWorked != null) {
+            issue.setEstimation(new IssueEstimation(estimatedTime, hoursWorked));
+        } else if (estimatedTime != null) {
+            issue.setEstimation(new IssueEstimation(estimatedTime));
+        } else {
+            issue.setEstimation(null);
+        }
 
         extractStageAndStreams(bug, issue);
         return issue;
