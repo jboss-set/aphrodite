@@ -111,12 +111,20 @@ class IssueWrapper {
         issue.setDependsOn(getListOfURlsFromIds(bug, baseURL, DEPENDS_ON));
         issue.setBlocks(getListOfURlsFromIds(bug, baseURL, BLOCKS));
 
-        Double estimatedTime = (Double) bug.get(ESTIMATED_TIME);
-        Double hoursWorked = (Double) bug.get(HOURS_WORKED);
-        issue.setEstimation(new IssueEstimation(estimatedTime, hoursWorked));
-
+        checkIsNullEstimation(bug,issue);
         extractStageAndStreams(bug, issue);
         return issue;
+    }
+
+    private void checkIsNullEstimation(Map<String, Object> bug, Issue issue) {
+        Double estimatedTime = (Double) bug.get(ESTIMATED_TIME);
+        Double hoursWorked = (Double) bug.get(HOURS_WORKED);
+        if (estimatedTime != null && hoursWorked != null) {
+            issue.setEstimation(new IssueEstimation(estimatedTime, hoursWorked));
+        } else if (estimatedTime != null) {
+            issue.setEstimation(new IssueEstimation(estimatedTime));
+        }
+
     }
 
     Map<String, Object> issueToBugzillaBug(Issue issue, Map<String, Object> loginDetails) {
