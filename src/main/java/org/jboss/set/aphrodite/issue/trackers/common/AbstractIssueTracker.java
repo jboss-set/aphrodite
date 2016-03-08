@@ -85,7 +85,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
             url = url + "/";
 
         try {
-            baseUrl = new URL(config.getUrl());
+            baseUrl = new URL(url);
         } catch (MalformedURLException e) {
             String errorMsg = "Invalid IssueTracker url. " + this.getClass().getName() +
                     " service for '" + url + "' cannot be started";
