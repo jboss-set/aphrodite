@@ -28,7 +28,7 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
 
-
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -77,7 +76,6 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientF
 public class JiraIssueTracker extends AbstractIssueTracker {
 
     private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
-    private static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("filter=([^&]+)");
 
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private final JiraQueryBuilder queryBuilder = new JiraQueryBuilder();
@@ -337,5 +335,14 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             return String.format(template, val, "issues in project", optional.get());
         else
             return String.format(template, val, "issue at ", url);
+    }
+
+    @Override
+    public void destroy() {
+        try {
+            restClient.close();
+        } catch (IOException e) {
+            LOG.warn("destroyin jira issue tracker", e);
+        }
     }
 }

@@ -51,7 +51,7 @@ import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
 
-public class Aphrodite {
+public class Aphrodite implements AutoCloseable {
 
     public static final String FILE_PROPERTY = "aphrodite.config";
 
@@ -95,6 +95,14 @@ public class Aphrodite {
 
         instance = new Aphrodite(config);
         return instance();
+    }
+
+    @Override
+    public void close() throws Exception {
+        issueTrackers.forEach(e -> e.destroy());
+        issueTrackers.clear();
+        repositories.forEach(e -> e.destroy());
+        repositories.clear();
     }
 
     private final List<IssueTrackerService> issueTrackers = new ArrayList<>();
@@ -501,6 +509,5 @@ public class Aphrodite {
             throw new IllegalStateException("Unable to find any repository data as a valid " +
                     RepositoryService.class.getName() + " has not been created.");
     }
-
 
 }
