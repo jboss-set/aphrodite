@@ -22,17 +22,28 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import net.rcarz.jiraclient.Component;
-import net.rcarz.jiraclient.Field;
-import net.rcarz.jiraclient.IssueLink;
-import net.rcarz.jiraclient.Project;
-import net.rcarz.jiraclient.User;
-import net.rcarz.jiraclient.Version;
-import net.sf.json.JSONNull;
-import net.sf.json.JSONObject;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
@@ -42,25 +53,18 @@ import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.CREATED_FIELD;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.UPDATED_FIELD;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DATE_STRING_FORMAT;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
+import com.atlassian.jira.rest.client.api.domain.BasicComponent;
+import com.atlassian.jira.rest.client.api.domain.BasicProject;
+import com.atlassian.jira.rest.client.api.domain.IssueField;
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId;
+import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
+import com.atlassian.jira.rest.client.api.domain.TimeTracking;
+import com.atlassian.jira.rest.client.api.domain.User;
+import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
+import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 
 /**
  * @author Ryan Emerson
@@ -69,38 +73,35 @@ class IssueWrapper {
 
     private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
 
-    Issue jiraSearchIssueToIssue(URL baseURL, net.rcarz.jiraclient.Issue jiraIssue) {
+    Issue jiraSearchIssueToIssue(URL baseURL, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         URL url = trackerIdToBrowsableUrl(baseURL, jiraIssue.getKey());
         return jiraIssueToIssue(url, jiraIssue);
     }
 
-    private void setCreationTime(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
-        issue.setCreationTime(getDateField(jiraIssue, CREATED_FIELD));
+    private void setCreationTime(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        issue.setCreationTime(jiraIssue.getCreationDate().toDate());
     }
 
-    private Date getDateField(net.rcarz.jiraclient.Issue jiraIssue, String fieldName) {
-        final String dateAsString = (String) jiraIssue.getField(fieldName);
-        try {
-            return new SimpleDateFormat(DATE_STRING_FORMAT).parse(dateAsString);
-        } catch (ParseException e) {
-            throw new IllegalStateException("Failed to deserialized date:" + dateAsString, e);
-        }
+    private void setLastUpdated(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        issue.setLastUpdated(jiraIssue.getUpdateDate().toDate());
     }
 
-    private void setLastUpdated(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
-        issue.setLastUpdated(getDateField(jiraIssue, UPDATED_FIELD));
-    }
-
-    Issue jiraIssueToIssue(URL url, net.rcarz.jiraclient.Issue jiraIssue) {
+    Issue jiraIssueToIssue(URL url, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         Issue issue = new Issue(url);
 
         issue.setTrackerId(jiraIssue.getKey());
         issue.setSummary(jiraIssue.getSummary());
         issue.setDescription(jiraIssue.getDescription());
         issue.setStatus(getAphroditeStatus(jiraIssue.getStatus().getName()));
-        issue.setEstimation(new IssueEstimation(jiraIssue.getTimeEstimate(), jiraIssue.getTimeSpent()));
 
-        // TODO implement streams when it is in JIRA
+        TimeTracking timeTracking = jiraIssue.getTimeTracking();
+        if(timeTracking != null) {
+            int estimate = (timeTracking.getOriginalEstimateMinutes() == null) ? 0 : timeTracking.getOriginalEstimateMinutes();
+            int spent = (timeTracking.getTimeSpentMinutes() == null) ? 0 : timeTracking.getTimeSpentMinutes();
+            issue.setEstimation(new IssueEstimation(estimate / 60d, spent / 60d));
+        }
+
+        setIssueStream(issue, jiraIssue);
         setIssueProject(issue, jiraIssue);
         setIssueComponent(issue, jiraIssue);
         setIssueAssignee(issue, jiraIssue);
@@ -117,36 +118,42 @@ class IssueWrapper {
         return issue;
     }
 
-    net.rcarz.jiraclient.Issue.FluentUpdate issueToFluentUpdate(Issue issue, net.rcarz.jiraclient.Issue.FluentUpdate update) {
+    IssueInput issueToFluentUpdate(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         checkUnsupportedUpdateFields(issue);
+        IssueInputBuilder inputBuilder = new IssueInputBuilder(jiraIssue.getProject().getKey(), jiraIssue.getIssueType().getId());
 
-        issue.getSummary().ifPresent(summary -> update.field(Field.SUMMARY, summary));
-        issue.getComponent().ifPresent(component -> update.field(Field.COMPONENTS, new ArrayList<String>() {{
-            add(component);
-        }}));
-        issue.getDescription().ifPresent(description -> update.field(Field.DESCRIPTION, description));
-        issue.getAssignee().ifPresent(assignee -> update.field(Field.ASSIGNEE, assignee));
 
-        issue.getStage().getStateMap().entrySet()
-                .stream()
-                .filter(entry -> entry.getValue() != FlagStatus.NO_SET)
-                .forEach(entry -> update.field(JSON_CUSTOM_FIELD + FLAG_MAP.get(entry.getKey()),
-                        entry.getValue().getSymbol()));
-
-        issue.getRelease().getMilestone().ifPresent(milestone -> update.field(JSON_CUSTOM_FIELD + TARGET_RELEASE, milestone));
-        issue.getRelease().getVersion().ifPresent(version ->
-                update.field(Field.VERSIONS, new ArrayList<String>() {{
-                    add(version);
-                }}));
-
-        // TODO implement streams when it is in JIRA
+        issue.getSummary().ifPresent(summary -> inputBuilder.setSummary(summary));
+        inputBuilder.setFieldInput(new FieldInput(IssueFieldId.COMPONENTS_FIELD,
+                issue.getComponents().stream().map(e -> ComplexIssueInputFieldValue.with("name", e)).collect(Collectors.toList()))
+        );
+        issue.getDescription().ifPresent(description -> inputBuilder.setDescription(description));
+        issue.getAssignee().ifPresent(
+            assignee -> inputBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("name", assignee)))
+        );
 
         issue.getEstimation().ifPresent(tracking -> {
-            update.field(Field.TIME_ESTIMATE, tracking.getInitialEstimate());
-            update.field(Field.TIME_SPENT, tracking.getHoursWorked());
+            Map<String, Object> timeTrackingMap = new HashMap<>();
+            timeTrackingMap.put("originalEstimate", (int) (tracking.getInitialEstimate() * 60));
+            // commented here, this is not supported
+            // timeTrackingMap.put("timeSpent", (int) (tracking.getHoursWorked() * 60));
+            inputBuilder.setFieldInput(new FieldInput(IssueFieldId.TIMETRACKING_FIELD,
+                    new ComplexIssueInputFieldValue(timeTrackingMap)));
         });
+        issue.getRelease().getVersion().ifPresent(version ->
+                inputBuilder.setFieldInput(new FieldInput(IssueFieldId.FIX_VERSIONS_FIELD, new ArrayList<ComplexIssueInputFieldValue>() {{
+                    add(ComplexIssueInputFieldValue.with("name", version));
+                }})
+        ));
 
-        return update;
+        // this is ok but does nothing if there is no permissions.
+        issue.getStage().getStateMap().entrySet()
+            .stream().filter(entry -> entry.getValue() != FlagStatus.NO_SET)
+            .forEach(entry -> inputBuilder.setFieldInput(new FieldInput(JSON_CUSTOM_FIELD + FLAG_MAP.get(entry.getKey()), entry.getValue().getSymbol())));
+
+        issue.getRelease().getMilestone().ifPresent(milestone ->  inputBuilder.setFieldInput(new FieldInput(JSON_CUSTOM_FIELD + TARGET_RELEASE, ComplexIssueInputFieldValue.with("value", milestone))));
+
+        return inputBuilder.build();
     }
 
     private void checkUnsupportedUpdateFields(Issue issue) {
@@ -154,39 +161,44 @@ class IssueWrapper {
             LOG.debug("JIRA does not support updating the reporter field, field ignored.");
     }
 
-    private void setIssueProject(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
-        Project project = jiraIssue.getProject();
+    private void setIssueProject(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        BasicProject project = jiraIssue.getProject();
         if (project != null)
             issue.setProduct(project.getName());
     }
 
-    private void setIssueComponent(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
-        List<Component> components = jiraIssue.getComponents();
-        if (components != null && !components.isEmpty())
-            issue.setComponent(components.get(0).getName());
+    private void setIssueComponent(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        Iterable<BasicComponent> components = jiraIssue.getComponents();
+        List<String> tmp = new ArrayList<>();
+        for(BasicComponent component : components) {
+            tmp.add(component.getName());
+        }
+        issue.setComponents(tmp);
     }
 
-    private void setIssueAssignee(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+    private void setIssueAssignee(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         User assignee = jiraIssue.getAssignee();
         if (assignee != null)
-            issue.setAssignee(assignee.getEmail());
+            issue.setAssignee(assignee.getName());
     }
 
-    private void setIssueReporter(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+    private void setIssueReporter(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         User reporter = jiraIssue.getReporter();
         if (reporter != null)
-            issue.setReporter(reporter.getEmail());
+            issue.setReporter(reporter.getName());
     }
 
-    private void setIssueStage(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+    private void setIssueStage(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         Stage stage = new Stage();
-        stage.setStatus(Flag.PM, FlagStatus.getMatchingFlag(jiraIssue.getField(JSON_CUSTOM_FIELD + PM_ACK)));
-        stage.setStatus(Flag.DEV, FlagStatus.getMatchingFlag(jiraIssue.getField(JSON_CUSTOM_FIELD + DEV_ACK)));
-        stage.setStatus(Flag.QE, FlagStatus.getMatchingFlag(jiraIssue.getField(JSON_CUSTOM_FIELD + QE_ACK)));
+        stage.setStatus(Flag.PM, FlagStatus.getMatchingFlag((String) jiraIssue.getField(JSON_CUSTOM_FIELD + PM_ACK).getValue()));
+        stage.setStatus(Flag.DEV, FlagStatus.getMatchingFlag((String) jiraIssue.getField(JSON_CUSTOM_FIELD + DEV_ACK).getValue()));
+        stage.setStatus(Flag.QE, FlagStatus.getMatchingFlag((String) jiraIssue.getField(JSON_CUSTOM_FIELD + QE_ACK).getValue()));
         issue.setStage(stage);
     }
 
-    private void setIssueType(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+
+
+    private void setIssueType(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         String type = jiraIssue.getIssueType().getName();
         try {
             issue.setType(IssueType.valueOf(type.toUpperCase()));
@@ -195,43 +207,50 @@ class IssueWrapper {
         }
     }
 
-    private void setIssueRelease(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+    private void setIssueStream(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        try {
+            IssueField jsonField = jiraIssue.getField(JSON_CUSTOM_FIELD + TARGET_RELEASE);
+            if (jsonField == null || jsonField.getValue() == null) {
+                return;
+            }
+            JSONObject value = (JSONObject) jsonField.getValue();
+            Map<String, FlagStatus> streamStatus;
+            streamStatus = Collections.singletonMap(value.getString("name"), FlagStatus.ACCEPTED);
+            issue.setStreamStatus(streamStatus);
+        } catch (JSONException e) {
+            LOG.error("error setting the stream in " + jiraIssue.getKey(), e);
+        }
+
+    }
+
+    private void setIssueRelease(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         Release release = new Release();
-        Object jsonField = jiraIssue.getField(JSON_CUSTOM_FIELD + TARGET_RELEASE);
-        if (jsonField instanceof JSONNull)
-            return;
-
-        JSONObject jsonObject = (JSONObject) jsonField;
-        String milestone = (String) jsonObject.get("name");
-        release.setMilestone(milestone);
-
-        List<Version> versions = jiraIssue.getVersions();
-        if (versions != null && !versions.isEmpty())
-            release.setVersion(versions.get(0).getName());
+        for(Version tmp : jiraIssue.getFixVersions()) {
+            release.setVersion(tmp.getName());
+            release.setMilestone("---");
+        }
         issue.setRelease(release);
     }
 
-    private void setIssueDependencies(URL originalUrl, Issue issue, List<IssueLink> links) {
-        if (links == null || links.isEmpty())
+    private void setIssueDependencies(URL originalUrl, Issue issue, Iterable<com.atlassian.jira.rest.client.api.domain.IssueLink> links) {
+        if (links == null)
             return;
 
-        for (IssueLink il : links) {
-            if (il.getInwardIssue() != null) {
-                net.rcarz.jiraclient.Issue linkedIssue = il.getInwardIssue();
-                URL url = trackerIdToBrowsableUrl(originalUrl, linkedIssue.getKey());
+        for (com.atlassian.jira.rest.client.api.domain.IssueLink il : links) {
+            if (il.getIssueLinkType().getDirection().equals(Direction.INBOUND)) {
+                URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 issue.getBlocks().add(url);
             } else {
-                net.rcarz.jiraclient.Issue linkedIssue = il.getOutwardIssue();
-                URL url = trackerIdToBrowsableUrl(originalUrl, linkedIssue.getKey());
+                URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 issue.getDependsOn().add(url);
             }
         }
     }
 
-    private void setIssueComments(Issue issue, net.rcarz.jiraclient.Issue jiraIssue) {
+    private void setIssueComments(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         List<Comment> comments = new ArrayList<>();
         jiraIssue.getComments()
-                .forEach(c -> comments.add(new Comment(issue.getTrackerId().get(), c.getId(), c.getBody(), false)));
+                .forEach(c -> comments.add(new Comment(issue.getTrackerId().get(), Long.toString(c.getId()), c.getBody(), false)));
         issue.getComments().addAll(comments);
     }
 

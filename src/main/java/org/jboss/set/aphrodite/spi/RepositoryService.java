@@ -122,4 +122,9 @@ public interface RepositoryService {
      * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
      */
     List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException;
+
+    /**
+     * allows to destroy and deallocate resources
+     */
+    default void destroy() { }
 }

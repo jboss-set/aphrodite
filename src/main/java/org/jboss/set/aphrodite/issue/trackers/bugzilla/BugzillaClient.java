@@ -194,8 +194,9 @@ public class BugzillaClient {
     }
 
     public Map<String, List<Comment>> getCommentsForIssues(Map<String, Issue> issues) {
-        if (issues == null || issues.isEmpty())
-            throw new IllegalArgumentException("Provided list of issues instance can't be null neither empty");
+        if (issues == null || issues.isEmpty()) {
+            Collections.emptyMap();
+        }
 
         Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(ISSUE_IDS, extractIssueIdsList(issues.values()));

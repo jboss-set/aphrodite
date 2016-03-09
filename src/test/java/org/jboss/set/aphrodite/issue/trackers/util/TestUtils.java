@@ -45,7 +45,7 @@ public class TestUtils {
         assertEquals("issue creation time mismatch", expected.getCreationTime(), expected.getCreationTime());
         assertEquals("issue description mismatch", expected.getDescription(), other.getDescription());
         assertEquals("issue status mismatch", expected.getStatus(), other.getStatus());
-        assertEquals("issue component mismatch", expected.getComponent(), other.getComponent());
+        assertEquals("issue component mismatch", expected.getComponents(), other.getComponents());
         assertEquals("issue product mismatch", expected.getProduct(), other.getProduct());
         assertEquals("issue type mismatch", expected.getType(), other.getType());
 
@@ -62,8 +62,7 @@ public class TestUtils {
         Optional<IssueEstimation> expectedEst = expected.getEstimation();
         Optional<IssueEstimation> otherEst = other.getEstimation();
         assertEquals("issue estimation mismatch", expectedEst.isPresent(), otherEst.isPresent());
-        assertEquals("issue estimation mismatch", expectedEst.get().getInitialEstimate(), otherEst.get().getInitialEstimate(),
-                DELTA);
+        assertEquals("issue estimation mismatch", expectedEst.get().getInitialEstimate(), otherEst.get().getInitialEstimate(), DELTA);
         assertEquals("issue estimation mismatch", expectedEst.get().getHoursWorked(), otherEst.get().getHoursWorked(), DELTA);
 
         Stage expectedStage = expected.getStage();

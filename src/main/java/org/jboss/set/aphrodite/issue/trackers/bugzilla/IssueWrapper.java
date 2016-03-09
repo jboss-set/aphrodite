@@ -22,6 +22,41 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaClient.ID_PARAM_PATTERN;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ASSIGNEE;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.BLOCKS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMPONENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.CREATION_TIME;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.DEPENDS_ON;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.DESCRIPTION;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ESTIMATED_TIME;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FLAGS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FLAG_NAME;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FLAG_STATUS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.HOURS_WORKED;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ID;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ID_QUERY;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISSUE_IDS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISSUE_TYPE;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.LAST_UPDATED;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_SET_COLLECTION;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.REPORTER;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.STATUS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.SUMMARY;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_MILESTONE;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.VERSION;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.getAphroditeFlag;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.getBugzillaFlag;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
@@ -33,17 +68,6 @@ import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaClient.ID_PARAM_PATTERN;
-import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
 
 /**
  * @author Ryan Emerson
@@ -64,7 +88,12 @@ class IssueWrapper {
         issue.setSummary((String) bug.get(SUMMARY));
         issue.setDescription((String) bug.get(DESCRIPTION));
         issue.setStatus(IssueStatus.valueOf((String) bug.get(STATUS)));
-        issue.setComponent((String) ((Object[]) bug.get(COMPONENT))[0]);
+        Object[] components = (Object[]) bug.get(COMPONENT);
+        List<String> tmp = new ArrayList<>();
+        for(Object component : components) {
+            tmp.add((String) component);
+        }
+        issue.setComponents(tmp);
         issue.setProduct((String) bug.get(PRODUCT));
         issue.setStatus(IssueStatus.valueOf(((String) bug.get(STATUS)).toUpperCase()));
 
@@ -97,7 +126,7 @@ class IssueWrapper {
         issue.getTrackerId().ifPresent(trackerId -> params.put(ISSUE_IDS, trackerId));
         issue.getSummary().ifPresent(summary -> params.put(SUMMARY, summary));
         issue.getProduct().ifPresent(product -> params.put(PRODUCT, product));
-        issue.getComponent().ifPresent(component -> params.put(COMPONENT, component));
+        params.put(COMPONENT, issue.getComponents().toArray(new String[issue.getComponents().size()]));
         issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee));
         issue.getReporter().ifPresent(reporter -> params.put(REPORTER, reporter));
         issue.getRelease().getVersion().ifPresent(version -> params.put(VERSION, version));
@@ -113,7 +142,6 @@ class IssueWrapper {
 
         addURLCollectionToParameters(issue.getDependsOn(), DEPENDS_ON, params);
         addURLCollectionToParameters(issue.getBlocks(), BLOCKS, params);
-
         return params;
     }
 
@@ -173,10 +201,10 @@ class IssueWrapper {
                     if (!flag.isPresent())
                         continue;
 
-                    FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
+                    FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
                     issueStage.setStatus(flag.get(), status);
                 } else { // Else Stream
-                    FlagStatus status = FlagStatus.getMatchingFlag(flagMap.get(FLAG_STATUS));
+                    FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
                     streams.put(name, status);
                 }
             }

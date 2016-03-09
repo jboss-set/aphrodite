@@ -145,4 +145,9 @@ public interface IssueTrackerService {
      * @return true if the comment is successfully added to all issues.
      */
     boolean addCommentToIssue(Collection<Issue> issues, Comment comment);
+
+    /**
+     * allows to destroy and deallocate resources
+     */
+    default void destroy() { }
 }

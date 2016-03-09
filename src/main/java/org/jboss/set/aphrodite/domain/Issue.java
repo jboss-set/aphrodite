@@ -45,7 +45,7 @@ public class Issue {
 
     private String product; // E.g EAP6
 
-    private String component; // E.g Clustering
+    private List<String> components; // E.g Clustering
 
     private String summary;
 
@@ -90,6 +90,7 @@ public class Issue {
         this.dependsOn = new ArrayList<>();
         this.blocks = new ArrayList<>();
         this.comments = new ArrayList<>();
+        this.components = new ArrayList<>();
     }
 
     public URL getURL() {
@@ -112,12 +113,12 @@ public class Issue {
         this.product = product;
     }
 
-    public Optional<String> getComponent() {
-        return Optional.ofNullable(component);
+    public List<String> getComponents() {
+        return components;
     }
 
-    public void setComponent(String component) {
-        this.component = component;
+    public void setComponents(List<String> components) {
+        this.components = components;
     }
 
     public Optional<String> getSummary() {
@@ -254,7 +255,7 @@ public class Issue {
                 "url=" + url +
                 ", trackerId='" + trackerId + '\'' +
                 ", product='" + product + '\'' +
-                ", component='" + component + '\'' +
+                ", component='" + components + '\'' +
                 ", summary='" + summary + '\'' +
                 ", description='" + getPrintableDescription() + '\'' +
                 ", assignee='" + assignee + '\'' +
