@@ -103,6 +103,7 @@ public class Aphrodite implements AutoCloseable {
         issueTrackers.clear();
         repositories.forEach(e -> e.destroy());
         repositories.clear();
+        instance = null;
     }
 
     private final List<IssueTrackerService> issueTrackers = new ArrayList<>();
