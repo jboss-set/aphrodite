@@ -56,17 +56,18 @@ repositoryConfigs.add(githubService);
 AphroditeConfig config = new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);
 Aphrodite aphrodite = Aphrodite.instance(config);
 ```
-##### Warning
-the class of Aphrodite implements the interface AutoCloseble,so you can call the close() method close the resource  after Aphrodite use has finished,
- or that Aphrodite.Instance() should be performed in a try with resources statement.for example:
+##### Closing Aphrodite Resources
+The Aphrodite class implements the AutoCloseble interface, so in order for all resources to be closed you must either call the close() method explicitly or utilise a try with resources statement when calling Aphrodite.instance(). For example:
  ```java
  
- try(Aphrodite aphrodite = Aphrodite.instance(config)){
- 
+ try(Aphrodite aphrodite = Aphrodite.instance()){
+     // perform some aphrodite operations
  }
- 
-// or 
- 
+``` 
+Or
+```java
+ Aphrodite aphrodite = Aphrodite.instance();
+ // perform some aphrodite operations
  aphrodite.close();
  ```
 ## Example Usage
