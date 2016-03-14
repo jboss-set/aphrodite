@@ -42,6 +42,7 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
@@ -103,7 +104,6 @@ public class Aphrodite implements AutoCloseable {
         issueTrackers.clear();
         repositories.forEach(e -> e.destroy());
         repositories.clear();
-        instance = null;
     }
 
     private final List<IssueTrackerService> issueTrackers = new ArrayList<>();
@@ -432,6 +432,97 @@ public class Aphrodite implements AutoCloseable {
             }
         }
         throw new NotFoundException("No patch found which corresponds to patch.");
+    }
+
+    /**
+     * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.
+     * @param patch the <code>Repository<code> object whose associated labels should be returned.
+     * @return a list of all matching <code>Label<code> objects, or an empty list if no label can be found.
+     * @throws NotFoundException if the provided <code>Repository</code> url not consistent with the baseURL.
+     */
+    public List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException {
+        checkRepositoryServiceExists();
+        Objects.requireNonNull(repository, "repository cannot be null");
+
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                return repositoryService.getLabelsFromRepository(repository);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No repository found at RepositoryService: " + repositoryService.getClass().getName(), e);
+
+            }
+        }
+
+        return new ArrayList<>();
+    }
+
+    /**
+     * Retrieve all labels associated with the provided <code>Patch</code> object.
+     * @param patch the <code>Patch<code> object whose associated labels should be returned.
+     * @return a list of all matching <code>Label<code> objects, or an empty list if no patches can be found.
+     * @throws if the provided <code>Patch</code> url not consistent with the baseURL.
+     */
+    public List<Label> getLabelsFromPatch(Patch patch) throws NotFoundException {
+        checkRepositoryServiceExists();
+        Objects.requireNonNull(patch, "patch cannot be null");
+
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                return repositoryService.getLabelsFromPatch(patch);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at Patch: " + repositoryService.getClass().getName(), e);
+
+            }
+        }
+        return new ArrayList<>();
+
+    }
+
+    /**
+     * Set the labels for the provided <code>Patch</code> object.
+     * @param patch the <code>Patch</code> object whose will be set.
+     * @param labels the <code>Label</code> apply to the <code>Patch</code>
+     * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>Patch</code>
+     * @throws AphroditeException if add the <code>Label<code> is not consistent with get labels
+     */
+    public void setLabelsToPatch(Patch patch, List<Label> labels) throws NotFoundException, AphroditeException {
+        checkRepositoryServiceExists();
+        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(labels, "labels cannot be null");
+
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                repositoryService.setLabelsToPatch(patch, labels);
+                return;
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
+    }
+
+    /**
+     *Delete a label from the provided <code>Patch</code> object.
+     * @param patch the <code>Patch</code> whose label will be removed.
+     * @param name the <code>Label</code> name will be removed.
+     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>Patch</code>
+     */
+    public void removeLabelFromPatch(Patch patch, String name) throws NotFoundException {
+        checkRepositoryServiceExists();
+        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(name, "labelname cannot be null");
+
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                repositoryService.removeLabelFromPatch(patch, name);
+                return;
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
     }
 
     /**

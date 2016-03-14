@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.egit.github.core.Label;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.eclipse.egit.github.core.RepositoryId;
@@ -56,6 +55,8 @@ import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryServ
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
+import org.jboss.set.aphrodite.domain.Label;
+
 /**
  * @author Ryan Emerson
  */
@@ -64,6 +65,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
     private final GitHubWrapper WRAPPER = new GitHubWrapper();
     private GitHubClient gitHubClient;
+    private LabelService labelService;
 
     public GitHubRepositoryService() {
         super(RepositoryType.GITHUB);
@@ -106,6 +108,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         String[] elements = url.getPath().split("/");
         int pullId = Integer.parseInt(elements[elements.length - 1]);
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+
         PullRequestService pullRequestService = new PullRequestService(gitHubClient);
         try {
             PullRequest pullRequest = pullRequestService.getPullRequest(repositoryId, pullId);
@@ -189,9 +192,9 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
         IssueService issueService = new IssueService(gitHubClient);
         try {
-            Label newLabel = getLabel(repositoryId, labelName);
+            org.eclipse.egit.github.core.Label newLabel = getLabel(repositoryId, labelName);
             org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
-            List<Label> issueLabels = issue.getLabels();
+            List<org.eclipse.egit.github.core.Label> issueLabels = issue.getLabels();
             if (issueLabels.contains(newLabel))
                 return;
 
@@ -204,10 +207,11 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         }
     }
 
-    private Label getLabel(RepositoryId repositoryId, String labelName) throws NotFoundException, IOException {
-        LabelService labelService = new LabelService(gitHubClient);
-        List<Label> labels = labelService.getLabels(repositoryId);
-        for (Label label : labels)
+    private org.eclipse.egit.github.core.Label getLabel(RepositoryId repositoryId, String labelName)
+            throws NotFoundException, IOException {
+        labelService = new LabelService(gitHubClient);
+        List<org.eclipse.egit.github.core.Label> labels = labelService.getLabels(repositoryId);
+        for (org.eclipse.egit.github.core.Label label : labels)
             if (label.getName().equalsIgnoreCase(labelName))
                 return label;
 
@@ -215,16 +219,108 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
                 "' at repository '" + repositoryId + "'");
     }
 
-    private static final Pattern RELATED_PR_PATTERN = Pattern.compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern ABBREVIATED_RELATED_PR_PATTERN = Pattern.compile("([a-zA-Z_0-9-//]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO = Pattern.compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
+    @Override
+    public List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException {
+        labelService = new LabelService(gitHubClient);
+        URL url = repository.getURL();
+        checkHost(url);
+        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+        List<org.eclipse.egit.github.core.Label> labels=null;
+        try {
+            labels = labelService.getLabels(repositoryId);
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+        }
+
+        return WRAPPER.pullRequestLabeltoPatchLabel(labels);
+
+    }
+
+    @Override
+    public List<Label> getLabelsFromPatch(Patch patch) throws NotFoundException {
+        URL url = patch.getURL();
+        checkHost(url);
+        String patchId = patch.getId();
+        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+        IssueService issueService = new IssueService(gitHubClient);
+        List<org.eclipse.egit.github.core.Label> labels = null;
+        try {
+            org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
+            labels = issue.getLabels();
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+        }
+
+        return WRAPPER.pullRequestLabeltoPatchLabel(labels);
+    }
+
+    @Override
+    public void setLabelsToPatch(Patch patch, List<Label> labels) throws NotFoundException {
+        URL url = patch.getURL();
+        checkHost(url);
+
+        int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+        IssueService issueService = new IssueService(gitHubClient);
+        try {
+            org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
+            List<org.eclipse.egit.github.core.Label> issueLabels = issue.getLabels();
+            issueLabels.removeAll(issueLabels);
+
+            for (Label label : labels) {
+                org.eclipse.egit.github.core.Label newLabel = getLabel(repositoryId, label.getName());
+                issueLabels.add(newLabel);
+            }
+            issue.setLabels(issueLabels);
+            issueService.editIssue(repositoryId, issue);
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+    }
+
+    @Override
+    public void removeLabelFromPatch(Patch patch, String name) throws NotFoundException {
+        labelService = new LabelService(gitHubClient);
+        IssueService issueService = new IssueService(gitHubClient);
+        String patchId = patch.getId();
+        URL url = patch.getURL();
+        checkHost(url);
+        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+
+        org.eclipse.egit.github.core.Issue issue;
+        try {
+            issue = issueService.getIssue(repositoryId, patchId);
+            List<org.eclipse.egit.github.core.Label> labels = issue.getLabels();
+
+            for (org.eclipse.egit.github.core.Label label : labels)
+                if (label.getName().equalsIgnoreCase(name)) {
+                    labelService.deleteLabel(repositoryId, name);
+                    return;
+                }
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+
+        throw new NotFoundException("No label exists with the name '" + name +
+                "' at repository '" + repositoryId + "'");
+
+    }
+
+    private static final Pattern RELATED_PR_PATTERN = Pattern
+            .compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ABBREVIATED_RELATED_PR_PATTERN = Pattern.compile("([a-zA-Z_0-9-//]*)#(\\d+)",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO = Pattern
+            .compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @Override
     public List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException {
         try {
             List<URL> urls = getPRFromDescription(patch.getURL(), patch.getBody());
             List<Patch> related = new ArrayList<Patch>();
-            for(URL url : urls) {
+            for (URL url : urls) {
                 try {
                     related.add(getPatch(url));
                 } catch (NotFoundException e) {
@@ -232,19 +328,21 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
                 }
             }
             return related;
-        } catch(MalformedURLException | URISyntaxException e) {
+        } catch (MalformedURLException | URISyntaxException e) {
             Utils.logException(LOG, "something went wrong while trying to get related patches to " + patch.getURL(), e);
             return Collections.emptyList();
         }
     }
 
     private List<URL> getPRFromDescription(URL url, String content) throws MalformedURLException, URISyntaxException {
-        String []paths = url.getPath().split("/");
+        String[] paths = url.getPath().split("/");
         Matcher matcher = RELATED_PR_PATTERN.matcher(content);
         List<URL> relatedPullRequests = new ArrayList<URL>();
-        while(matcher.find()) {
+        while (matcher.find()) {
             if (matcher.groupCount() == 3) {
-                URL relatedPullRequest = new URI("https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pulls/" + matcher.group(3) ).toURL();
+                URL relatedPullRequest = new URI(
+                        "https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pulls/" + matcher.group(3))
+                                .toURL();
                 relatedPullRequests.add(relatedPullRequest);
             }
         }
@@ -257,17 +355,20 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
                     URL relatedPullRequest = new URI("https://github.com/"
                             + abbreviatedExternalMatcher.group(1) + "/"
                             + abbreviatedExternalMatcher.group(2) + "/pulls/"
-                            + abbreviatedExternalMatcher.group(3) ).toURL();
+                            + abbreviatedExternalMatcher.group(3)).toURL();
                     relatedPullRequests.add(relatedPullRequest);
                     continue;
                 }
             }
 
             if (abbreviatedMatcher.groupCount() == 2) {
-                URL relatedPullRequest = new URI("https://github.com/" + paths[1] + "/" + paths[2] + "/" + "/pulls/" + abbreviatedMatcher.group(2)).toURL();
+                URL relatedPullRequest = new URI(
+                        "https://github.com/" + paths[1] + "/" + paths[2] + "/" + "/pulls/" + abbreviatedMatcher.group(2))
+                                .toURL();
                 relatedPullRequests.add(relatedPullRequest);
             }
         }
         return relatedPullRequests;
     }
+
 }

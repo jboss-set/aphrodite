@@ -28,6 +28,7 @@ import java.util.List;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
@@ -94,6 +95,39 @@ public interface RepositoryService {
     List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) throws NotFoundException;
 
     /**
+     * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.
+     * @param patch the <code>Repository<code> object whose associated labels should be returned.
+     * @return a list of all matching <code>Label<code> objects, or an empty list if no label can be found.
+     * @throws NotFoundException if the provided <code>Repository</code> url not consistent with the baseURL.
+     */
+    List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException;
+
+    /**
+     * Retrieve all labels associated with the provided <code>Patch</code> object.
+     * @param patch the <code>Patch<code> object whose associated labels should be returned.
+     * @return a list of all matching <code>Label<code> objects, or an empty list if no patches can be found.
+     * @throws NotFoundException if the provided <code>Patch</code> url not consistent with the baseURL.
+     */
+    List<Label> getLabelsFromPatch(Patch patch) throws NotFoundException;
+
+    /**
+     * Set the labels for the provided <code>Patch</code> object.
+     * @param patch the <code>Patch</code> object whose will be set.
+     * @param labels the <code>Label</code> apply to the <code>Patch</code>
+     * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>Patch</code>
+     * @throws AphroditeException if add the <code>Label<code> is not consistent with get labels
+     */
+    void setLabelsToPatch(Patch patch, List<Label> labels) throws NotFoundException, AphroditeException ;
+
+    /**
+     *Delete a label from the provided <code>Patch</code> object.
+     * @param patch the <code>Patch</code> whose label will be removed.
+     * @param name the <code>Label</code> name will be removed.
+     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>Patch</code>
+     */
+    void removeLabelFromPatch(Patch patch, String name) throws NotFoundException;
+
+    /**
      * Add a <code>Comment</code> to the specified <code>Patch</code> object, and propagate the changes
      * to the remote repository.
      *
@@ -126,5 +160,6 @@ public interface RepositoryService {
     /**
      * allows to destroy and deallocate resources
      */
-    default void destroy() { }
+    default void destroy() {
+    }
 }

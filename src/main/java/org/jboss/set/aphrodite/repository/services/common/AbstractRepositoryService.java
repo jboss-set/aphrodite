@@ -74,7 +74,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
             url = url + "/";
 
         try {
-            baseUrl = new URL(config.getUrl());
+            baseUrl = new URL(url);
         } catch (MalformedURLException e) {
             String errorMsg = "Invalid Repository url. " + this.getClass().getName() +
                     " service for '" + url + "' cannot be started";
