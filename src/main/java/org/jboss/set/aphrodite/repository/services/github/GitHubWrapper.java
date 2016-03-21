@@ -28,10 +28,12 @@ import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchStatus;
 import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.domain.Label;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,10 +72,23 @@ class GitHubWrapper {
                 urlString = urlString.substring(0, idx);
             }
             Repository repo = new Repository(URI.create(urlString).toURL());
+
             return new Patch(id, url, repo, codebase, status, title, body);
         } catch (MalformedURLException e) {
             return null;
         }
+    }
+
+    public List<Label> pullRequestLabeltoPatchLabel(List<org.eclipse.egit.github.core.Label> labels) {
+        List<Label> patchLabels = new ArrayList<>();
+        for (org.eclipse.egit.github.core.Label label : labels) {
+            String name = label.getName();
+            String color = label.getColor();
+            String url = label.getUrl();
+
+            patchLabels.add(new Label(color, name, url));
+        }
+        return patchLabels;
     }
 
     private PatchStatus getPatchStatus(String status) {
