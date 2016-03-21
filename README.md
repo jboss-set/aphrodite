@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/jboss-set/aphrodite.svg?branch=master)](https://travis-ci.org/jboss-set/aphrodite)
 Aphrodite
 ===========
 An API for retrieving and updating SET issues from multiple issue trackers.
