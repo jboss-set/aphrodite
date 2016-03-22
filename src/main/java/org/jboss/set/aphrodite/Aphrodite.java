@@ -41,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Comment;
+import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
@@ -588,6 +589,21 @@ public class Aphrodite implements AutoCloseable {
             }
         }
         return patches;
+    }
+
+    public CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException {
+        checkRepositoryServiceExists();
+        Objects.requireNonNull(patch, "patch cannot be null");
+
+        for (RepositoryService repositoryService : repositories) {
+            try {
+                return repositoryService.getCommitStatusFromPatch(patch);
+            } catch (NotFoundException e) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("No commit status found at RepositoryService: " + repositoryService.getClass().getName(), e);
+            }
+        }
+        throw new NotFoundException("No commit status found for patch:" + patch.getURL());
     }
 
     private void checkIssueTrackerExists() {

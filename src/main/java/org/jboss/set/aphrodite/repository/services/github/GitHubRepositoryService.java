@@ -36,10 +36,13 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.egit.github.core.CommitStatus;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
+import org.eclipse.egit.github.core.RepositoryCommit;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.LabelService;
 import org.eclipse.egit.github.core.service.PullRequestService;
@@ -369,6 +372,71 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             }
         }
         return relatedPullRequests;
+    }
+
+    @Override
+    public org.jboss.set.aphrodite.domain.CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException {
+        PullRequestService pullrequestService = new PullRequestService(gitHubClient);
+        CommitService commitService = new CommitService(gitHubClient);
+        String sha = null;
+        org.jboss.set.aphrodite.domain.CommitStatus status = null;
+        URL url = patch.getURL();
+        int patchId = Integer.parseInt(patch.getId());
+        checkHost(url);
+        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+        try {
+            List<RepositoryCommit> commits = pullrequestService.getCommits(repositoryId, patchId);
+            if (commits.size() > 0) {
+                sha = commits.get(commits.size() - 1).getSha();
+            }
+            // statuses contains Finished and Started TeamCity Build
+            List<CommitStatus> statuses = commitService.getStatuses(repositoryId, sha);
+            if (statuses.size() > 0) {
+                String sta = getCombineStatus(statuses);
+                status = org.jboss.set.aphrodite.domain.CommitStatus.fromString(sta);
+            }
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+
+        if (status != null) {
+            return status;
+        } else {
+            throw new NotFoundException("No commit status found for patch:" + patch.getURL());
+        }
+    }
+
+    private String getCombineStatus(List<CommitStatus> comStatuses) {
+        int count = 0, flag = 0;
+        List<String> stas = new ArrayList<>();
+        for (CommitStatus status : comStatuses) {
+            String sta = status.getState();
+            stas.add(sta);
+            // until sta="pending"
+            if (!sta.equals("pending")) {
+                if (sta.equals("failure")) {
+                    return "failure";
+                } else if (sta.equals("error")) {
+                    return "error";
+                }
+            } else {
+                flag = 1;
+                // The Travis CI and TeamCity Build has different rules
+                if (status.getDescription().contains("Travis")) {
+                    return stas.contains("success") ? "success" : "pending";
+                }
+                if (comStatuses.size() > 2 * count) {
+                    String temp = comStatuses.get(2 * count).getState();
+                    return temp.equals("pending") ? "pending" : "success";
+                } else if (comStatuses.size() == 2 * count) {
+                    return "success";
+                }
+            }
+            count++;
+        }
+
+        return (flag == 0) ? "success" : null;
     }
 
 }

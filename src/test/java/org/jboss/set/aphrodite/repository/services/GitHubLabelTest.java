@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
+import static org.mockito.Mockito.when;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
@@ -222,8 +222,8 @@ public class GitHubLabelTest {
     }
 
     private void mockLabel() throws NotFoundException {
-        org.mockito.Mockito.when(aphrodite.getLabelsFromRepository(repository)).thenReturn(labels);
-        org.mockito.Mockito.when(aphrodite.getLabelsFromPatch(patch)).thenReturn(prlabels);
+        when(aphrodite.getLabelsFromRepository(repository)).thenReturn(labels);
+        when(aphrodite.getLabelsFromPatch(patch)).thenReturn(prlabels);
 
     }
 }
