@@ -28,7 +28,7 @@ import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchStatus;
+import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
@@ -100,7 +100,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
     }
 
     @Override
-    public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) throws NotFoundException {
+    public List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 

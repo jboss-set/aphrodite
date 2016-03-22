@@ -26,7 +26,7 @@ import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchStatus;
+import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Label;
 
@@ -62,7 +62,7 @@ class GitHubWrapper {
             String id = Integer.toString(pullRequest.getNumber());
             URL url = new URL(pullRequest.getHtmlUrl());
             Codebase codebase = new Codebase(pullRequest.getBase().getRef());
-            PatchStatus status = getPatchStatus(pullRequest.getState());
+            PatchState state = getPatchState(pullRequest.getState());
             String title = pullRequest.getTitle().replaceFirst("\\u2026", "");
             String body = pullRequest.getBody().replaceFirst("\\u2026", "");
 
@@ -73,7 +73,7 @@ class GitHubWrapper {
             }
             Repository repo = new Repository(URI.create(urlString).toURL());
 
-            return new Patch(id, url, repo, codebase, status, title, body);
+            return new Patch(id, url, repo, codebase, state, title, body);
         } catch (MalformedURLException e) {
             return null;
         }
@@ -91,11 +91,11 @@ class GitHubWrapper {
         return patchLabels;
     }
 
-    private PatchStatus getPatchStatus(String status) {
+    private PatchState getPatchState(String state) {
         try {
-            return PatchStatus.valueOf(status.toUpperCase());
+            return PatchState.valueOf(state.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return PatchStatus.UNDEFINED;
+            return PatchState.UNDEFINED;
         }
     }
 
