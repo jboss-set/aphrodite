@@ -49,7 +49,7 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchStatus;
+import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
@@ -151,15 +151,15 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) throws NotFoundException {
+    public List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException {
         URL url = repository.getURL();
         checkHost(url);
 
         RepositoryId id = RepositoryId.createFromUrl(url);
         PullRequestService pullRequestService = new PullRequestService(gitHubClient);
         try {
-            String githubStatus = status.toString().toLowerCase();
-            List<PullRequest> pullRequests = pullRequestService.getPullRequests(id, githubStatus);
+            String githubState = state.toString().toLowerCase();
+            List<PullRequest> pullRequests = pullRequestService.getPullRequests(id, githubState);
             return WRAPPER.toAphroditePatches(pullRequests);
         } catch (IOException e) {
             Utils.logException(LOG, e);

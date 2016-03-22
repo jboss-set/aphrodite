@@ -29,23 +29,23 @@ public class Patch {
     private final String id;
     private final URL url;
     private final Codebase codebase;
-    private PatchStatus status;
+    private PatchState state;
     private String title;
     private String body;
     private Repository repository;
 
-    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchStatus status, String title, String body) {
+    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchState state, String title, String body) {
         this.id = id;
         this.url = url;
         this.codebase = codebase;
-        this.status = status;
+        this.state = state;
         this.title = title;
         this.body = body;
         this.repository = repository;
     }
 
-    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchStatus status) {
-        this(id, url, repository, codebase, status, null, null);
+    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchState state) {
+        this(id, url, repository, codebase, state, null, null);
 
     }
 
@@ -62,12 +62,12 @@ public class Patch {
         return codebase;
     }
 
-    public PatchStatus getStatus() {
-        return status;
+    public PatchState getState() {
+        return state;
     }
 
-    public void setStatus(PatchStatus status) {
-        this.status = status;
+    public void setState(PatchState state) {
+        this.state = state;
     }
 
     public String getTitle() {
@@ -99,7 +99,7 @@ public class Patch {
     public String toString() {
         return "Patch{" +
                 "url=" + url +
-                ", status=" + status +
+                ", state=" + state +
                 ", title='" + title + '\'' +
                 ", body='" + body + '\'' +
                 ", codebase=" + codebase +

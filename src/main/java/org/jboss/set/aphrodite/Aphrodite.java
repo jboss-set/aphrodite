@@ -44,7 +44,7 @@ import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchStatus;
+import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -390,20 +390,20 @@ public class Aphrodite implements AutoCloseable {
 
     /**
      * Retrieve all Patches associated with the provided <code>Repository</code> object, which have a
-     * status that matches the provided <code>PatchStatus</code> object.
+     * state that matches the provided <code>PatchState</code> object.
      *
      * @param repository the <code>Repository</code> object whose associated Patches should be returned.
-     * @param status the <code>PatchStatus</code> which the returned <code>Patch</code> objects must have.
+     * @param state the <code>PatchState</code> which the returned <code>Patch</code> objects must have.
      * @return a list of all matching <code>Patch</code> objects, or an empty list if no patches can be found.
      */
-    public List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) {
+    public List<Patch> getPatchesByState(Repository repository, PatchState state) {
         checkRepositoryServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
-        Objects.requireNonNull(status, "status cannot be null");
+        Objects.requireNonNull(state, "state cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             try {
-                return repositoryService.getPatchesByStatus(repository, status);
+                return repositoryService.getPatchesByState(repository, state);
             } catch (NotFoundException e) {
                 if (LOG.isInfoEnabled())
                     LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);

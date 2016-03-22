@@ -30,7 +30,7 @@ import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchStatus;
+import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
 
 public interface RepositoryService {
@@ -85,14 +85,14 @@ public interface RepositoryService {
 
     /**
      * Retrieve all Patches associated with the provided <code>Repository</code> object, which have a
-     * status that matches the provided <code>PatchStatus</code> object.
+     * state that matches the provided <code>PatchState</code> object.
      *
      * @param repository the <code>Repository</code> object whose associated Patches should be returned.
-     * @param status the <code>PatchStatus</code> which the returned <code>Patch</code> objects must have.
+     * @param state the <code>PatchState</code> which the returned <code>Patch</code> objects must have.
      * @return a list of all matching <code>Patch</code> objects, or an empty list if no patches can be found.
      * @throws NotFoundException if the provided <code>Repository</code> cannot be found at the RepositoryService.
      */
-    List<Patch> getPatchesByStatus(Repository repository, PatchStatus status) throws NotFoundException;
+    List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException;
 
     /**
      * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.
