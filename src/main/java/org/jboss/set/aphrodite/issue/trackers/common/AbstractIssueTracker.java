@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,6 +56,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
             .compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?");
 
     protected final TrackerType TRACKER_TYPE;
+    protected ExecutorService executorService;
     protected IssueTrackerConfig config;
     protected URL baseUrl;
 
@@ -66,6 +68,8 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
 
     @Override
     public boolean init(AphroditeConfig aphroditeConfig) {
+        executorService = aphroditeConfig.getExecutorService();
+
         Iterator<IssueTrackerConfig> i = aphroditeConfig.getIssueTrackerConfigs().iterator();
         while (i.hasNext()) {
             IssueTrackerConfig config = i.next();

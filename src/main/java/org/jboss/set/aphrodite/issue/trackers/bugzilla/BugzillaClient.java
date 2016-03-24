@@ -65,7 +65,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -94,12 +93,13 @@ public class BugzillaClient {
     static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("namedcmd=([^&]+)");
     static final Pattern SHARER_ID_PARAM_PATTERN = Pattern.compile("sharer_id=([^&]+)");
 
-    private final int MAX_THREADS = 10; // TODO expose this in the configuration
+    private final ExecutorService executorService;
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private final URL baseURL;
     private final Map<String, Object> loginDetails;
 
-    public BugzillaClient(URL baseURL, String login, String password) throws IllegalStateException {
+    public BugzillaClient(URL baseURL, String login, String password, ExecutorService executorService) throws IllegalStateException {
+        this.executorService = executorService;
         this.baseURL = baseURL;
 
         Map<String, String> params = new HashMap<>();
@@ -347,8 +347,6 @@ public class BugzillaClient {
 
     // Posts comments in parallel as a bulk method is not possible with BZ
     private boolean executeCommentFutures(List<CommentFuture> futures) {
-        int numberOfThreads = futures.size() > MAX_THREADS ? MAX_THREADS : futures.size();
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         try {
             return executorService.invokeAll(futures)
                     .stream()
@@ -364,8 +362,6 @@ public class BugzillaClient {
             if (LOG.isWarnEnabled())
                 LOG.warn(e);
             return false;
-        } finally {
-            executorService.shutdown();
         }
     }
 
