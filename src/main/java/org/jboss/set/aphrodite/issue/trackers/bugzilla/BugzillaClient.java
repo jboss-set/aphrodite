@@ -81,6 +81,7 @@ import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
+import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 /**
@@ -311,7 +312,7 @@ public class BugzillaClient {
         return issues;
     }
 
-    public boolean updateIssue(Issue issue) {
+    public boolean updateIssue(Issue issue) throws AphroditeException {
         Map<String, Object> params = WRAPPER.issueToBugzillaBug(issue, loginDetails);
         return runCommand(METHOD_UPDATE_BUG, params);
     }

@@ -31,6 +31,7 @@ import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.issue.trackers.util.TestUtils;
+import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -104,7 +105,7 @@ public class BZIssueWrapperTest {
     }
 
     @Test
-    public void validIssueToBZTest() {
+    public void validIssueToBZTest() throws AphroditeException {
         Map<String, Object> result = wrapper.issueToBugzillaBug(issue01, loginMap);
         result.put(BugzillaFields.CREATION_TIME, getCreationDate());
 
@@ -113,7 +114,7 @@ public class BZIssueWrapperTest {
     }
 
     @Test
-    public void nullIssuetoBZTest() {
+    public void nullIssuetoBZTest() throws AphroditeException {
         expectedException.expect(NullPointerException.class);
         Map<String, Object> result = wrapper.issueToBugzillaBug(null, loginMap);
 
@@ -121,7 +122,7 @@ public class BZIssueWrapperTest {
     }
 
     @Test
-    public void nullLoginIssuetoBZTest() {
+    public void nullLoginIssuetoBZTest() throws AphroditeException {
         expectedException.expect(NullPointerException.class);
         Map<String, Object> result = wrapper.issueToBugzillaBug(issue01, null);
 

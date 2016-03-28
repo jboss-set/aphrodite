@@ -68,6 +68,7 @@ import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
+import org.jboss.set.aphrodite.spi.AphroditeException;
 
 /**
  * @author Ryan Emerson
@@ -127,8 +128,9 @@ class IssueWrapper {
 
     }
 
-    Map<String, Object> issueToBugzillaBug(Issue issue, Map<String, Object> loginDetails) {
+    Map<String, Object> issueToBugzillaBug(Issue issue, Map<String, Object> loginDetails) throws AphroditeException {
         checkUnsupportedUpdateFields(issue);
+        checkUnsupportedIssueStatus(issue);
 
         Map<String, Object> params = new HashMap<>(loginDetails);
         issue.getTrackerId().ifPresent(trackerId -> params.put(ISSUE_IDS, trackerId));
@@ -156,6 +158,12 @@ class IssueWrapper {
     private void checkUnsupportedUpdateFields(Issue issue) {
         if (issue.getReporter().isPresent() && LOG.isDebugEnabled())
             LOG.debug("Bugzilla does not support updating the reporter field, field ignored.");
+    }
+
+    private void checkUnsupportedIssueStatus(Issue issue) throws AphroditeException {
+        if (issue.getStatus() == IssueStatus.CREATED) {
+            throw new AphroditeException("bugzilla not insist on the CREATED status! it is not found in the bugzilla status");
+        }
     }
 
     private List<Map<String, Object>> getStageAndStreamsMap(Map<String, FlagStatus> streams, Map<Flag, FlagStatus> stateMap) {
