@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
+import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
@@ -156,6 +157,15 @@ public interface RepositoryService {
      * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
      */
     List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException;
+
+    /**
+     * get the commit result status from a patch
+     * this method can only fetch the last commit status.
+     * @param patch the <code>Patch</code> which will get the commit status return.
+     * @return commit status return the status of the commit.
+     * @throws NotFoundException if the commit status not found
+     */
+    CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException;
 
     /**
      * allows to destroy and deallocate resources
