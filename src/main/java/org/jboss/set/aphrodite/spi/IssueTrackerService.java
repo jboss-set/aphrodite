@@ -91,7 +91,7 @@ public interface IssueTrackerService {
      *
      * @param searchCriteria all set fields will be search for.
      * @return a list of all <code>Issue</code> objects which match the specified searchCriteria,
-     *         or an empty list if no issues match the searched criteria.
+     *         or an empty list if no issues match the searched criteria or the searchCriteria object contains no entries.
      */
     List<Issue> searchIssues(SearchCriteria searchCriteria);
 

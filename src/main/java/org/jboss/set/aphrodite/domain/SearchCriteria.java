@@ -102,6 +102,11 @@ public class SearchCriteria {
         return Optional.ofNullable(maxResults);
     }
 
+    public boolean isEmpty() {
+        return status == null && assignee == null && reporter == null && product == null && component == null && stage == null
+                && release == null && streams == null && lastUpdated == null && maxResults == null;
+    }
+
     public static class Builder {
 
         private IssueStatus status;

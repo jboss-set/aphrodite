@@ -203,13 +203,16 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param searchCriteria all set fields will be search for.
      * @return a list of all <code>Issue</code> objects which match the specified searchCriteria,
-     *         or an empty list if no issues match the searched criteria.
+     *         or an empty list if no issues match the searched criteria or the searchCriteria object contains no entries.
      */
     public List<Issue> searchIssues(SearchCriteria searchCriteria) {
         Objects.requireNonNull(searchCriteria, "searchCriteria cannot be null");
         checkIssueTrackerExists();
 
         List<Issue> issues = new ArrayList<>();
+        if (searchCriteria.isEmpty())
+            return issues;
+
         issueTrackers.forEach(tracker -> issues.addAll(tracker.searchIssues(searchCriteria)));
         return issues;
     }

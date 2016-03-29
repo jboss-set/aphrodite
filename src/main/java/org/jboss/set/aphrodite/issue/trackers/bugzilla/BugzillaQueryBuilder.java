@@ -22,8 +22,12 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
+import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
 
@@ -38,6 +42,8 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.*;
  * @author Ryan Emerson
  */
 class BugzillaQueryBuilder {
+
+    private static final Log LOG = LogFactory.getLog(BugzillaQueryBuilder.class);
 
     private final SearchCriteria criteria;
     private final Map<String, Object> loginDetails;
@@ -55,15 +61,8 @@ class BugzillaQueryBuilder {
         if (queryMap != null)
             return queryMap;
 
-        queryMap = new HashMap<>(loginDetails);
-        queryMap.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
-        queryMap.put(RESULT_PERMISSIVE_SEARCH, true);
+        queryMap = new HashMap<>();
 
-        int limit = criteria.getMaxResults().orElse(defaultIssueLimit);
-        if (limit > 0)
-            queryMap.put(RESULT_LIMIT, limit);
-
-        criteria.getStatus().ifPresent(status -> queryMap.put(STATUS, status.toString()));
         criteria.getAssignee().ifPresent(assignee -> queryMap.put(ASSIGNEE, assignee));
         criteria.getReporter().ifPresent(reporter -> queryMap.put(REPORTER, reporter));
         criteria.getLastUpdated().ifPresent(date -> queryMap.put(LAST_UPDATED, date.atStartOfDay().toString()));
@@ -75,6 +74,21 @@ class BugzillaQueryBuilder {
         });
 
         addStreamsAndStageToQueryMap();
+        addIssueStatusToMap();
+
+        // Necessary as an exception is thrown by BZ if queryMap is passed to the service without valid search fields
+        if (queryMap.isEmpty()) {
+            queryMap = null;
+            return null;
+        }
+        queryMap.putAll(loginDetails);
+        queryMap.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
+        queryMap.put(RESULT_PERMISSIVE_SEARCH, true);
+
+        int limit = criteria.getMaxResults().orElse(defaultIssueLimit);
+        if (limit > 0)
+            queryMap.put(RESULT_LIMIT, limit);
+
         return queryMap;
     }
 
@@ -117,5 +131,16 @@ class BugzillaQueryBuilder {
         queryMap.put(SEARCH_FUNCTION + index, SEARCH_FLAGS);
         queryMap.put(SEARCH_OPTION + index, SEARCH_EQUALS);
         queryMap.put(SEARCH_VALUE + index, value);
+    }
+
+    // IssueStatus.CREATED not supported by BZ, so ignore status and log message
+    private void addIssueStatusToMap() {
+        IssueStatus issueStatus = criteria.getStatus().orElse(IssueStatus.CREATED);
+        if (issueStatus != IssueStatus.CREATED) {
+            queryMap.put(STATUS, issueStatus.toString());
+        } else {
+            Utils.logWarnMessage(LOG, "Bugzilla issues do not support the IssueStatus CREATED, so this field is ignored "
+                    + "when searching for issues");
+        }
     }
 }

@@ -280,6 +280,8 @@ public class BugzillaClient {
 
     public List<Issue> searchIssues(SearchCriteria criteria, int defaultIssueLimit) {
         Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, loginDetails, defaultIssueLimit).getQueryMap();
+        if (queryMap == null)
+            return new ArrayList<>();
         return searchIssues(queryMap);
     }
 
