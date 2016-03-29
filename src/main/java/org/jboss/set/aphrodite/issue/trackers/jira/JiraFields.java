@@ -61,6 +61,7 @@ class JiraFields {
             .build();
 
     static final BiMap<String, IssueStatus> STATUS_MAP = new ImmutableBiMap.Builder<String, IssueStatus>()
+            .put("new",IssueStatus.CREATED)
             .put("open", IssueStatus.NEW)
             .put("coding in progress", IssueStatus.ASSIGNED)
             .put("pull request sent", IssueStatus.POST)
@@ -81,7 +82,6 @@ class JiraFields {
         IssueStatus issueStatus = STATUS_MAP.get(status);
         if (issueStatus == null) {
             switch (status) {
-                case "new":
                 case "reopened":
                     return IssueStatus.NEW;
                 case "qa in progress":
@@ -115,6 +115,8 @@ class JiraFields {
     // Surely there is a better way of achieving this?????
     static String getJiraTransition(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
         switch (currentStatus) {
+            case CREATED:
+                return transitionsForCreatedStatus(currentStatus,newStatus);
             case NEW:
                 return transitionsForNewStatus(currentStatus, newStatus);
             case ASSIGNED:
@@ -134,8 +136,24 @@ class JiraFields {
         }
     }
 
+    private static String transitionsForCreatedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+            throws AphroditeException {
+        switch (newStatus) {
+            case CREATED:
+                return "Devel Approve";
+            case NEW:
+                return "Hand Over to Development";
+            case CLOSED:
+                return "Close Issue";
+            default:
+                throw new AphroditeException("It's not possible to transition from " + currentStatus);
+        }
+    }
+
     private static String transitionsForNewStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
         switch (newStatus) {
+            case CREATED:
+                return "Back To New";
             case ASSIGNED:
                 return "Start Progress";
             case POST:
@@ -153,6 +171,8 @@ class JiraFields {
     private static String transitionsForAssignedStatus(IssueStatus currentStatus, IssueStatus newStatus)
             throws AphroditeException {
         switch (newStatus) {
+            case CREATED:
+                return "Back To New";
             case NEW:
                 return "Stop Progress";
             default:
@@ -162,8 +182,16 @@ class JiraFields {
 
     private static String transitionsForPostStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
         switch (newStatus) {
+            case CREATED:
+                return "Back To New";
             case MODIFIED:
                 return "Resolve Issue";
+            case ASSIGNED:
+                return "Start Progress";
+            case POST:
+                return "Update Pull Request";
+            case NEW:
+                return "Reject Pull Request";
             case CLOSED:
                 return "Close Issue";
             default:
@@ -175,6 +203,8 @@ class JiraFields {
     private static String transitionsForModifiedStatus(IssueStatus currentStatus, IssueStatus newStatus)
             throws AphroditeException {
         switch (newStatus) {
+            case CREATED:
+                return "Back To New";
             case NEW:
             case ASSIGNED:
                 return "Reopen Issue";
@@ -191,9 +221,11 @@ class JiraFields {
     private static String transitionsForON_QAStatus(IssueStatus currentStatus, IssueStatus newStatus)
             throws AphroditeException {
         switch (newStatus) {
+            case CREATED:
+                return "Back To New";
             case NEW:
             case ASSIGNED:
-                return "Reopen Issue";
+                return "Reopen Issue From QA";
             case VERIFIED:
                 return "Verify Issue";
             case CLOSED:
@@ -207,6 +239,8 @@ class JiraFields {
     private static String transitionsForVerifiedStatus(IssueStatus currentStatus, IssueStatus newStatus)
             throws AphroditeException {
         switch (newStatus) {
+            case CREATED:
+                return "Back To New";
             case NEW:
             case ASSIGNED:
                 return "Reopen Issue";
