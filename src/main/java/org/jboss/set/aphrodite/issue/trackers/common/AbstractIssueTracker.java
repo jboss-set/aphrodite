@@ -120,22 +120,23 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     }
 
     @Override
-    public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
+    public void addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         checkHost(issue.getURL());
         comment.getId().ifPresent(id ->
                 Utils.logWarnMessage(getLog(), "ID: " + id + "ignored when posting comments " +
                         "as this is set by the issue tracker.")
         );
-        return false;
     }
 
     protected void checkHost(URL url) throws NotFoundException {
-        if (!issueExistsAtHost(url))
+        if (!urlExists(url))
             throw new NotFoundException("The requested entity cannot be found at this tracker as " +
                     "the specified host domain is different from this service.");
     }
 
-    protected boolean issueExistsAtHost(URL url) {
+    @Override
+    public boolean urlExists(URL url) {
+        Objects.requireNonNull(url);
         return url.getHost().equals(baseUrl.getHost());
     }
 
@@ -144,7 +145,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
 
         return commentMap.entrySet()
                 .stream()
-                .filter(entry -> entry.getKey() != null && issueExistsAtHost(entry.getKey().getURL()))
+                .filter(entry -> entry.getKey() != null && urlExists(entry.getKey().getURL()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
@@ -152,7 +153,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         Objects.requireNonNull(issues);
 
         return issues.stream()
-                .filter(i -> i != null && issueExistsAtHost(i.getURL()))
+                .filter(i -> i != null && urlExists(i.getURL()))
                 .collect(Collectors.toList());
     }
 
@@ -160,7 +161,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         Objects.requireNonNull(urls);
 
         return urls.stream()
-                .filter(url -> url != null && issueExistsAtHost(url))
+                .filter(url -> url != null && urlExists(url))
                 .collect(Collectors.toList());
     }
 }

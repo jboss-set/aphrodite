@@ -104,15 +104,15 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public Issue getIssue(URL url) throws NotFoundException {
+        String issueKey = getIssueKey(url);
         try {
             checkHost(url);
-            com.atlassian.jira.rest.client.api.domain.Issue issue;
-            issue = restClient.getIssueClient().getIssue(getIssueKey(url)).get();
+            com.atlassian.jira.rest.client.api.domain.Issue issue = restClient.getIssueClient().getIssue(issueKey).get();
             return WRAPPER.jiraIssueToIssue(url, issue);
         } catch (InterruptedException e) {
-            throw new NotFoundException("something interrupted the execution ", e);
+            throw new NotFoundException("Something interrupted the execution when trying to retrieve issue " + issueKey, e);
         } catch (ExecutionException e) {
-            throw new NotFoundException("problem during execution ", e);
+            throw new NotFoundException("Unable to retrieve issue with id: " + issueKey , e);
         }
 
     }
@@ -182,7 +182,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             Filter filter = searchClient.getFilter(filterUrl.toURI()).get();
             return filter.getJql();
         } catch (Exception e) {
-            throw new NotFoundException("Unable to retrieve filter with id:=" + filterUrl, e);
+            throw new NotFoundException("Unable to retrieve filter with url: " + filterUrl, e);
         }
     }
 
@@ -252,12 +252,12 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
+    public void addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         super.addCommentToIssue(issue, comment);
-        return postComment(issue, comment);
+        postComment(issue, comment);
     }
 
-    private boolean postComment(Issue issue, Comment comment) throws NotFoundException {
+    private void postComment(Issue issue, Comment comment) throws NotFoundException {
         if (comment.isPrivate())
             Utils.logWarnMessage(LOG, "Private comments are not currently supported by " + getClass().getName());
         com.atlassian.jira.rest.client.api.domain.Issue jiraIssue = getIssue(issue);
@@ -265,7 +265,6 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         com.atlassian.jira.rest.client.api.domain.Comment c =
                 com.atlassian.jira.rest.client.api.domain.Comment.valueOf(comment.getBody());
         restClient.getIssueClient().addComment(jiraIssue.getCommentsUri(), c).claim();
-        return true;
     }
 
     @Override

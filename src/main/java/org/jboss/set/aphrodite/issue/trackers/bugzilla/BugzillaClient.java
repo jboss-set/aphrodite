@@ -114,11 +114,6 @@ public class BugzillaClient {
         runCommand(METHOD_USER_LOGIN, params);
     }
 
-    public Issue getIssue(URL url) throws NotFoundException {
-        String trackerId = Utils.getParamaterFromUrl(ID_PARAM_PATTERN, url);
-        return getIssue(trackerId);
-    }
-
     public Issue getIssue(String trackerId) throws NotFoundException {
         Map<String, Object> params = new HashMap<>(loginDetails);
         params.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
@@ -134,7 +129,7 @@ public class BugzillaClient {
         } else {
             Utils.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
         }
-        throw new NotFoundException();
+        throw new NotFoundException("No issues found with id: " + trackerId);
     }
 
     public List<Issue> getIssues(Collection<URL> urls) {
@@ -270,7 +265,7 @@ public class BugzillaClient {
         try {
             return searchIssues(queryMap);
         } catch (RuntimeException e) {
-            throw new NotFoundException(e);
+            throw new NotFoundException("Unable to retrieve issues associated with filter url: " + filterUrl, e);
         }
     }
 

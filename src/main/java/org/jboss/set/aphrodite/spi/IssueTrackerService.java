@@ -58,6 +58,14 @@ public interface IssueTrackerService {
     boolean init(IssueTrackerConfig config);
 
     /**
+     * Checks whether the provided <code>URL</code> is on the same host as this service.
+     * @param url the <code>URL</code> to check.
+     * @return true if the provided <code>URL</code> has the same host as this service, otherwise false.
+     * @throws NullPointerException if the provided <code>URL</code> is null.
+     */
+    boolean urlExists(URL url);
+
+    /**
      * Retrieve all Issues associated with the provided patch object.
      * Implementations of this method assume that the urls of the related issues are present in the
      * patch's description field.
@@ -123,10 +131,9 @@ public interface IssueTrackerService {
      *
      * @param issue the issue to add a new comment to.
      * @param comment the comment to be added to the issue.
-     * @return true if the comment was successfully added to the issue, false otherwise.
      * @throws NotFoundException if the provided <code>Issue</code> cannot be found at the IssueTracker.
      */
-    boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException;
+    void addCommentToIssue(Issue issue, Comment comment) throws NotFoundException;
 
     /**
      * Adds the <code>Comment</code> to the associated <code>Issue</code> object for all Issue/Comment

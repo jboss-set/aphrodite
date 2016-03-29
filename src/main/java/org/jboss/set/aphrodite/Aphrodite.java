@@ -171,14 +171,10 @@ public class Aphrodite implements AutoCloseable {
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
-            try {
+            if (trackerService.urlExists(url))
                 return trackerService.getIssue(url);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("Issue not found at IssueTrackerService: " + trackerService.getClass().getName());
-            }
         }
-        throw new NotFoundException("No issues found which correspond to url.");
+        throw new NotFoundException("No issues found which correspond to url: " + url);
     }
 
     /**
@@ -243,15 +239,10 @@ public class Aphrodite implements AutoCloseable {
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
-            try {
+            if (trackerService.urlExists(filterUrl))
                 return trackerService.searchIssuesByFilter(filterUrl);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("Filter not found at IssueTrackerService: " +
-                            trackerService.getClass().getName() + ":" + e);
-            }
         }
-        throw new NotFoundException("No filter found which correspond to url.");
+        throw new NotFoundException("No filter found which correspond to url: " + filterUrl);
     }
 
     /**
@@ -271,14 +262,10 @@ public class Aphrodite implements AutoCloseable {
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
-            try {
+            if (trackerService.urlExists(issue.getURL()))
                 return trackerService.updateIssue(issue);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("Issue not found at IssueTrackerService: " + trackerService.getClass().getName());
-            }
         }
-        throw new NotFoundException("No issues found which correspond to url.");
+        throw new NotFoundException("No issues found which correspond to url: " + issue.getURL());
     }
 
     /**
@@ -288,21 +275,18 @@ public class Aphrodite implements AutoCloseable {
      * @param comment the comment to be added to the issue.
      * @return true if the comment was successfully added to the issue, false otherwise.
      */
-    public boolean addCommentToIssue(Issue issue, Comment comment) {
+    public void addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         Objects.requireNonNull(issue, "issue cannot be null");
         Objects.requireNonNull(comment, "comment cannot be null");
         checkIssueTrackerExists();
 
         for (IssueTrackerService trackerService : issueTrackers) {
-            try {
-                return trackerService.addCommentToIssue(issue, comment);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("IssueTrackerService: " + trackerService.getClass().getName() +
-                            ": " + e);
+            if (trackerService.urlExists(issue.getURL())) {
+                trackerService.addCommentToIssue(issue, comment);
+                return;
             }
         }
-        throw new IllegalStateException("Unable to add comment to issue: " + issue.getURL());
+        throw new NotFoundException("No issues found which correspond to url: " + issue.getURL());
     }
 
     /**

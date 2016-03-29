@@ -103,9 +103,9 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public boolean addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
+    public void addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         super.addCommentToIssue(issue, comment);
-        return bzClient.postComment(issue, comment);
+        bzClient.postComment(issue, comment);
     }
 
     @Override
