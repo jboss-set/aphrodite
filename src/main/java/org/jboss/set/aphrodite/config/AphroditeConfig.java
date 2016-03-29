@@ -25,6 +25,8 @@ package org.jboss.set.aphrodite.config;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.json.JsonArray;
@@ -36,6 +38,7 @@ import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
  * @author Ryan Emerson
  */
 public class AphroditeConfig {
+    private final ExecutorService executorService;
     private final List<IssueTrackerConfig> issueTrackerConfigs;
     private final List<RepositoryConfig> repositoryConfigs;
 
@@ -62,10 +65,25 @@ public class AphroditeConfig {
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs) {
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;
+        this.executorService = Executors.newCachedThreadPool();
+    }
+
+    public AphroditeConfig(ExecutorService executorService,
+            List<IssueTrackerConfig> issueTrackerConfigs,
+            List<RepositoryConfig> repositoryConfigs) {
+        this.executorService = executorService;
+        this.issueTrackerConfigs = issueTrackerConfigs;
+        this.repositoryConfigs = repositoryConfigs;
     }
 
     public AphroditeConfig(AphroditeConfig config) {
-        this(new ArrayList<>(config.getIssueTrackerConfigs()), new ArrayList<>(config.getRepositoryConfigs()));
+        this(config.getExecutorService(),new ArrayList<>(config.getIssueTrackerConfigs()),
+                new ArrayList<>(config.getRepositoryConfigs()));
+    }
+
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 
     public List<IssueTrackerConfig> getIssueTrackerConfigs() {
@@ -85,6 +103,8 @@ public class AphroditeConfig {
     }
 
     public static AphroditeConfig fromJson(JsonObject jsonObject) {
+        int maxThreadCount = jsonObject.getInt("maxThreadCount", 0);
+
         JsonArray jsonArray = jsonObject.getJsonArray("issueTrackerConfigs");
         Objects.requireNonNull(jsonArray, "issueTrackerConfigs array must be specified");
         List<IssueTrackerConfig> issueTrackerConfigs = jsonArray
@@ -111,6 +131,10 @@ public class AphroditeConfig {
                                 RepositoryType.valueOf(json.getString("type", null))))
                 .collect(Collectors.toList());
 
+        if (maxThreadCount > 0)
+            return new AphroditeConfig(Executors.newFixedThreadPool(maxThreadCount), issueTrackerConfigs, repositoryConfigs);
+
+        // IF maxThreadCount has not been specified, then we refer to the default executorService which is an unlimited cachedThreadPool
         return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);
     }
 

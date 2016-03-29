@@ -27,6 +27,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -101,14 +106,16 @@ public class Aphrodite implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        issueTrackers.forEach(e -> e.destroy());
+        executorService.shutdown();
+        issueTrackers.forEach(IssueTrackerService::destroy);
         issueTrackers.clear();
-        repositories.forEach(e -> e.destroy());
+        repositories.forEach(RepositoryService::destroy);
         repositories.clear();
     }
 
     private final List<IssueTrackerService> issueTrackers = new ArrayList<>();
     private final List<RepositoryService> repositories = new ArrayList<>();
+    private ExecutorService executorService;
 
     private AphroditeConfig config;
 
@@ -132,6 +139,7 @@ public class Aphrodite implements AutoCloseable {
     private void init(AphroditeConfig config) throws AphroditeException {
         this.config = config;
 
+        executorService = config.getExecutorService();
         // Create new config object, as the object passed to init() will have its state changed.
         AphroditeConfig mutableConfig = new AphroditeConfig(config);
 
@@ -187,15 +195,14 @@ public class Aphrodite implements AutoCloseable {
     public List<Issue> getIssues(Collection<URL> urls) {
         Objects.requireNonNull(urls, "the collection of urls cannot be null");
 
-        List<Issue> issues = new ArrayList<>();
         if (urls.isEmpty())
-            return issues;
+            return new ArrayList<>();
 
-        issues = issueTrackers.stream()
-                .map(tracker -> tracker.getIssues(urls))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-        return issues;
+        List<Callable<List<Issue>>> requests = new ArrayList<>(issueTrackers.size());
+        for (IssueTrackerService tracker : issueTrackers)
+            requests.add(() -> tracker.getIssues(urls));
+
+        return getIssuesInParallel(requests);
     }
 
     /**
@@ -209,8 +216,28 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(searchCriteria, "searchCriteria cannot be null");
         checkIssueTrackerExists();
 
+        List<Callable<List<Issue>>> searchRequests = new ArrayList<>(issueTrackers.size());
+        for (IssueTrackerService tracker : issueTrackers)
+            searchRequests.add(() -> tracker.searchIssues(searchCriteria));
+
+        return getIssuesInParallel(searchRequests);
+    }
+
+    private List<Issue> getIssuesInParallel(List<Callable<List<Issue>>> callables) {
         List<Issue> issues = new ArrayList<>();
-        issueTrackers.forEach(tracker -> issues.addAll(tracker.searchIssues(searchCriteria)));
+        try {
+            List<Future<List<Issue>>> futures = executorService.invokeAll(callables);
+            for (Future<List<Issue>> result : futures) {
+                try {
+                    issues.addAll(result.get());
+                } catch (ExecutionException | CancellationException | InterruptedException e) {
+                    if (LOG.isWarnEnabled())
+                        LOG.warn("Exception encountered when processing request future: " + e);
+                }
+            }
+        } catch (InterruptedException e) {
+            LOG.error("Issue search interrupted unexpectedly: " + e);
+        }
         return issues;
     }
 
