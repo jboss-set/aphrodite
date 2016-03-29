@@ -162,7 +162,7 @@ class IssueWrapper {
 
     private void checkUnsupportedIssueStatus(Issue issue) throws AphroditeException {
         if (issue.getStatus() == IssueStatus.CREATED) {
-            throw new AphroditeException("bugzilla not insist on the CREATED status! it is not found in the bugzilla status");
+            throw new AphroditeException("Bugzilla issues do not support the IssueStatus CREATED");
         }
     }
 
