@@ -41,6 +41,7 @@ public class AphroditeConfig {
     private final ExecutorService executorService;
     private final List<IssueTrackerConfig> issueTrackerConfigs;
     private final List<RepositoryConfig> repositoryConfigs;
+    private final List<StreamConfig> streamConfigs;
 
     public static AphroditeConfig singleIssueTracker(IssueTrackerConfig issueTrackerConfig) {
         List<IssueTrackerConfig> list = new ArrayList<>();
@@ -49,7 +50,7 @@ public class AphroditeConfig {
     }
 
     public static AphroditeConfig issueTrackersOnly(List<IssueTrackerConfig> issueTrackerConfigs) {
-        return new AphroditeConfig(issueTrackerConfigs, new ArrayList<>());
+        return new AphroditeConfig(issueTrackerConfigs, new ArrayList<>(),new ArrayList<>());
     }
 
     public static AphroditeConfig singleRepositoryService(RepositoryConfig repositoryConfig) {
@@ -59,26 +60,29 @@ public class AphroditeConfig {
     }
 
     public static AphroditeConfig repositoryServicesOnly(List<RepositoryConfig> repositoryConfigs) {
-        return new AphroditeConfig(new ArrayList<>(), repositoryConfigs);
+        return new AphroditeConfig(new ArrayList<>(), repositoryConfigs,new ArrayList<>());
     }
 
-    public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs) {
+    public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs,List<StreamConfig> streamConfigs) {
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;
+        this.streamConfigs=streamConfigs;
         this.executorService = Executors.newCachedThreadPool();
     }
 
     public AphroditeConfig(ExecutorService executorService,
             List<IssueTrackerConfig> issueTrackerConfigs,
-            List<RepositoryConfig> repositoryConfigs) {
+            List<RepositoryConfig> repositoryConfigs,
+            List<StreamConfig> streamConfigs) {
         this.executorService = executorService;
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;
+        this.streamConfigs=streamConfigs;
     }
 
     public AphroditeConfig(AphroditeConfig config) {
         this(config.getExecutorService(),new ArrayList<>(config.getIssueTrackerConfigs()),
-                new ArrayList<>(config.getRepositoryConfigs()));
+                new ArrayList<>(config.getRepositoryConfigs()),new ArrayList<>(config.getStreamConfig()));
     }
 
 
@@ -94,11 +98,16 @@ public class AphroditeConfig {
         return repositoryConfigs;
     }
 
+    public List<StreamConfig> getStreamConfig(){
+        return streamConfigs;
+    }
+
     @Override
     public String toString() {
         return "AphroditeConfig{" +
                 "issueTrackerConfigs=" + issueTrackerConfigs +
                 ", repositoryConfigs=" + repositoryConfigs +
+                ",streamConfigs=" + streamConfigs+
                 '}';
     }
 
@@ -132,10 +141,10 @@ public class AphroditeConfig {
                 .collect(Collectors.toList());
 
         if (maxThreadCount > 0)
-            return new AphroditeConfig(Executors.newFixedThreadPool(maxThreadCount), issueTrackerConfigs, repositoryConfigs);
+            return new AphroditeConfig(Executors.newFixedThreadPool(maxThreadCount), issueTrackerConfigs,repositoryConfigs,null);
 
         // IF maxThreadCount has not been specified, then we refer to the default executorService which is an unlimited cachedThreadPool
-        return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);
+        return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs,null);
     }
 
     @Override
@@ -144,6 +153,7 @@ public class AphroditeConfig {
         int result = 1;
         result = prime * result + ((issueTrackerConfigs == null) ? 0 : issueTrackerConfigs.hashCode());
         result = prime * result + ((repositoryConfigs == null) ? 0 : repositoryConfigs.hashCode());
+        result = prime * result + (streamConfigs == null ? 0 : streamConfigs.hashCode());
         return result;
     }
 
@@ -166,6 +176,14 @@ public class AphroditeConfig {
                 return false;
         } else if (!repositoryConfigs.equals(other.repositoryConfigs))
             return false;
+        if(streamConfigs==null){
+            if(other.streamConfigs!=null)
+                return false;
+        }else{
+            if(!streamConfigs.equals(other.streamConfigs))
+                return false;
+        }
+
         return true;
     }
 
