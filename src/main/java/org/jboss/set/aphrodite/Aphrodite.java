@@ -24,6 +24,7 @@ package org.jboss.set.aphrodite;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,6 +43,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
@@ -50,10 +52,12 @@ import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
+import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
+import org.jboss.set.aphrodite.spi.StreamService;
 
 public class Aphrodite implements AutoCloseable {
 
@@ -112,6 +116,8 @@ public class Aphrodite implements AutoCloseable {
 
     private final List<IssueTrackerService> issueTrackers = new ArrayList<>();
     private final List<RepositoryService> repositories = new ArrayList<>();
+    private final List<StreamService> streams = new ArrayList<>();
+
     private ExecutorService executorService;
 
     private AphroditeConfig config;
@@ -598,6 +604,145 @@ public class Aphrodite implements AutoCloseable {
         if (repositories.isEmpty())
             throw new IllegalStateException("Unable to find any repository data as a valid " +
                     RepositoryService.class.getName() + " has not been created.");
+    }
+
+    /**
+     * initial the stream service with the default url.
+     * @throws NotFoundException
+     * @throws MalformedURLException 
+     */
+    public void initStreamService() throws NotFoundException, MalformedURLException {
+        for (StreamService ss : ServiceLoader.load(StreamService.class)) {
+            ss.init(this);
+            streams.add(ss);
+        }
+    }
+
+    /**
+     * initial the stream service with the located file
+     * @throws NotFoundException
+     */
+    public void initStreamServicewithFileLocatin(String location) throws AphroditeException, NotFoundException {
+        if (location == null) {
+            throw new AphroditeException("the file location can not null!");
+        }
+        for (StreamService ss : ServiceLoader.load(StreamService.class)) {
+            ss.init(this, location);
+            streams.add(ss);
+        }
+    }
+    
+
+    /**
+     * initial the stream service with the  url.
+     * @throws AphroditeException 
+     * 
+     */
+    public void initStreamServicewithURL(URL url) throws AphroditeException{
+        if (url == null) {
+            throw new AphroditeException("the url can not null!");
+        }
+        for (StreamService ss : ServiceLoader.load(StreamService.class)) {
+            ss.init(this, url);
+            streams.add(ss);
+        }
+    }
+
+    /**
+     * Returns all streams discovered by this service.
+     * @return a list of all streams discovered by this <code>StreamService</code>
+     * @throws AphroditeException 
+     * @throws NotFoundException
+     */
+    public List<Stream> getStreams() throws AphroditeException {
+        for (StreamService ss : streams) {
+            return ss.getStreams();
+        }
+        throw new AphroditeException("the stream service has not been initial.");
+    }
+
+    /**
+     * Get a specific <code>Stream</code> object based upon its String name.
+     *
+     * @param streamName the name of the <code>Stream</code> to be returned.
+     * @return Stream the <code>Stream</code> object which corresponds to the specified streamName
+     *                if it exists, otherwise null.
+     * @throws AphroditeException
+     * @throws NotFoundException
+     */
+    public Stream getStream(String streamName) throws AphroditeException{
+        if (streamName == null) {
+            throw new AphroditeException("stream name is null.");
+        } else {
+            for (StreamService ss : streams) {
+                return ss.getStream(streamName);
+            }
+        }
+        throw new AphroditeException("the stream service has not been initial.");
+    }
+
+    /**
+     * Find all the url repositories stored in all streams
+     * @return list of unique url point to the repositories
+     */
+    public List<URL> findAllRepositories() {
+        for (StreamService ss : streams) {
+            return ss.findAllRepositories();
+        }
+        return null;
+    }
+
+    /**
+     * Find all the url repositories in the give streams
+     * @param streamName the name of the <code>Stream</code> to be returned.
+     * @return
+     * @throws AphroditeException
+     */
+    public List<URL> findAllRepositoriesInStream(String streamName) throws AphroditeException {
+        if (streamName == null) {
+            throw new AphroditeException("stream name is null in find respository stream");
+        } else {
+            for (StreamService ss : streams) {
+                return ss.findAllRepositories();
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Find all the streams associated to the given repository and codebase
+     * @param repository
+     * @param codebase
+     * @return a list of named streams
+     * @throws AphroditeException
+     */
+    public List<Stream> findStreamsBy(Repository repository, Codebase codebase) throws AphroditeException {
+        if (repository == null || codebase == null) {
+            throw new AphroditeException("repository or codebase is null in find stream.");
+        } else {
+            for (StreamService ss : streams) {
+                return ss.findStreamsBy(repository, codebase);
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Get the component name based on the given repository and codebase.
+     * @param repository
+     * @param codebase
+     * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
+     * @throws AphroditeException
+     */
+    public String findComponentNameBy(Repository repository, Codebase codebase) throws AphroditeException {
+        if (repository == null || codebase == null) {
+            throw new AphroditeException("repository or codebase is null in find component name.");
+        } else {
+            for (StreamService ss : streams) {
+                return ss.findComponentNameBy(repository, codebase);
+            }
+            return null;
+        }
     }
 
 }

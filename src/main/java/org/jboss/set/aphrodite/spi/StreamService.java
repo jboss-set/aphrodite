@@ -1,13 +1,33 @@
 package org.jboss.set.aphrodite.spi;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Stream;
 
 public interface StreamService {
+    /**
+     * initial the stream service with the default url.
+     * @throws NotFoundException
+     * @throws MalformedURLException
+     */
+    void init(Aphrodite aphrodite) throws NotFoundException, MalformedURLException;
+
+    /**
+     * initial the stream service with the located file
+     * @throws NotFoundException
+     */
+    void init(Aphrodite aphrodite, String location) throws NotFoundException;
+    
+    /**
+     * initial the stream service with the  url.
+     * 
+     */
+    void init(Aphrodite aphrodiet, URL url);
 
     /**
      * Returns all streams discovered by this service.

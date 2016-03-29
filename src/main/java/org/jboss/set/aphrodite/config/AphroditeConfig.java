@@ -62,6 +62,10 @@ public class AphroditeConfig {
         return new AphroditeConfig(new ArrayList<>(), repositoryConfigs);
     }
 
+    public static AphroditeConfig streamServiceOnly() {
+        return new AphroditeConfig(new ArrayList<>(), new ArrayList<>());
+    }
+
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs) {
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;
