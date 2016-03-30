@@ -213,12 +213,19 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             throws NotFoundException, IOException {
         LabelService labelService = new LabelService(gitHubClient);
         List<org.eclipse.egit.github.core.Label> labels = labelService.getLabels(repositoryId);
-        for (org.eclipse.egit.github.core.Label label : labels)
+        return getLabel(repositoryId, labelName, labels);
+    }
+
+    private org.eclipse.egit.github.core.Label getLabel(RepositoryId repositoryId, String labelName,
+            List<org.eclipse.egit.github.core.Label> validLabels)
+            throws NotFoundException {
+        for (org.eclipse.egit.github.core.Label label : validLabels) {
             if (label.getName().equalsIgnoreCase(labelName))
                 return label;
+        }
 
         throw new NotFoundException("No label exists with the name '" + labelName +
-                "' at repository '" + repositoryId + "'");
+                "' at repository '" + repositoryId.getName() + "'");
     }
 
     @Override
@@ -266,12 +273,14 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
         IssueService issueService = new IssueService(gitHubClient);
+        LabelService labelService = new LabelService(gitHubClient);
         try {
             org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
             List<org.eclipse.egit.github.core.Label> issueLabels = new ArrayList<>();
+            List<org.eclipse.egit.github.core.Label> existingLabels = labelService.getLabels(repositoryId);
 
             for (Label label : labels) {
-                issueLabels.add(getLabel(repositoryId, label.getName()));
+                issueLabels.add(getLabel(repositoryId, label.getName(), existingLabels));
             }
             issue.setLabels(issueLabels);
             issueService.editIssue(repositoryId, issue);
