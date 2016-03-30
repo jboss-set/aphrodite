@@ -58,6 +58,14 @@ public interface RepositoryService {
     boolean init(RepositoryConfig config);
 
     /**
+     * Checks whether the provided <code>URL</code> is on the same host as this service.
+     * @param url the <code>URL</code> to check.
+     * @return true if the provided <code>URL</code> has the same host as this service, otherwise false.
+     * @throws NullPointerException if the provided <code>URL</code> is null.
+     */
+    boolean urlExists(URL url);
+
+    /**
      * Get the repository located at the provided <code>URL</code>.
      *
      * @param url the <code>URL</code> of the repository to be retrieved.
@@ -80,7 +88,7 @@ public interface RepositoryService {
      *
      * @param issue the <code>Issue</code> object whose associated Patches should be returned.
      * @return a list of all <code>Patch</code> objects, or an empty list if no patches can be found.
-     * @throws NotFoundException if the provided <code>Repository</code> cannot be found at the RepositoryService.
+     * @throws NotFoundException if an exception is thrown when searching the RepositoryService.
      */
     List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException;
 
@@ -154,16 +162,15 @@ public interface RepositoryService {
      *
      * @param patch the <code>Patch</code> on which patches related are being searched
      * @return list of patches related.
-     * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
      */
-    List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException;
+    List<Patch> findPatchesRelatedTo(Patch patch);
 
     /**
-     * get the commit result status from a patch
-     * this method can only fetch the last commit status.
-     * @param patch the <code>Patch</code> which will get the commit status return.
-     * @return commit status return the status of the commit.
-     * @throws NotFoundException if the commit status not found
+     * Retrieve the current CI status of the latest commit associated with a given patch.
+     *
+     * @param patch the <code>Patch</code> object whose status is to be queried
+     * @return the CI status of the latest commit associated with the given patch
+     * @throws NotFoundException if no commit status can be found for the provided patch
      */
     CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException;
 

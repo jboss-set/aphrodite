@@ -68,7 +68,6 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
     private final GitHubWrapper WRAPPER = new GitHubWrapper();
     private GitHubClient gitHubClient;
-    private LabelService labelService;
 
     public GitHubRepositoryService() {
         super(RepositoryType.GITHUB);
@@ -212,7 +211,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     private org.eclipse.egit.github.core.Label getLabel(RepositoryId repositoryId, String labelName)
             throws NotFoundException, IOException {
-        labelService = new LabelService(gitHubClient);
+        LabelService labelService = new LabelService(gitHubClient);
         List<org.eclipse.egit.github.core.Label> labels = labelService.getLabels(repositoryId);
         for (org.eclipse.egit.github.core.Label label : labels)
             if (label.getName().equalsIgnoreCase(labelName))
@@ -224,19 +223,20 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     @Override
     public List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException {
-        labelService = new LabelService(gitHubClient);
         URL url = repository.getURL();
         checkHost(url);
+
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
-        List<org.eclipse.egit.github.core.Label> labels=null;
+        LabelService labelService = new LabelService(gitHubClient);
+        List<org.eclipse.egit.github.core.Label> labels;
         try {
             labels = labelService.getLabels(repositoryId);
         } catch (IOException e) {
             Utils.logException(LOG, e);
+            throw new NotFoundException(e);
         }
 
         return WRAPPER.pullRequestLabeltoPatchLabel(labels);
-
     }
 
     @Override
@@ -252,6 +252,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             labels = issue.getLabels();
         } catch (IOException e) {
             Utils.logException(LOG, e);
+            throw new NotFoundException(e);
         }
 
         return WRAPPER.pullRequestLabeltoPatchLabel(labels);
@@ -267,12 +268,10 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         IssueService issueService = new IssueService(gitHubClient);
         try {
             org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
-            List<org.eclipse.egit.github.core.Label> issueLabels = issue.getLabels();
-            issueLabels.removeAll(issueLabels);
+            List<org.eclipse.egit.github.core.Label> issueLabels = new ArrayList<>();
 
             for (Label label : labels) {
-                org.eclipse.egit.github.core.Label newLabel = getLabel(repositoryId, label.getName());
-                issueLabels.add(newLabel);
+                issueLabels.add(getLabel(repositoryId, label.getName()));
             }
             issue.setLabels(issueLabels);
             issueService.editIssue(repositoryId, issue);
@@ -284,11 +283,12 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     @Override
     public void removeLabelFromPatch(Patch patch, String name) throws NotFoundException {
-        labelService = new LabelService(gitHubClient);
-        IssueService issueService = new IssueService(gitHubClient);
-        String patchId = patch.getId();
         URL url = patch.getURL();
         checkHost(url);
+
+        LabelService labelService = new LabelService(gitHubClient);
+        IssueService issueService = new IssueService(gitHubClient);
+        String patchId = patch.getId();
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
 
         org.eclipse.egit.github.core.Issue issue;
@@ -319,15 +319,20 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             .compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @Override
-    public List<Patch> findPatchesRelatedTo(Patch patch) throws NotFoundException {
+    public List<Patch> findPatchesRelatedTo(Patch patch) {
         try {
             List<URL> urls = getPRFromDescription(patch.getURL(), patch.getBody());
-            List<Patch> related = new ArrayList<Patch>();
+            List<Patch> related = new ArrayList<>();
             for (URL url : urls) {
                 try {
-                    related.add(getPatch(url));
+                    // Only try and retrieve patch if it is located on the same host as this service
+                    if (urlExists(url)) {
+                        related.add(getPatch(url));
+                    } else {
+                        Utils.logWarnMessage(LOG, "Unable to process url '" + url + "' as it is not located on this service");
+                    }
                 } catch (NotFoundException e) {
-                    Utils.logException(LOG, url + " in patch related " + patch.getURL() + " is not a valid url", e);
+                    Utils.logException(LOG, "Unable to retrieve url '" + url + "' referenced in the patch at: " + patch.getURL(), e);
                 }
             }
             return related;
@@ -376,15 +381,16 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     @Override
     public org.jboss.set.aphrodite.domain.CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException {
+        URL url = patch.getURL();
+        checkHost(url);
+
         PullRequestService pullrequestService = new PullRequestService(gitHubClient);
         CommitService commitService = new CommitService(gitHubClient);
-        String sha = null;
         org.jboss.set.aphrodite.domain.CommitStatus status = null;
-        URL url = patch.getURL();
         int patchId = Integer.parseInt(patch.getId());
-        checkHost(url);
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
         try {
+            String sha = null;
             List<RepositoryCommit> commits = pullrequestService.getCommits(repositoryId, patchId);
             if (commits.size() > 0) {
                 sha = commits.get(commits.size() - 1).getSha();

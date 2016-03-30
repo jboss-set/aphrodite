@@ -37,6 +37,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Ryan Emerson
@@ -109,8 +110,14 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
+    @Override
+    public boolean urlExists(URL url) {
+        Objects.requireNonNull(url);
+        return url.getHost().equals(baseUrl.getHost());
+    }
+
     protected void checkHost(URL url) throws NotFoundException {
-        if (!url.getHost().equals(baseUrl.getHost()))
+        if (!urlExists(url))
             throw new NotFoundException("The requested Repository cannot be found as it is not " +
                     "hosted on this server.");
     }

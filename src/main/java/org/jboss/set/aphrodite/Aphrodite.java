@@ -351,21 +351,18 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param url the <code>URL</code> of the repository to be retrieved.
      * @return the <code>Repository</code> object.
-     * @throws NotFoundException if a <code>Repository</code> cannot be found at the provided base url.
+     * @throws NotFoundException if a <code>Repository</code> cannot be found at the provided base url,
+     * or no service exists with the same host domain as the provided URL.
      */
     public Repository getRepository(URL url) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(url, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(url))
                 return repositoryService.getRepository(url);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("Repository not found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
         }
-        throw new NotFoundException("No repositories found which correspond to url.");
+        throw new NotFoundException("No repositories found which correspond to url: " + url);
     }
 
     /**
@@ -373,19 +370,15 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param issue the <code>Issue</code> object whose associated Patches should be returned.
      * @return a list of all <code>Patch</code> objects, or an empty list if no patches can be found.
+     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve patches from a RepositoryService
      */
-    public List<Patch> getPatchesAssociatedWith(Issue issue) {
+    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(issue, "issue cannot be null");
 
         List<Patch> patches = new ArrayList<>();
         for (RepositoryService repositoryService : repositories) {
-            try {
-                patches.addAll(repositoryService.getPatchesAssociatedWith(issue));
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
+            patches.addAll(repositoryService.getPatchesAssociatedWith(issue));
         }
         return patches;
     }
@@ -397,19 +390,16 @@ public class Aphrodite implements AutoCloseable {
      * @param repository the <code>Repository</code> object whose associated Patches should be returned.
      * @param state the <code>PatchState</code> which the returned <code>Patch</code> objects must have.
      * @return a list of all matching <code>Patch</code> objects, or an empty list if no patches can be found.
+     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve patches from a RepositoryService
      */
-    public List<Patch> getPatchesByState(Repository repository, PatchState state) {
+    public List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
         Objects.requireNonNull(state, "state cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(repository.getURL()))
                 return repositoryService.getPatchesByState(repository, state);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
         }
         return new ArrayList<>();
     }
@@ -426,36 +416,26 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(url, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(url))
                 return repositoryService.getPatch(url);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
         }
-        throw new NotFoundException("No patch found which corresponds to patch.");
+        throw new NotFoundException("No patch found which corresponds to url: " + url);
     }
 
     /**
      * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.
      * @param patch the <code>Repository<code> object whose associated labels should be returned.
-     * @return a list of all matching <code>Label<code> objects, or an empty list if no label can be found.
-     * @throws NotFoundException if the provided <code>Repository</code> url not consistent with the baseURL.
+     * @return a list of all matching <code>Label<code> objects, or an empty list if no labels can be found.
+     * @throws a <code>NotFoundException</code> if an error is encountered when trying to retrieve labels from a RepositoryService
      */
     public List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(repository.getURL()))
                 return repositoryService.getLabelsFromRepository(repository);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No repository found at RepositoryService: " + repositoryService.getClass().getName(), e);
-
-            }
         }
-
         return new ArrayList<>();
     }
 
@@ -463,23 +443,17 @@ public class Aphrodite implements AutoCloseable {
      * Retrieve all labels associated with the provided <code>Patch</code> object.
      * @param patch the <code>Patch<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no patches can be found.
-     * @throws if the provided <code>Patch</code> url not consistent with the baseURL.
+     * @throws a <code>NotFoundException</code> if an error is encountered when trying to retrieve labels from a RepositoryService
      */
     public List<Label> getLabelsFromPatch(Patch patch) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(patch, "patch cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(patch.getURL()))
                 return repositoryService.getLabelsFromPatch(patch);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at Patch: " + repositoryService.getClass().getName(), e);
-
-            }
         }
         return new ArrayList<>();
-
     }
 
     /**
@@ -495,21 +469,17 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(labels, "labels cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(patch.getURL()))
                 repositoryService.setLabelsToPatch(patch, labels);
-                return;
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
         }
     }
 
     /**
-     *Delete a label from the provided <code>Patch</code> object.
+     * Delete a label from the provided <code>Patch</code> object.
      * @param patch the <code>Patch</code> whose label will be removed.
      * @param name the <code>Label</code> name will be removed.
-     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>Patch</code>
+     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>Patch</code>, or an
+     * exception occurs when contacting the RepositoryService
      */
     public void removeLabelFromPatch(Patch patch, String name) throws NotFoundException {
         checkRepositoryServiceExists();
@@ -517,13 +487,8 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(name, "labelname cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(patch.getURL()))
                 repositoryService.removeLabelFromPatch(patch, name);
-                return;
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
         }
     }
 
@@ -541,12 +506,9 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(comment, "comment cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(patch.getURL())) {
                 repositoryService.addCommentToPatch(patch, comment);
                 return;
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
             }
         }
         throw new NotFoundException("No patch found which corresponds to patch.");
@@ -559,50 +521,51 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param patch the <code>Patch</code> to which the label will be applied.
      * @param labelName the name of the label to be applied.
+     * @throws a <code>NotFoundException</code> if the <code>Patch</code> cannot be found, or the labelName does not exist.
      */
-    public void addLabelToPatch(Patch patch, String labelName) {
+    public void addLabelToPatch(Patch patch, String labelName) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(patch, "patch cannot be null");
         Objects.requireNonNull(labelName, "labelName cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(patch.getURL()))
                 repositoryService.addLabelToPatch(patch, labelName);
-                return;
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
         }
     }
 
+    /**
+     * Retrieve all <code>Patch</code> objects related to the supplied patch. A patch is related if its URL is referenced in the
+     * provided patch object. Note, this method fails silently if a patch cannot be retrieved from a URL, with the error message
+     * simply logged.
+     *
+     * @param patch the <code>Patch</code> object to be queried against
+     * @return a list of Patch objects that are related to the supplied patch object
+     */
     public List<Patch> findPatchesRelatedTo(Patch patch) {
         checkRepositoryServiceExists();
         Objects.requireNonNull(patch, "patch cannot be null");
 
-        List<Patch> patches = new ArrayList<Patch>();
-        for (RepositoryService repositoryService : repositories) {
-            try {
-                patches.addAll(repositoryService.findPatchesRelatedTo(patch));
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No patches found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
-        }
-        return patches;
+        return repositories.stream()
+                .filter(service -> service.urlExists(patch.getURL()))
+                .flatMap(service -> service.findPatchesRelatedTo(patch).stream())
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Retrieve the current CI status of the latest commit associated with a given patch.
+     *
+     * @param patch the <code>Patch</code> object whose status is to be queried
+     * @return the CI status of the latest commit associated with the given patch
+     * @throws NotFoundException if no commit status can be found for the provided patch
+     */
     public CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(patch, "patch cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            try {
+            if (repositoryService.urlExists(patch.getURL()))
                 return repositoryService.getCommitStatusFromPatch(patch);
-            } catch (NotFoundException e) {
-                if (LOG.isInfoEnabled())
-                    LOG.info("No commit status found at RepositoryService: " + repositoryService.getClass().getName(), e);
-            }
         }
         throw new NotFoundException("No commit status found for patch:" + patch.getURL());
     }
