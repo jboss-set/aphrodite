@@ -34,10 +34,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -269,31 +269,39 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     @Override
     public boolean addCommentToIssue(Map<Issue, Comment> commentMap) {
-
         commentMap = filterIssuesByHost(commentMap);
-        if (commentMap.isEmpty())
-            return true;
+        List<CompletableFuture<Boolean>> requests = commentMap.entrySet().stream()
+                .map(entry -> CompletableFuture.supplyAsync(
+                        () -> postCommentAndLogExceptions(entry.getKey(), entry.getValue()), executorService))
+                .collect(Collectors.toList());
 
-        commentMap.entrySet().forEach(e  -> {
-            try {
-                postComment(e.getKey(), e.getValue());
-            } catch (NotFoundException ex) {
-                LOG.error("issue not found", ex);
-            }
-        });
-        return true;
-
+        return requests.stream()
+                .map(CompletableFuture::join)
+                .noneMatch(failed -> !failed);
     }
 
     @Override
     public boolean addCommentToIssue(Collection<Issue> issues, Comment comment) {
         issues = filterIssuesByHost(issues);
-        if (issues.isEmpty())
-            return true;
 
-        Map<Issue, Comment> data = new HashMap<>();
-        issues.stream().forEach(e -> data.put(e, comment));
-        return addCommentToIssue(data);
+        List<CompletableFuture<Boolean>> requests = issues.stream()
+                .map(issue -> CompletableFuture.supplyAsync(
+                        () -> postCommentAndLogExceptions(issue, comment), executorService))
+                .collect(Collectors.toList());
+
+        return requests.stream()
+                .map(CompletableFuture::join)
+                .noneMatch(failed -> !failed);
+    }
+
+    private boolean postCommentAndLogExceptions(Issue issue, Comment comment) {
+        try {
+            postComment(issue, comment);
+            return true;
+        } catch (NotFoundException e) {
+            Utils.logException(LOG, e);
+            return false;
+        }
     }
 
     @Override
