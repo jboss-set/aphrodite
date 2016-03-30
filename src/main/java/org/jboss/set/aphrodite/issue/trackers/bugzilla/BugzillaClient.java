@@ -63,7 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -343,40 +343,35 @@ public class BugzillaClient {
         return runCommand(METHOD_ADD_COMMENT, params);
     }
 
-    // Posts comments in parallel as a bulk method is not possible with BZ
-    private boolean executeCommentFutures(List<CommentFuture> futures) {
-        try {
-            return executorService.invokeAll(futures)
-                    .stream()
-                    .map(future -> {
-                        try {
-                            return future.get();
-                        } catch (Exception e) {
-                            throw new IllegalStateException(e);
-                        }
-                    })
-                    .allMatch(result -> result.equals(true));
-        } catch (InterruptedException e) {
-            if (LOG.isWarnEnabled())
-                LOG.warn(e);
-            return false;
-        }
-    }
-
     public boolean postComment(Map<Issue, Comment> commentMap) {
-        List<CommentFuture> futures = commentMap.entrySet().stream()
-                .map(entry -> new CommentFuture(entry.getKey(), entry.getValue()))
+        List<CompletableFuture<Boolean>> requests = commentMap.entrySet().stream()
+                .map(entry -> CompletableFuture.supplyAsync(
+                        () -> postCommentAndLogExceptions(entry.getKey(), entry.getValue()), executorService))
                 .collect(Collectors.toList());
 
-        return executeCommentFutures(futures);
+        return requests.stream()
+                .map(CompletableFuture::join)
+                .noneMatch(failed -> !failed);
     }
 
     public boolean postComment(Collection<Issue> issues, Comment comment) {
-        List<CommentFuture> futures = issues.stream()
-                .map(issue -> new CommentFuture(issue, comment))
+        List<CompletableFuture<Boolean>> requests = issues.stream()
+                .map(issue -> CompletableFuture.supplyAsync(
+                        () -> postCommentAndLogExceptions(issue, comment), executorService))
                 .collect(Collectors.toList());
 
-        return executeCommentFutures(futures);
+        return requests.stream()
+                .map(CompletableFuture::join)
+                .noneMatch(failed -> !failed);
+    }
+
+    private boolean postCommentAndLogExceptions(Issue issue, Comment comment) {
+        try {
+            return postComment(issue, comment);
+        } catch (NotFoundException e) {
+            Utils.logException(LOG, e);
+            return false;
+        }
     }
 
     public boolean updateFlags(int ids, String name, FlagStatus status) {
@@ -448,27 +443,6 @@ public class BugzillaClient {
             return true;
         } catch (XmlRpcException e) {
             throw new IllegalStateException(e);
-        }
-    }
-
-    private class CommentFuture implements Callable<Boolean> {
-        final Issue issue;
-        final Comment comment;
-
-        public CommentFuture(Issue issue, Comment comment) {
-            this.issue = issue;
-            this.comment = comment;
-        }
-
-        @Override
-        public Boolean call() throws Exception {
-            try {
-                return postComment(issue, comment);
-            } catch (NotFoundException e) {
-                if (LOG.isWarnEnabled())
-                    LOG.warn(e);
-                return false;
-            }
         }
     }
 
