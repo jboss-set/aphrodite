@@ -42,6 +42,8 @@ import org.eclipse.egit.github.core.RepositoryBranch;
 import org.eclipse.egit.github.core.RepositoryCommit;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.client.RequestException;
+import org.eclipse.egit.github.core.service.CollaboratorService;
 import org.eclipse.egit.github.core.service.CommitService;
 import org.eclipse.egit.github.core.service.IssueService;
 import org.eclipse.egit.github.core.service.LabelService;
@@ -180,6 +182,23 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             IssueService is = new IssueService(gitHubClient);
             is.createComment(id, pullId, comment);
         } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
+    }
+
+    @Override
+    public boolean isLabelModifiable(Patch patch) throws NotFoundException {
+        URL url = patch.getURL();
+        checkHost(url);
+
+        RepositoryId id = RepositoryId.createFromUrl(url);
+        try {
+            return new CollaboratorService(gitHubClient).isCollaborator(id, gitHubClient.getUser());
+        } catch (IOException e) {
+            if (e instanceof RequestException && ((RequestException) e).getStatus() == 403)
+                return false;
+
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
