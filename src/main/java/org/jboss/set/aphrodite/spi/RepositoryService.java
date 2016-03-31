@@ -121,12 +121,12 @@ public interface RepositoryService {
 
     /**
      * Discover if the user logged into this <code>RepositoryService</code> has the correct permissions to apply/remove
-     * a label for the given patch.
-     * @param patch the <code>Patch</code> who the label is to be applied/removed.
+     * labels to patches in the provided <code>Repository</code>
+     * @param repository the <code>Repository</code> whose permissions are to be checked
      * @return true if the user has permission, otherwise false.
-     * @throws NotFoundException if the specified <code>Patch</code> cannot be found.
+     * @throws NotFoundException if the specified <code>Repository</code> cannot be found.
      */
-    boolean isLabelModifiable(Patch patch) throws NotFoundException;
+    boolean hasModifiableLabels(Repository repository) throws NotFoundException;
 
     /**
      * Set the labels for the provided <code>Patch</code> object.

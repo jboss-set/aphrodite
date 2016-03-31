@@ -458,20 +458,21 @@ public class Aphrodite implements AutoCloseable {
 
     /**
      * Discover if the user logged into a <code>RepositoryService</code> has the correct permissions to apply/remove
-     * a label for the given patch.
-     * @param patch the <code>Patch</code> who the label is to be applied/removed.
+     * labels to patches in the provided <code>Repository</code>
+     *
+     * @param repository the <code>Repository</code> whose permissions are to be checked
      * @return true if the user has permission, otherwise false.
-     * @throws NotFoundException if the specified <code>Patch</code> cannot be found.
+     * @throws NotFoundException if the specified <code>Repository</code> cannot be found.
      */
-    public boolean patchLabelCanBeModified(Patch patch) throws NotFoundException {
+    public boolean isRepositoryLabelsModifiable(Repository repository) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(repository, "repository cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(patch.getURL()))
-                return repositoryService.isLabelModifiable(patch);
+            if (repositoryService.urlExists(repository.getURL()))
+                return repositoryService.hasModifiableLabels(repository);
         }
-        throw new NotFoundException("No patch found which corresponds to url: " + patch.getURL());
+        throw new NotFoundException("No repository found which corresponds to url: " + repository.getURL());
     }
 
     /**

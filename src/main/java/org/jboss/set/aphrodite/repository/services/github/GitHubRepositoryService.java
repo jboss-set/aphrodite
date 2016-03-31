@@ -188,8 +188,8 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public boolean isLabelModifiable(Patch patch) throws NotFoundException {
-        URL url = patch.getURL();
+    public boolean hasModifiableLabels(Repository repository) throws NotFoundException {
+        URL url = repository.getURL();
         checkHost(url);
 
         RepositoryId id = RepositoryId.createFromUrl(url);
