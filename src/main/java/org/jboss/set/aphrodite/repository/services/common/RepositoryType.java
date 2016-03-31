@@ -4,9 +4,9 @@ public enum RepositoryType {
 
     GITHUB("github");
 
-    private String type;
+    private final String type;
 
-    private RepositoryType(final String type) {
+    RepositoryType(final String type) {
         this.type = type;
     }
 

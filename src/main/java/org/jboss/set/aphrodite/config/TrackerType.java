@@ -6,7 +6,7 @@ public enum TrackerType {
 
     private final String typename;
 
-    private TrackerType(final String typename) {
+    TrackerType(final String typename) {
         this.typename = typename;
     }
 

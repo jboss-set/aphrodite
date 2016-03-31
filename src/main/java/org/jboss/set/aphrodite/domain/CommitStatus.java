@@ -26,9 +26,9 @@ public enum CommitStatus {
 
     ERROR("error"), FAILURE("failure"), PENDING("pending"), SUCCESS("success");
 
-    private String status;
+    private final String status;
 
-    private CommitStatus(final String status) {
+    CommitStatus(final String status) {
         this.status = status;
     }
     public static CommitStatus fromString(String status) {

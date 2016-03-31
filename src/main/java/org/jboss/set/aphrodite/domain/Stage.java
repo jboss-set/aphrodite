@@ -27,7 +27,7 @@ import java.util.Map;
 
 public class Stage {
 
-    private Map<Flag, FlagStatus> state;
+    private final Map<Flag, FlagStatus> state;
 
     public Stage() {
         this.state = new HashMap<>();
