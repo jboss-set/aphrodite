@@ -35,7 +35,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -118,6 +117,7 @@ class IssueWrapper {
         return issue;
     }
 
+    // TODO find a solution for updating time estimates, see https://github.com/jboss-set/aphrodite/issues/23
     IssueInput issueToFluentUpdate(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         checkUnsupportedUpdateFields(issue);
         IssueInputBuilder inputBuilder = new IssueInputBuilder(jiraIssue.getProject().getKey(), jiraIssue.getIssueType().getId());
@@ -132,14 +132,6 @@ class IssueWrapper {
             assignee -> inputBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("name", assignee)))
         );
 
-        issue.getEstimation().ifPresent(tracking -> {
-            Map<String, Object> timeTrackingMap = new HashMap<>();
-            timeTrackingMap.put("originalEstimate", (int) (tracking.getInitialEstimate() * 60));
-            // commented here, this is not supported
-            // timeTrackingMap.put("timeSpent", (int) (tracking.getHoursWorked() * 60));
-            inputBuilder.setFieldInput(new FieldInput(IssueFieldId.TIMETRACKING_FIELD,
-                    new ComplexIssueInputFieldValue(timeTrackingMap)));
-        });
         issue.getRelease().getVersion().ifPresent(version ->
                 inputBuilder.setFieldInput(new FieldInput(IssueFieldId.FIX_VERSIONS_FIELD, new ArrayList<ComplexIssueInputFieldValue>() {{
                     add(ComplexIssueInputFieldValue.with("name", version));
