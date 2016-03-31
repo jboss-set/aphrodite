@@ -105,7 +105,7 @@ public interface RepositoryService {
 
     /**
      * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.
-     * @param patch the <code>Repository<code> object whose associated labels should be returned.
+     * @param repository the <code>Repository<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no label can be found.
      * @throws NotFoundException if the provided <code>Repository</code> url not consistent with the baseURL.
      */

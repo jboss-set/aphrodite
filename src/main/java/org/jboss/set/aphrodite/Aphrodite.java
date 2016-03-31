@@ -273,7 +273,6 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param issue the issue to add a new comment to.
      * @param comment the comment to be added to the issue.
-     * @return true if the comment was successfully added to the issue, false otherwise.
      */
     public void addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         Objects.requireNonNull(issue, "issue cannot be null");
@@ -424,7 +423,7 @@ public class Aphrodite implements AutoCloseable {
 
     /**
      * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.
-     * @param patch the <code>Repository<code> object whose associated labels should be returned.
+     * @param repository the <code>Repository<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no labels can be found.
      * @throws a <code>NotFoundException</code> if an error is encountered when trying to retrieve labels from a RepositoryService
      */

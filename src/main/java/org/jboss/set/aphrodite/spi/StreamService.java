@@ -34,22 +34,22 @@ public interface StreamService {
     /**
      * Find all the url repositories in the give streams
      * @param streamName the name of the <code>Stream</code> to be returned.
-     * @return
+     * @return a list of all <code>Repository</code> <code>URL</code> objects.
      */
     List<URL> findAllRepositoriesInStream(String streamName);
 
     /**
      * Find all the streams associated to the given repository and codebase
-     * @param repository
-     * @param codebase
-     * @return a list of named streams
+     * @param repository the <code>Repository</code> to search against.
+     * @param codebase the <code>Codebase</code> to search against.
+     * @return a list of named <code>Stream</code> objects.
      */
     List<Stream> findStreamsBy(Repository repository, Codebase codebase);
 
     /**
      * Get the component name based on the given repository and codebase.
-     * @param repository
-     * @param codebase
+     * @param repository the <code>Repository</code> to search against.
+     * @param codebase the <code>Codebase</code> to search against.
      * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
      */
     String findComponentNameBy(Repository repository, Codebase codebase);
