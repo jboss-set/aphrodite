@@ -77,11 +77,7 @@ public class IssueTrackerConfig extends AbstractServiceConfig {
         if (getClass() != obj.getClass())
             return false;
         IssueTrackerConfig other = (IssueTrackerConfig) obj;
-        if (defaultIssueLimit != other.defaultIssueLimit)
-            return false;
-        if (tracker != other.tracker)
-            return false;
-        return true;
+        return defaultIssueLimit == other.defaultIssueLimit && tracker == other.tracker;
     }
 
 }

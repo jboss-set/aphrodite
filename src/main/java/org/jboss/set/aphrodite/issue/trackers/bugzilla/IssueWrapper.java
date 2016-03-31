@@ -205,8 +205,7 @@ class IssueWrapper {
     private void extractStageAndStreams(Map<String, Object> bug, Issue issue) {
         Stage issueStage = new Stage();
         Map<String, FlagStatus> streams = new HashMap<>();
-        Object flagsMap = (Object[]) bug.get(FLAGS);
-        if (flagsMap != null) {
+        if (bug.get(FLAGS) != null) {
             for (Object object : (Object[]) bug.get(FLAGS)) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> flagMap = (Map<String, Object>) object;
@@ -232,8 +231,8 @@ class IssueWrapper {
     // Ensure all missing flag, if any are set to NO_SET
     private static Stage ensureStageMapIsComplete(Stage issue) {
         for (Flag flag : Flag.values())
-            if (issue.getStateMap().get(flag) == null)
-                issue.getStateMap().put(flag, FlagStatus.NO_SET);
+            issue.getStateMap().putIfAbsent(flag, FlagStatus.NO_SET);
+
         return issue;
     }
 }

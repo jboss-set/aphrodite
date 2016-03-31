@@ -154,7 +154,7 @@ public class JsonStreamService implements StreamService {
 
     @Override
     public List<URL> findAllRepositories() {
-        List<URL> repositories = new ArrayList<URL>();
+        List<URL> repositories = new ArrayList<>();
 
         List<Stream> streams = getStreams();
         for (Stream stream : streams) {
@@ -170,12 +170,12 @@ public class JsonStreamService implements StreamService {
     public List<URL> findAllRepositoriesInStream(String streamName) {
         return getStream(streamName).getAllComponents().stream()
             .map((e) -> e.getRepository().getURL())
-            .collect(Collectors.<URL> toList());
+            .collect(Collectors.toList());
     }
 
     @Override
     public List<Stream> findStreamsBy(Repository repository, Codebase codebase) {
-        List<Stream> streams = new ArrayList<Stream>();
+        List<Stream> streams = new ArrayList<>();
         for(Stream stream : getStreams()) {
             for(StreamComponent sc : stream.getAllComponents()) {
                 if(sc.getRepository().equals(repository) && sc.getCodebase().equals(codebase)) {

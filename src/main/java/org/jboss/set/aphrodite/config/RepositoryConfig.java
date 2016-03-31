@@ -71,8 +71,6 @@ public class RepositoryConfig extends AbstractServiceConfig {
         if (getClass() != obj.getClass())
             return false;
         RepositoryConfig other = (RepositoryConfig) obj;
-        if (type != other.type)
-            return false;
-        return true;
+        return type == other.type;
     }
 }

@@ -123,11 +123,11 @@ class IssueWrapper {
         IssueInputBuilder inputBuilder = new IssueInputBuilder(jiraIssue.getProject().getKey(), jiraIssue.getIssueType().getId());
 
 
-        issue.getSummary().ifPresent(summary -> inputBuilder.setSummary(summary));
+        issue.getSummary().ifPresent(inputBuilder::setSummary);
         inputBuilder.setFieldInput(new FieldInput(IssueFieldId.COMPONENTS_FIELD,
                 issue.getComponents().stream().map(e -> ComplexIssueInputFieldValue.with("name", e)).collect(Collectors.toList()))
         );
-        issue.getDescription().ifPresent(description -> inputBuilder.setDescription(description));
+        issue.getDescription().ifPresent(inputBuilder::setDescription);
         issue.getAssignee().ifPresent(
             assignee -> inputBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("name", assignee)))
         );

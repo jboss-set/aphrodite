@@ -373,7 +373,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     private List<URL> getPRFromDescription(URL url, String content) throws MalformedURLException, URISyntaxException {
         String[] paths = url.getPath().split("/");
         Matcher matcher = RELATED_PR_PATTERN.matcher(content);
-        List<URL> relatedPullRequests = new ArrayList<URL>();
+        List<URL> relatedPullRequests = new ArrayList<>();
         while (matcher.find()) {
             if (matcher.groupCount() == 3) {
                 URL relatedPullRequest = new URI(
