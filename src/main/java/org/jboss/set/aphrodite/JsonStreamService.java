@@ -124,16 +124,18 @@ public class JsonStreamService implements StreamService {
             String componentName = json.getString("component_name");
             String codebaseName = json.getString("codebase");
             URL repositoryUrl = parseUrl(json.getString("repository_url"));
-
-            Repository repository = aphrodite.getRepository(repositoryUrl);
-            Codebase codebase = new Codebase(codebaseName);
-
-            if (!repository.getCodebases().contains(codebase))
-                throw new NotFoundException("The specified codebase '" + codebaseName + "' " +
-                        "does not belong to the Repository at " + repository.getURL());
-
-            StreamComponent component = new StreamComponent(componentName, repository, codebase);
-            codebaseMap.put(component.getName(), component);
+            // ignore until it supports svn repository
+            if (!repositoryUrl.toString().contains("svn.jboss.org")) {
+                Repository repository = aphrodite.getRepository(repositoryUrl);
+                Codebase codebase = new Codebase(codebaseName);
+                if (!repository.getCodebases().contains(codebase)) {
+                    Utils.logWarnMessage(LOG, "The specified codebase '" + codebaseName + "' " +
+                            "does not belong to the Repository at " + repository.getURL());
+                } else {
+                    StreamComponent component = new StreamComponent(componentName, repository, codebase);
+                    codebaseMap.put(component.getName(), component);
+                }
+            }
         }
         return codebaseMap;
     }
