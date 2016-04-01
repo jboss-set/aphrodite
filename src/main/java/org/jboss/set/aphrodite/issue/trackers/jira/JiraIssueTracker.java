@@ -39,8 +39,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import com.atlassian.jira.rest.client.api.IssueRestClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
@@ -190,7 +194,6 @@ public class JiraIssueTracker extends AbstractIssueTracker {
      * Known limitations:
      * - Jira api does not allow an issue type to be update (WTF?)
      * - Jira api does not allow project to be changed
-     * @throws InterruptedException
      */
     @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
@@ -200,20 +203,20 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             com.atlassian.jira.rest.client.api.domain.Issue jiraIssue = getIssue(issue);
             IssueInput update = WRAPPER.issueToFluentUpdate(issue, jiraIssue);
 
-            restClient.getIssueClient().updateIssue(jiraIssue.getKey(), update).claim();
+            IssueRestClient issueClient = restClient.getIssueClient();
+            issueClient.updateIssue(jiraIssue.getKey(), update).claim();
             if (!JiraFields.hasSameIssueStatus(issue, jiraIssue)) {
                 String transition = getJiraTransition(issue, jiraIssue);
-                Iterable<Transition> availableTransitions = restClient.getIssueClient().getTransitions(jiraIssue).get();
-                for(Transition t : availableTransitions) {
+                for(Transition t : issueClient.getTransitions(jiraIssue).get()) {
                     if(t.getName().equals(transition)) {
-                        restClient.getIssueClient().transition(jiraIssue, new TransitionInput(t.getId())).claim();
+                        issueClient.transition(jiraIssue, new TransitionInput(t.getId())).claim();
                     }
                 }
             }
 
             // only supports add
             for(LinkIssuesInput linkIssuesInput : calculateNewLinks(issue, jiraIssue)) {
-                restClient.getIssueClient().linkIssue(linkIssuesInput).claim();
+                issueClient.linkIssue(linkIssuesInput).claim();
             }
 
             return true;
@@ -223,24 +226,36 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     private List<LinkIssuesInput> calculateNewLinks(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        // When jiraIssueLinks is null, this means that issue links have been disabled, so return an empty list
+        Iterable<IssueLink> jiraIssueLinks = jiraIssue.getIssueLinks();
+        if (jiraIssueLinks == null)
+            return new ArrayList<>();
 
-        List<LinkIssuesInput> links = new ArrayList<>();
+        // Process the existing IssueLinks and retrieve their Issue keys
+        List<IssueLink> tmp = StreamSupport.stream(jiraIssueLinks.spliterator(), false).collect(Collectors.toList());
+        List<String> inbound = getExistingIssueLinkKeys(tmp, Direction.INBOUND);
+        List<String> outbound = getExistingIssueLinkKeys(tmp, Direction.OUTBOUND);
 
-        Iterable<IssueLink> jiraIssueLinks  = jiraIssue.getIssueLinks();
-        List<IssueLink> tmp = new ArrayList<>();
-        jiraIssueLinks.forEach(e -> tmp.add(e));
+        return Stream.concat(
+                createIssueLinks(issue, inbound, e -> new LinkIssuesInput(e, jiraIssue.getKey(), "Dependency")),
+                createIssueLinks(issue, outbound, e -> new LinkIssuesInput(jiraIssue.getKey(), e, "Dependency")))
+                .collect(Collectors.toList());
+    }
 
-        List<String> inbound = tmp.stream().filter(
-                e -> e.getIssueLinkType().getDirection().equals(Direction.INBOUND) && e.getIssueLinkType().getName().equals("Dependency")
-           ).map(e -> e.getTargetIssueKey()).collect(Collectors.toList());
-        List<String> outbound = tmp.stream().filter(
-                e -> e.getIssueLinkType().getDirection().equals(Direction.OUTBOUND) && e.getIssueLinkType().getName().equals("Dependency")
-           ).map(e -> e.getTargetIssueKey()).collect(Collectors.toList());
+    private Stream<LinkIssuesInput> createIssueLinks(Issue issue, List<String> existingLinks,
+                                                     Function<String, LinkIssuesInput> createLink) {
+        return issue.getBlocks().stream()
+                .map(this::toKey)
+                .filter(e -> !e.isEmpty() && !existingLinks.contains(e))
+                .map(createLink);
+    }
 
-        issue.getBlocks().stream().map(e -> toKey(e)).filter(e -> !e.isEmpty() && !inbound.contains(e)).forEach(e -> links.add(new LinkIssuesInput(e, issue.getTrackerId().get(), "Dependency")));
-        issue.getDependsOn().stream().map(e -> toKey(e)).filter(e -> !e.isEmpty() && !outbound.contains(e)).forEach(e -> links.add(new LinkIssuesInput(issue.getTrackerId().get(), e,"Dependency")));
-        return links;
-
+    private List<String> getExistingIssueLinkKeys(List<IssueLink> issueLinks, Direction linkDirection) {
+        return issueLinks.stream()
+                .filter(link -> link.getIssueLinkType().getDirection().equals(linkDirection))
+                .filter(link -> link.getIssueLinkType().getName().equals("Dependency"))
+                .map(IssueLink::getTargetIssueKey)
+                .collect(Collectors.toList());
     }
 
     private String toKey(URL url) {
