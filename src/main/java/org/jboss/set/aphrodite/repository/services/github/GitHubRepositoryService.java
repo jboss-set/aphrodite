@@ -41,7 +41,6 @@ import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.RepositoryBranch;
 import org.eclipse.egit.github.core.RepositoryCommit;
 import org.eclipse.egit.github.core.RepositoryId;
-import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.client.RequestException;
 import org.eclipse.egit.github.core.service.CollaboratorService;
 import org.eclipse.egit.github.core.service.CommitService;
@@ -53,6 +52,7 @@ import org.eclipse.egit.github.core.service.UserService;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
@@ -60,7 +60,6 @@ import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryServ
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
-import org.jboss.set.aphrodite.domain.Label;
 
 /**
  * @author Ryan Emerson
@@ -69,7 +68,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
     private final GitHubWrapper WRAPPER = new GitHubWrapper();
-    private GitHubClient gitHubClient;
+    private CustomGitHubClient gitHubClient;
 
     public GitHubRepositoryService() {
         super(RepositoryType.GITHUB);
@@ -87,7 +86,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             return false;
 
         try {
-            gitHubClient = GitHubClient.createClient(baseUrl.toString());
+            gitHubClient = CustomGitHubClient.createClient(baseUrl.toString());
             gitHubClient.setCredentials(config.getUsername(), config.getPassword());
             new UserService(gitHubClient).getUser();
         } catch (IOException e) {
@@ -272,16 +271,13 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         String patchId = patch.getId();
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
         IssueService issueService = new IssueService(gitHubClient);
-        List<org.eclipse.egit.github.core.Label> labels = null;
         try {
             org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
-            labels = issue.getLabels();
+            return WRAPPER.pullRequestLabeltoPatchLabel(issue.getLabels());
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
-
-        return WRAPPER.pullRequestLabeltoPatchLabel(labels);
     }
 
     @Override
@@ -291,18 +287,16 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
         int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
-        IssueService issueService = new IssueService(gitHubClient);
         LabelService labelService = new LabelService(gitHubClient);
         try {
-            org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
             List<org.eclipse.egit.github.core.Label> issueLabels = new ArrayList<>();
             List<org.eclipse.egit.github.core.Label> existingLabels = labelService.getLabels(repositoryId);
 
             for (Label label : labels) {
                 issueLabels.add(getLabel(repositoryId, label.getName(), existingLabels));
             }
-            issue.setLabels(issueLabels);
-            issueService.editIssue(repositoryId, issue);
+            issueLabels.add(existingLabels.get(0));
+            labelService.setLabels(repositoryId, Long.toString(patchId), issueLabels);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -314,29 +308,36 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         URL url = patch.getURL();
         checkHost(url);
 
-        LabelService labelService = new LabelService(gitHubClient);
         IssueService issueService = new IssueService(gitHubClient);
-        String patchId = patch.getId();
         RepositoryId repositoryId = RepositoryId.createFromUrl(url);
-
-        org.eclipse.egit.github.core.Issue issue;
         try {
-            issue = issueService.getIssue(repositoryId, patchId);
-            List<org.eclipse.egit.github.core.Label> labels = issue.getLabels();
+            List<org.eclipse.egit.github.core.Label> labels = issueService.getIssue(repositoryId, patch.getId()).getLabels();
 
             for (org.eclipse.egit.github.core.Label label : labels)
                 if (label.getName().equalsIgnoreCase(name)) {
-                    labelService.deleteLabel(repositoryId, name);
+                    // Currently does not support labels with spaces in the name
+//                    new LabelService(gitHubClient).deleteLabel(repositoryId, label.getName());
+                    deleteLabelWithEscapedName(repositoryId, patch, label);
                     return;
                 }
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
-
         throw new NotFoundException("No label exists with the name '" + name +
                 "' at repository '" + repositoryId + "'");
+    }
 
+    // Workaround for issue with egit GH client: https://github.com/jboss-set/aphrodite/issues/59
+    private void deleteLabelWithEscapedName(RepositoryId repositoryId, Patch patch, org.eclipse.egit.github.core.Label label) throws IOException {
+        String path = "/repos/" + repositoryId.generateId() + "/issues/" + patch.getId() + "/labels/" + label.getName();
+        try {
+            URI uri = new URI(baseUrl.getProtocol(), baseUrl.getHost(), path, null);
+            path = uri.toASCIIString().substring(baseUrl.toString().length() - 1); // -1 to keep / at start
+            gitHubClient.deleteWith200Response(path);
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     private static final Pattern RELATED_PR_PATTERN = Pattern
