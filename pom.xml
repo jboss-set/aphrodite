@@ -180,11 +180,6 @@
             <version>${commons.logging.version}</version>
         </dependency>
         <dependency>
-            <groupId>commons-beanutils</groupId>
-            <artifactId>commons-beanutils</artifactId>
-            <version>${commons.beanutils.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.mylyn.github</groupId>
             <artifactId>org.eclipse.egit.github.core</artifactId>
             <version>${org.eclipse.egit.github.core.version}</version>
@@ -202,11 +197,6 @@
         <dependency>
        	    <groupId>com.atlassian.jira</groupId>
             <artifactId>jira-rest-java-client-core</artifactId>
-            <version>${jira.client.version}</version>
-        </dependency>
-        <dependency>
-       	    <groupId>com.atlassian.jira</groupId>
-            <artifactId>jira-rest-java-client-plugin</artifactId>
             <version>${jira.client.version}</version>
         </dependency>
         <dependency>
