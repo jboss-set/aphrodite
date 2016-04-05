@@ -27,9 +27,11 @@ import org.jboss.set.aphrodite.domain.IssueEstimation;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Martin Stefanko (mstefank@redhat.com)
@@ -49,10 +51,9 @@ public class TestUtils {
         assertEquals("issue product mismatch", expected.getProduct(), other.getProduct());
         assertEquals("issue type mismatch", expected.getType(), other.getType());
 
-        Release expectedRelease = expected.getRelease();
-        Release otherRealease = other.getRelease();
-        assertEquals("issue version mismatch", expectedRelease.getVersion(), otherRealease.getVersion());
-        assertEquals("issue milestone mismatch", expectedRelease.getMilestone(), otherRealease.getMilestone());
+        List<Release> expectedReleases = expected.getReleases();
+        List<Release> otherReleases = other.getReleases();
+        assertTrue("issue release mismatch", expectedReleases.containsAll(otherReleases));
 
         assertEquals("issue depends on list mismatch", expected.getDependsOn().size(), other.getDependsOn().size());
         assertEquals("issue depends on list mismatch", expected.getDependsOn(), other.getDependsOn());

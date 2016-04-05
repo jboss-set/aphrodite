@@ -40,6 +40,7 @@ import org.junit.rules.ExpectedException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -188,7 +189,11 @@ public class BZIssueWrapperTest {
         result.setComponents(Collections.singletonList("CLI"));
         result.setProduct("EAP");
         result.setType(IssueType.BUG);
-        result.setRelease(new Release("6.4.4", "---"));
+
+        List<Release> releases = new ArrayList<>();
+        releases.add(new Release("6.4.4", "---"));
+        result.setReleases(releases);
+
         result.setDependsOn(Arrays.asList(
                 new URL("https://bugzilla.redhat.com/show_bug.cgi?id=1111112"),
                 new URL("https://bugzilla.redhat.com/show_bug.cgi?id=1111113")

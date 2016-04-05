@@ -45,6 +45,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
+import com.atlassian.jira.rest.client.api.domain.Project;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
@@ -201,7 +202,8 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             checkHost(issue.getURL());
 
             com.atlassian.jira.rest.client.api.domain.Issue jiraIssue = getIssue(issue);
-            IssueInput update = WRAPPER.issueToFluentUpdate(issue, jiraIssue);
+            Project project = restClient.getProjectClient().getProject(jiraIssue.getProject().getSelf()).claim();
+            IssueInput update = WRAPPER.issueToFluentUpdate(issue, jiraIssue, project);
 
             IssueRestClient issueClient = restClient.getIssueClient();
             issueClient.updateIssue(jiraIssue.getKey(), update).claim();

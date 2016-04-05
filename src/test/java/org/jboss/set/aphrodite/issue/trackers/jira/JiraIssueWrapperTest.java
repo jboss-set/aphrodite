@@ -33,7 +33,9 @@ import java.net.URL;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -211,7 +213,11 @@ public class JiraIssueWrapperTest {
         result.setComponents(Collections.singletonList("CLI"));
         result.setProduct("EAP");
         result.setType(org.jboss.set.aphrodite.domain.IssueType.BUG);
-        result.setRelease(new Release("6.4.4", "---"));
+
+        List<Release> releases = new ArrayList<>();
+        releases.add(new Release("6.4.4"));
+        result.setReleases(releases);
+
         result.setDependsOn(Collections.emptyList());
         result.setBlocks(Collections.emptyList());
         result.setEstimation(new IssueEstimation(8.0, 8.0));

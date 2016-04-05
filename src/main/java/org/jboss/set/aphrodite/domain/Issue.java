@@ -61,7 +61,7 @@ public class Issue {
 
     private IssueType type;
 
-    private Release release;
+    private List<Release> releases;
 
     private Map<String, FlagStatus> streamStatus;
 
@@ -85,7 +85,7 @@ public class Issue {
         this.stage = new Stage();
         this.status = IssueStatus.UNDEFINED;
         this.type = IssueType.UNDEFINED;
-        this.release = new Release();
+        this.releases = new ArrayList<>();
         this.streamStatus = new HashMap<>();
         this.dependsOn = new ArrayList<>();
         this.blocks = new ArrayList<>();
@@ -180,13 +180,13 @@ public class Issue {
         this.type = type;
     }
 
-    public Release getRelease() {
-        return release;
+    public List<Release> getReleases() {
+        return releases;
     }
 
-    public void setRelease(Release release) {
-        Objects.requireNonNull(release, "An Issue's Release cannot be set to null");
-        this.release = release;
+    public void setReleases(List<Release> releases) {
+        Objects.requireNonNull(releases, "An Issue's Release cannot be set to null");
+        this.releases = releases;
     }
 
     public Map<String, FlagStatus> getStreamStatus() {
@@ -263,7 +263,7 @@ public class Issue {
                 ", stage=" + stage +
                 ", status=" + status +
                 ", type=" + type +
-                ", release=" + release +
+                ", release=" + releases +
                 ", streamStatus=" + streamStatus +
                 ", dependsOn=" + dependsOn +
                 ", blocks=" + blocks +

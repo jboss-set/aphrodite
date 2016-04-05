@@ -37,12 +37,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
+import com.atlassian.jira.rest.client.api.domain.Project;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
@@ -64,6 +68,7 @@ import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldVal
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 
 /**
  * @author Ryan Emerson
@@ -108,7 +113,7 @@ class IssueWrapper {
 
         setIssueStage(issue, jiraIssue);
         setIssueType(issue, jiraIssue);
-        setIssueRelease(issue, jiraIssue);
+        setIssueReleases(issue, jiraIssue);
         setIssueDependencies(url, issue, jiraIssue.getIssueLinks());
         setIssueComments(issue, jiraIssue);
         setCreationTime(issue, jiraIssue);
@@ -118,7 +123,7 @@ class IssueWrapper {
     }
 
     // TODO find a solution for updating time estimates, see https://github.com/jboss-set/aphrodite/issues/23
-    IssueInput issueToFluentUpdate(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+    IssueInput issueToFluentUpdate(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, Project project) throws NotFoundException {
         checkUnsupportedUpdateFields(issue);
         IssueInputBuilder inputBuilder = new IssueInputBuilder(jiraIssue.getProject().getKey(), jiraIssue.getIssueType().getId());
 
@@ -132,20 +137,55 @@ class IssueWrapper {
             assignee -> inputBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("name", assignee)))
         );
 
-        issue.getRelease().getVersion().ifPresent(version ->
-                inputBuilder.setFieldInput(new FieldInput(IssueFieldId.FIX_VERSIONS_FIELD, new ArrayList<ComplexIssueInputFieldValue>() {{
-                    add(ComplexIssueInputFieldValue.with("name", version));
-                }})
-        ));
-
         // this is ok but does nothing if there is no permissions.
         issue.getStage().getStateMap().entrySet()
             .stream().filter(entry -> entry.getValue() != FlagStatus.NO_SET)
             .forEach(entry -> inputBuilder.setFieldInput(new FieldInput(JSON_CUSTOM_FIELD + FLAG_MAP.get(entry.getKey()), entry.getValue().getSymbol())));
 
-        issue.getRelease().getMilestone().ifPresent(milestone ->  inputBuilder.setFieldInput(new FieldInput(JSON_CUSTOM_FIELD + TARGET_RELEASE, ComplexIssueInputFieldValue.with("value", milestone))));
+        Map<String, Version> versionsMap = StreamSupport.stream(project.getVersions().spliterator(), false)
+                .collect(Collectors.toMap(Version::getName, Function.identity()));
+        updateFixVersions(issue, versionsMap, inputBuilder);
+        updateStreamStatus(issue, jiraIssue, versionsMap, inputBuilder);
 
         return inputBuilder.build();
+    }
+
+    private void updateStreamStatus(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue,
+                                    Map<String, Version> versionsMap, IssueInputBuilder inputBuilder) throws NotFoundException {
+        String customField = JSON_CUSTOM_FIELD + TARGET_RELEASE;
+        IssueField issueField = jiraIssue.getField(customField);
+        if (issueField == null || (issueField.getType() == null && issueField.getValue() == null)) {
+            String msg = String.format("Unable to set a stream status for issue %1$s as %2$s projects do not utilise field: %3$s",
+                    jiraIssue.getKey(), jiraIssue.getProject().getName(), customField);
+            Utils.logWarnMessage(LOG, msg);
+            return;
+        }
+
+        for (Map.Entry<String, FlagStatus> entry : issue.getStreamStatus().entrySet()) {
+            if (entry.getValue() != FlagStatus.ACCEPTED) {
+                String streamName = entry.getKey();
+                Version version = versionsMap.get(streamName);
+                if (version != null) {
+                    inputBuilder.setFieldInput(new FieldInput(customField, ComplexIssueInputFieldValue.with("value", version.getId())));
+                } else {
+                    throw new NotFoundException("No Stream exists for this project with the name : " + streamName);
+                }
+            }
+        }
+    }
+
+    private void updateFixVersions(Issue issue, Map<String, Version> versionsMap, IssueInputBuilder inputBuilder) throws NotFoundException {
+        List<Version> projectVersions = new ArrayList<>();
+        for (Release release : issue.getReleases()) {
+            String releaseName = release.getVersion().orElse(null);
+            Version version = versionsMap.get(releaseName);
+            if (version != null) {
+                projectVersions.add(version);
+            } else {
+                throw new NotFoundException("No Release exists for this project with name : " + releaseName);
+            }
+        }
+        inputBuilder.setFixVersions(projectVersions);
     }
 
     private void checkUnsupportedUpdateFields(Issue issue) {
@@ -215,13 +255,14 @@ class IssueWrapper {
 
     }
 
-    private void setIssueRelease(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        Release release = new Release();
-        for(Version tmp : jiraIssue.getFixVersions()) {
-            release.setVersion(tmp.getName());
-            release.setMilestone("---");
+    private void setIssueReleases(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        Iterable<Version> versions = jiraIssue.getFixVersions();
+        if (versions != null) {
+            List<Release> releases = StreamSupport.stream(jiraIssue.getFixVersions().spliterator(), false)
+                    .map(version -> new Release(version.getName()))
+                    .collect(Collectors.toList());
+            issue.setReleases(releases);
         }
-        issue.setRelease(release);
     }
 
     private void setIssueDependencies(URL originalUrl, Issue issue, Iterable<com.atlassian.jira.rest.client.api.domain.IssueLink> links) {

@@ -58,6 +58,24 @@ public class Release {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Release release = (Release) o;
+
+        if (version != null ? !version.equals(release.version) : release.version != null) return false;
+        return milestone != null ? milestone.equals(release.milestone) : release.milestone == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = version != null ? version.hashCode() : 0;
+        result = 31 * result + (milestone != null ? milestone.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "Release{" +
                 "version='" + version + '\'' +

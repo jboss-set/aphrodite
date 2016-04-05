@@ -106,8 +106,9 @@ class IssueWrapper {
         }
 
         String version = (String) ((Object[]) bug.get(VERSION))[0];
-        Release release = new Release(version, (String) bug.get(TARGET_MILESTONE));
-        issue.setRelease(release);
+        List<Release> releases = new ArrayList<>();
+        releases.add(new Release(version, (String) bug.get(TARGET_MILESTONE)));
+        issue.setReleases(releases);
 
         issue.setDependsOn(getListOfURlsFromIds(bug, baseURL, DEPENDS_ON));
         issue.setBlocks(getListOfURlsFromIds(bug, baseURL, BLOCKS));
@@ -139,8 +140,7 @@ class IssueWrapper {
         params.put(COMPONENT, issue.getComponents().toArray(new String[issue.getComponents().size()]));
         issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee));
         issue.getReporter().ifPresent(reporter -> params.put(REPORTER, reporter));
-        issue.getRelease().getVersion().ifPresent(version -> params.put(VERSION, version));
-        issue.getRelease().getMilestone().ifPresent(milestone -> params.put(TARGET_MILESTONE, milestone));
+
         issue.getEstimation().ifPresent(tracking -> {
             params.put(HOURS_WORKED, tracking.getHoursWorked());
             params.put(ESTIMATED_TIME, tracking.getInitialEstimate());
@@ -150,6 +150,7 @@ class IssueWrapper {
         params.put(ISSUE_TYPE, issue.getType().toString());
         params.put(FLAGS, getStageAndStreamsMap(issue.getStreamStatus(), issue.getStage().getStateMap()));
 
+        addReleaseToUpdate(issue, params);
         addURLCollectionToParameters(issue.getDependsOn(), DEPENDS_ON, params);
         addURLCollectionToParameters(issue.getBlocks(), BLOCKS, params);
         return params;
@@ -163,6 +164,20 @@ class IssueWrapper {
     private void checkUnsupportedIssueStatus(Issue issue) throws AphroditeException {
         if (issue.getStatus() == IssueStatus.CREATED) {
             throw new AphroditeException("Bugzilla issues do not support the IssueStatus CREATED");
+        }
+    }
+
+    private void addReleaseToUpdate(Issue issue, Map<String, Object> params) {
+        List<Release> releases = issue.getReleases();
+        if (!releases.isEmpty()) {
+            Release release = releases.get(0);
+            release.getVersion().ifPresent(version -> params.put(VERSION, version));
+            release.getMilestone().ifPresent(milestone -> params.put(TARGET_MILESTONE, milestone));
+
+            if (releases.size() > 1) {
+                Utils.logWarnMessage(LOG, "Bugzilla only supports one Release object. The first Release object in " +
+                        "Issue::getReleases is used and subsequent Releases are ignored.");
+            }
         }
     }
 
