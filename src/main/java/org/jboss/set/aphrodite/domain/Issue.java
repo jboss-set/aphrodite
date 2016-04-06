@@ -91,6 +91,7 @@ public class Issue {
         this.blocks = new ArrayList<>();
         this.comments = new ArrayList<>();
         this.components = new ArrayList<>();
+        this.estimation = new IssueEstimation();
     }
 
     public URL getURL() {
