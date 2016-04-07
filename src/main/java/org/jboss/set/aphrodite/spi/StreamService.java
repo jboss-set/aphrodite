@@ -3,11 +3,19 @@ package org.jboss.set.aphrodite.spi;
 import java.net.URL;
 import java.util.List;
 
+import org.jboss.set.aphrodite.Aphrodite;
+import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Stream;
 
 public interface StreamService {
+
+    /**
+     * initial the streams service with the default url.
+     * @throws NotFoundException
+     */
+    boolean init(Aphrodite aphrodite, AphroditeConfig config) throws NotFoundException;
 
     /**
      * Returns all streams discovered by this service.
