@@ -30,6 +30,7 @@ import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
+import org.jboss.set.aphrodite.domain.User;
 import org.jboss.set.aphrodite.issue.trackers.util.TestUtils;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.junit.Before;
@@ -143,6 +144,7 @@ public class BZIssueWrapperTest {
 
         result.put(BugzillaFields.ID, 1111111);
         result.put(BugzillaFields.ASSIGNEE, "jboss-set@redhat.com");
+        result.put(BugzillaFields.REPORTER, "jboss-set@redhat.com");
         result.put(BugzillaFields.CREATION_TIME, getCreationDate());
         result.put(BugzillaFields.SUMMARY, "Test Issue");
         result.put(BugzillaFields.DESCRIPTION, "Test bugzilla");
@@ -181,7 +183,8 @@ public class BZIssueWrapperTest {
         Issue result = new Issue(url);
 
         result.setTrackerId("1111111");
-        result.setAssignee("jboss-set@redhat.com");
+        result.setAssignee(User.createWithEmail("jboss-set@redhat.com"));
+        result.setReporter(User.createWithEmail("jboss-set@redhat.com"));
         result.setCreationTime(getCreationDate());
         result.setSummary("Test Issue");
         result.setDescription("Test bugzilla");

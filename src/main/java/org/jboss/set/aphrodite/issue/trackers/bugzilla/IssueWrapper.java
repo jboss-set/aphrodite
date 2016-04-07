@@ -68,6 +68,7 @@ import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
+import org.jboss.set.aphrodite.domain.User;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 
 /**
@@ -82,8 +83,8 @@ class IssueWrapper {
         URL url = Utils.createURL(baseURL + ID_QUERY + id);
         Issue issue = new Issue(url);
         issue.setTrackerId(id.toString());
-        issue.setAssignee((String) bug.get(ASSIGNEE));
-        issue.setReporter((String) bug.get(REPORTER));
+        issue.setAssignee(User.createWithEmail((String) bug.get(ASSIGNEE)));
+        issue.setReporter(User.createWithEmail((String) bug.get(REPORTER)));
         issue.setCreationTime((Date) bug.get(CREATION_TIME));
         issue.setLastUpdated((Date) bug.get(LAST_UPDATED));
         issue.setSummary((String) bug.get(SUMMARY));
@@ -138,8 +139,8 @@ class IssueWrapper {
         issue.getSummary().ifPresent(summary -> params.put(SUMMARY, summary));
         issue.getProduct().ifPresent(product -> params.put(PRODUCT, product));
         params.put(COMPONENT, issue.getComponents().toArray(new String[issue.getComponents().size()]));
-        issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee));
-        issue.getReporter().ifPresent(reporter -> params.put(REPORTER, reporter));
+        issue.getAssignee().ifPresent(assignee -> params.put(ASSIGNEE, assignee.getEmail().orElseThrow(this::nullUserEmail)));
+        issue.getReporter().ifPresent(reporter -> params.put(REPORTER, reporter.getEmail().orElseThrow(this::nullUserEmail)));
 
         issue.getEstimation().ifPresent(tracking -> {
             params.put(HOURS_WORKED, tracking.getHoursWorked());
@@ -147,8 +148,10 @@ class IssueWrapper {
         });
 
         params.put(STATUS, issue.getStatus().toString());
-        params.put(ISSUE_TYPE, issue.getType().toString());
         params.put(FLAGS, getStageAndStreamsMap(issue.getStreamStatus(), issue.getStage().getStateMap()));
+
+        if (issue.getType() != IssueType.UNDEFINED)
+            params.put(ISSUE_TYPE, issue.getType().toString());
 
         addReleaseToUpdate(issue, params);
         addURLCollectionToParameters(issue.getDependsOn(), DEPENDS_ON, params);
@@ -156,9 +159,16 @@ class IssueWrapper {
         return params;
     }
 
+    private IllegalArgumentException nullUserEmail() {
+        throw new IllegalArgumentException("Bugzilla requires a non-null User.email field to update assignee/reporters");
+    }
+
     private void checkUnsupportedUpdateFields(Issue issue) {
-        if (issue.getReporter().isPresent() && LOG.isDebugEnabled())
-            LOG.debug("Bugzilla does not support updating the reporter field, field ignored.");
+        if (issue.getReporter().isPresent() && LOG.isWarnEnabled())
+            LOG.warn("Bugzilla does not support updating the reporter field, field ignored.");
+
+        if (issue.getStatus() == IssueStatus.UNDEFINED && LOG.isWarnEnabled())
+            LOG.warn("IssueStatus.UNDEFINED is ignored when updating a Bugzilla operation.");
     }
 
     private void checkUnsupportedIssueStatus(Issue issue) throws AphroditeException {

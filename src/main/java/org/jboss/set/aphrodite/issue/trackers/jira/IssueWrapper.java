@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -55,6 +56,7 @@ import org.jboss.set.aphrodite.domain.IssueEstimation;
 import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
+import org.jboss.set.aphrodite.domain.User;
 
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
@@ -62,7 +64,6 @@ import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.IssueFieldId;
 import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
 import com.atlassian.jira.rest.client.api.domain.TimeTracking;
-import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
@@ -108,8 +109,9 @@ class IssueWrapper {
         setIssueStream(issue, jiraIssue);
         setIssueProject(issue, jiraIssue);
         setIssueComponent(issue, jiraIssue);
-        setIssueAssignee(issue, jiraIssue);
-        setIssueReporter(issue, jiraIssue);
+
+        setIssueUser((i, u) -> i.setAssignee(new User(u.getEmailAddress(), u.getName())), issue, jiraIssue.getAssignee());
+        setIssueUser((i, u) -> i.setReporter(new User(u.getEmailAddress(), u.getName())), issue, jiraIssue.getReporter());
 
         setIssueStage(issue, jiraIssue);
         setIssueType(issue, jiraIssue);
@@ -133,9 +135,10 @@ class IssueWrapper {
                 issue.getComponents().stream().map(e -> ComplexIssueInputFieldValue.with("name", e)).collect(Collectors.toList()))
         );
         issue.getDescription().ifPresent(inputBuilder::setDescription);
-        issue.getAssignee().ifPresent(
-            assignee -> inputBuilder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("name", assignee)))
-        );
+
+        issue.getAssignee().ifPresent(assignee -> inputBuilder.setFieldInput(
+                new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("name",
+                        assignee.getName().orElseThrow(this::nullUsername)))));
 
         // this is ok but does nothing if there is no permissions.
         issue.getStage().getStateMap().entrySet()
@@ -208,16 +211,14 @@ class IssueWrapper {
         issue.setComponents(tmp);
     }
 
-    private void setIssueAssignee(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        User assignee = jiraIssue.getAssignee();
-        if (assignee != null)
-            issue.setAssignee(assignee.getName());
+    private IllegalArgumentException nullUsername() {
+        throw new IllegalArgumentException("JIRA issues require a non-null username in order to set an assignee/reporter");
     }
 
-    private void setIssueReporter(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        User reporter = jiraIssue.getReporter();
-        if (reporter != null)
-            issue.setReporter(reporter.getName());
+    private void setIssueUser(BiConsumer<Issue, com.atlassian.jira.rest.client.api.domain.User> function, Issue issue,
+                              com.atlassian.jira.rest.client.api.domain.User user) {
+        if (user != null && user.getName() != null && user.getEmailAddress() != null)
+            function.accept(issue, user);
     }
 
     private void setIssueStage(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
@@ -227,8 +228,6 @@ class IssueWrapper {
         stage.setStatus(Flag.QE, FlagStatus.getMatchingFlag((String) jiraIssue.getField(JSON_CUSTOM_FIELD + QE_ACK).getValue()));
         issue.setStage(stage);
     }
-
-
 
     private void setIssueType(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         String type = jiraIssue.getIssueType().getName();

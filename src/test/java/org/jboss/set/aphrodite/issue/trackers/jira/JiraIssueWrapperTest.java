@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,6 +45,7 @@ import org.jboss.set.aphrodite.domain.IssueEstimation;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
+import org.jboss.set.aphrodite.domain.User;
 import org.jboss.set.aphrodite.issue.trackers.util.TestUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -64,7 +64,6 @@ import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Project;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.TimeTracking;
-import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.Version;
 
 /**
@@ -160,8 +159,8 @@ public class JiraIssueWrapperTest {
         when(componentMock.getName()).thenReturn("CLI");
         when(jiraIssue01.getComponents()).thenReturn(Collections.singletonList(componentMock));
 
-        User assigneeMock = mock(User.class);
-        when(assigneeMock.getName()).thenReturn("jboss-set@redhat.com");
+        com.atlassian.jira.rest.client.api.domain.User assigneeMock = mock(com.atlassian.jira.rest.client.api.domain.User.class);
+        when(assigneeMock.getName()).thenReturn("jboss-set");
         when(assigneeMock.getEmailAddress()).thenReturn("jboss-set@redhat.com");
         when(jiraIssue01.getAssignee()).thenReturn(assigneeMock);
 
@@ -207,7 +206,7 @@ public class JiraIssueWrapperTest {
         result.setSummary("Test Issue");
         result.setCreationTime(new SimpleDateFormat(JiraFields.DATE_STRING_FORMAT)
                 .parse("2013-01-17T00:12:31.000-0500"));
-        result.setAssignee("jboss-set@redhat.com");
+        result.setAssignee(new User("jboss-set@redhat.com", "jboss-set"));
         result.setDescription("Test jira");
         result.setStatus(IssueStatus.NEW);
         result.setComponents(Collections.singletonList("CLI"));

@@ -51,9 +51,9 @@ public class Issue {
 
     private String description;
 
-    private String assignee;
+    private User assignee;
 
-    private String reporter;
+    private User reporter;
 
     private Stage stage;
 
@@ -137,19 +137,19 @@ public class Issue {
         this.description = description;
     }
 
-    public Optional<String> getAssignee() {
+    public Optional<User> getAssignee() {
         return Optional.ofNullable(assignee);
     }
 
-    public void setAssignee(String assignee) {
+    public void setAssignee(User assignee) {
         this.assignee = assignee;
     }
 
-    public Optional<String> getReporter() {
+    public Optional<User> getReporter() {
         return Optional.ofNullable(reporter);
     }
 
-    public void setReporter(String reporter) {
+    public void setReporter(User reporter) {
         this.reporter = reporter;
     }
 
