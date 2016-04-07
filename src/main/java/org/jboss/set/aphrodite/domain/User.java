@@ -26,11 +26,11 @@ public class User {
     }
 
     public Optional<String> getEmail() {
-        return Optional.of(email);
+        return Optional.ofNullable(email);
     }
 
     public Optional<String> getName() {
-        return Optional.of(name);
+        return Optional.ofNullable(name);
     }
 
     @Override
