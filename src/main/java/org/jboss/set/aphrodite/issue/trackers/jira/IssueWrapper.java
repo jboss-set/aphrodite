@@ -217,7 +217,7 @@ class IssueWrapper {
     private void setIssueReporter(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         User reporter = jiraIssue.getReporter();
         if (reporter != null)
-            issue.setReporter(reporter.getName());
+            issue.setReporter(reporter.getEmailAddress());
     }
 
     private void setIssueStage(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
