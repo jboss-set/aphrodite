@@ -1,12 +1,11 @@
 package org.jboss.set.aphrodite.config;
 
 public enum StreamType {
-    JSONSTREAM("jsonstream");
+    JSON("json");
 
     private final String jsonstream;
 
     StreamType(final String jsonstream) {
-
         this.jsonstream = jsonstream;
     }
 

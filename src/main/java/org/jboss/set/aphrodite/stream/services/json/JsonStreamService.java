@@ -23,6 +23,7 @@
 package org.jboss.set.aphrodite.stream.services.json;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,9 +71,7 @@ public class JsonStreamService implements StreamService {
     private static final Log LOG = LogFactory.getLog(JsonStreamService.class);
 
     private final Map<String, Stream> streamMap = new HashMap<>();
-    private String jsonFileLocation;
     private Aphrodite aphrodite;
-    private URL url;
 
     @Override
     public boolean init(Aphrodite aphrodite, AphroditeConfig config) throws NotFoundException {
@@ -80,7 +79,7 @@ public class JsonStreamService implements StreamService {
         Iterator<StreamConfig> i = config.getStreamConfigs().iterator();
         while (i.hasNext()) {
             StreamConfig streamConfig = i.next();
-            if (streamConfig.getStreamType() == StreamType.JSONSTREAM) {
+            if (streamConfig.getStreamType() == StreamType.JSON) {
                 i.remove();
                 return init(streamConfig);
             }
@@ -89,18 +88,14 @@ public class JsonStreamService implements StreamService {
     }
 
     private boolean init(StreamConfig config) throws NotFoundException {
-        jsonFileLocation = config.getLocation();
-        url = config.getURL();
-        loadData();
-        return true;
-    }
-
-    private void loadData() throws NotFoundException {
-        if (url == null) {
-            loadStreamData();
+        if (config.getURL().isPresent()) {
+            readJsonFromURL(config.getURL().get());
+        } else if (config.getStreamFile().isPresent()) {
+            readJsonFromFile(config.getStreamFile().get());
         } else {
-            readJsonFromURL();
+            throw new IllegalArgumentException("StreamConfig requires either a URL or File to be specified");
         }
+        return true;
     }
 
     @Override
@@ -113,19 +108,19 @@ public class JsonStreamService implements StreamService {
         return streamMap.get(streamName);
     }
 
-    private void loadStreamData() throws NotFoundException {
-        try (JsonReader jr = Json.createReader(new FileInputStream(jsonFileLocation))) {
+    private void readJsonFromFile(File file) throws NotFoundException {
+        try (JsonReader jr = Json.createReader(new FileInputStream(file))) {
             parseJson(jr.readObject());
         } catch (IOException e) {
-            Utils.logException(LOG, "Unable to load file: " + jsonFileLocation, e);
-            throw new NotFoundException("Unable to load file: " + jsonFileLocation, e);
+            Utils.logException(LOG, "Unable to load file: " + file.getPath(), e);
+            throw new NotFoundException("Unable to load file: " + file.getPath(), e);
         } catch (JsonException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
     }
 
-    private void readJsonFromURL() throws NotFoundException {
+    private void readJsonFromURL(URL url) throws NotFoundException {
         try (InputStream is = url.openStream()) {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is));
             JsonReader jr = Json.createReader(rd);

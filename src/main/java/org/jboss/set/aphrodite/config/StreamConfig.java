@@ -21,11 +21,13 @@
  */
 package org.jboss.set.aphrodite.config;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Objects;
+import java.util.Optional;
 
 public class StreamConfig {
-    private String location;
+    private File streamFile;
     private StreamType streamType;
     private URL url;
 
@@ -36,10 +38,10 @@ public class StreamConfig {
         this.streamType = streamType;
     }
 
-    public StreamConfig(String location, StreamType streamType) {
-        Objects.requireNonNull(location, "A 'location' must be specified for each service.");
+    public StreamConfig(File streamFile, StreamType streamType) {
+        Objects.requireNonNull(streamFile, "A 'streamFile' must be specified for each service.");
         Objects.requireNonNull(streamType, "A 'streamType' must be specified for each service.");
-        this.location = location;
+        this.streamFile = streamFile;
         this.streamType = streamType;
     }
 
@@ -47,12 +49,12 @@ public class StreamConfig {
         return streamType;
     }
 
-    public String getLocation() {
-        return location;
+    public Optional<File> getStreamFile() {
+        return Optional.ofNullable(streamFile);
     }
 
-    public URL getURL() {
-        return url;
+    public Optional<URL> getURL() {
+        return Optional.ofNullable(url);
     }
 
     @Override
@@ -62,7 +64,7 @@ public class StreamConfig {
 
         StreamConfig that = (StreamConfig) o;
 
-        if (location != null ? !location.equals(that.location) : that.location != null) return false;
+        if (streamFile != null ? !streamFile.equals(that.streamFile) : that.streamFile != null) return false;
         if (streamType != that.streamType) return false;
         return url != null ? url.equals(that.url) : that.url == null;
 
@@ -70,7 +72,7 @@ public class StreamConfig {
 
     @Override
     public int hashCode() {
-        int result = location != null ? location.hashCode() : 0;
+        int result = streamFile != null ? streamFile.hashCode() : 0;
         result = 31 * result + (streamType != null ? streamType.hashCode() : 0);
         result = 31 * result + (url != null ? url.hashCode() : 0);
         return result;
@@ -79,7 +81,7 @@ public class StreamConfig {
     @Override
     public String toString() {
         return "StreamConfig{" +
-                "location='" + location + '\'' +
+                "streamFile='" + streamFile + '\'' +
                 ", streamType=" + streamType +
                 ", url=" + url +
                 '}';

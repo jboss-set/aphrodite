@@ -139,6 +139,9 @@ public class Aphrodite implements AutoCloseable {
     }
 
     private void init(AphroditeConfig config) throws AphroditeException {
+        if (LOG.isInfoEnabled())
+            LOG.info("Initiating Aphrodite ...");
+
         this.config = config;
 
         executorService = config.getExecutorService();
@@ -163,6 +166,9 @@ public class Aphrodite implements AutoCloseable {
                     + " does not exist.");
 
         initialiseStreams(mutableConfig);
+
+        if (LOG.isInfoEnabled())
+            LOG.info("Aphrodite Initialisation Complete");
     }
 
     private void initialiseStreams(AphroditeConfig mutableConfig) throws AphroditeException {
