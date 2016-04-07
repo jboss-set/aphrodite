@@ -34,17 +34,18 @@ public interface StreamService {
     Stream getStream(String streamName);
 
     /**
-     * Find all the url repositories stored in all streams
-     * @return list of unique url point to the repositories
+     * Retrieve the URLs of all Repositories across all Streams
+     * @return a list of unique Repository URLs
      */
-    List<URL> findAllRepositories();
+    List<URL> getAllRepositoryURLs();
 
     /**
-     * Find all the url repositories in the give streams
-     * @param streamName the name of the <code>Stream</code> to be returned.
-     * @return a list of all <code>Repository</code> <code>URL</code> objects.
+     * Retrieve the URLs of all Repositories associated with a given Stream.
+     *
+     * @param streamName the name of the <code>Stream</code> containing the returned repositories.
+     * @return a list of unique Repository URLs
      */
-    List<URL> findAllRepositoriesInStream(String streamName);
+    List<URL> getRepositoryURLsByStream(String streamName);
 
     /**
      * Find all the streams associated to the given repository and codebase
@@ -52,13 +53,13 @@ public interface StreamService {
      * @param codebase the <code>Codebase</code> to search against.
      * @return a list of named <code>Stream</code> objects.
      */
-    List<Stream> findStreamsBy(Repository repository, Codebase codebase);
+    List<Stream> getStreamsBy(Repository repository, Codebase codebase);
 
     /**
      * Get the component name based on the given repository and codebase.
-     * @param repository the <code>Repository</code> to search against.
-     * @param codebase the <code>Codebase</code> to search against.
+     * @param repository the Repository to be searched against
+     * @param codebase the codebase to be searched against
      * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
      */
-    String findComponentNameBy(Repository repository, Codebase codebase);
+    String getComponentNameBy(Repository repository, Codebase codebase);
 }

@@ -30,19 +30,15 @@ public class StreamConfig {
     private URL url;
 
     public StreamConfig(URL url, StreamType streamType) {
-
         Objects.requireNonNull(url, "A 'url' must be specified for each service.");
         Objects.requireNonNull(streamType, "A 'streamType' must be specified for each service.");
-
         this.url = url;
         this.streamType = streamType;
     }
 
     public StreamConfig(String location, StreamType streamType) {
-
         Objects.requireNonNull(location, "A 'location' must be specified for each service.");
         Objects.requireNonNull(streamType, "A 'streamType' must be specified for each service.");
-
         this.location = location;
         this.streamType = streamType;
     }
@@ -60,42 +56,32 @@ public class StreamConfig {
     }
 
     @Override
-    public String toString() {
-        return "StreamConfig {" +
-                "streamType=" + getStreamType().toString() + "}";
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        StreamConfig that = (StreamConfig) o;
+
+        if (location != null ? !location.equals(that.location) : that.location != null) return false;
+        if (streamType != that.streamType) return false;
+        return url != null ? url.equals(that.url) : that.url == null;
+
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((location == null) ? 0 : location.hashCode());
-        result = prime * result + ((streamType == null) ? 0 : streamType.hashCode());
-        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        int result = location != null ? location.hashCode() : 0;
+        result = 31 * result + (streamType != null ? streamType.hashCode() : 0);
+        result = 31 * result + (url != null ? url.hashCode() : 0);
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        StreamConfig other = (StreamConfig) obj;
-        if (location == null) {
-            if (other.location != null)
-                return false;
-        } else if (!location.equals(other.location))
-            return false;
-        if (streamType != other.streamType)
-            return false;
-        if (url == null) {
-            if (other.url != null)
-                return false;
-        } else if (!url.equals(other.url))
-            return false;
-        return true;
+    public String toString() {
+        return "StreamConfig{" +
+                "location='" + location + '\'' +
+                ", streamType=" + streamType +
+                ", url=" + url +
+                '}';
     }
 }

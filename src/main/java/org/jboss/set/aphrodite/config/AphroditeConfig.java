@@ -50,7 +50,7 @@ public class AphroditeConfig {
     }
 
     public static AphroditeConfig issueTrackersOnly(List<IssueTrackerConfig> issueTrackerConfigs) {
-        return new AphroditeConfig(issueTrackerConfigs, new ArrayList<>(),new ArrayList<>());
+        return new AphroditeConfig(issueTrackerConfigs, new ArrayList<>(), new ArrayList<>());
     }
 
     public static AphroditeConfig singleRepositoryService(RepositoryConfig repositoryConfig) {
@@ -60,13 +60,13 @@ public class AphroditeConfig {
     }
 
     public static AphroditeConfig repositoryServicesOnly(List<RepositoryConfig> repositoryConfigs) {
-        return new AphroditeConfig(new ArrayList<>(), repositoryConfigs,new ArrayList<>());
+        return new AphroditeConfig(new ArrayList<>(), repositoryConfigs, new ArrayList<>());
     }
 
-    public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs,List<StreamConfig> streamConfigs) {
+    public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs) {
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;
-        this.streamConfigs=streamConfigs;
+        this.streamConfigs = streamConfigs;
         this.executorService = Executors.newCachedThreadPool();
     }
 
@@ -77,12 +77,12 @@ public class AphroditeConfig {
         this.executorService = executorService;
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;
-        this.streamConfigs=streamConfigs;
+        this.streamConfigs = streamConfigs;
     }
 
     public AphroditeConfig(AphroditeConfig config) {
-        this(config.getExecutorService(),new ArrayList<>(config.getIssueTrackerConfigs()),
-                new ArrayList<>(config.getRepositoryConfigs()),new ArrayList<>(config.getStreamConfig()));
+        this(config.getExecutorService(), new ArrayList<>(config.getIssueTrackerConfigs()),
+                new ArrayList<>(config.getRepositoryConfigs()), new ArrayList<>(config.getStreamConfigs()));
     }
 
 
@@ -98,7 +98,7 @@ public class AphroditeConfig {
         return repositoryConfigs;
     }
 
-    public List<StreamConfig> getStreamConfig(){
+    public List<StreamConfig> getStreamConfigs(){
         return streamConfigs;
     }
 
@@ -148,43 +148,25 @@ public class AphroditeConfig {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((issueTrackerConfigs == null) ? 0 : issueTrackerConfigs.hashCode());
-        result = prime * result + ((repositoryConfigs == null) ? 0 : repositoryConfigs.hashCode());
-        result = prime * result + (streamConfigs == null ? 0 : streamConfigs.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AphroditeConfig that = (AphroditeConfig) o;
+
+        if (issueTrackerConfigs != null ? !issueTrackerConfigs.equals(that.issueTrackerConfigs) : that.issueTrackerConfigs != null)
+            return false;
+        if (repositoryConfigs != null ? !repositoryConfigs.equals(that.repositoryConfigs) : that.repositoryConfigs != null)
+            return false;
+        return streamConfigs != null ? streamConfigs.equals(that.streamConfigs) : that.streamConfigs == null;
+
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        AphroditeConfig other = (AphroditeConfig) obj;
-        if (issueTrackerConfigs == null) {
-            if (other.issueTrackerConfigs != null)
-                return false;
-        } else if (!issueTrackerConfigs.equals(other.issueTrackerConfigs))
-            return false;
-        if (repositoryConfigs == null) {
-            if (other.repositoryConfigs != null)
-                return false;
-        } else if (!repositoryConfigs.equals(other.repositoryConfigs))
-            return false;
-        if(streamConfigs==null){
-            if(other.streamConfigs!=null)
-                return false;
-        }else{
-            if(!streamConfigs.equals(other.streamConfigs))
-                return false;
-        }
-
-        return true;
+    public int hashCode() {
+        int result = issueTrackerConfigs != null ? issueTrackerConfigs.hashCode() : 0;
+        result = 31 * result + (repositoryConfigs != null ? repositoryConfigs.hashCode() : 0);
+        result = 31 * result + (streamConfigs != null ? streamConfigs.hashCode() : 0);
+        return result;
     }
-
 }

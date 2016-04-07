@@ -72,15 +72,12 @@ public class JsonStreamService implements StreamService {
     private final Map<String, Stream> streamMap = new HashMap<>();
     private String jsonFileLocation;
     private Aphrodite aphrodite;
-    private boolean streamsAreLoaded = false;
-
-    // example: https://raw.githubusercontent.com/jboss-set/jboss-streams/master/streams.json
     private URL url;
 
     @Override
     public boolean init(Aphrodite aphrodite, AphroditeConfig config) throws NotFoundException {
         this.aphrodite = aphrodite;
-        Iterator<StreamConfig> i = config.getStreamConfig().iterator();
+        Iterator<StreamConfig> i = config.getStreamConfigs().iterator();
         while (i.hasNext()) {
             StreamConfig streamConfig = i.next();
             if (streamConfig.getStreamType() == StreamType.JSONSTREAM) {
@@ -108,13 +105,11 @@ public class JsonStreamService implements StreamService {
 
     @Override
     public List<Stream> getStreams() {
-        checkStreamsLoaded();
         return new ArrayList<>(streamMap.values());
     }
 
     @Override
     public Stream getStream(String streamName) {
-        checkStreamsLoaded();
         return streamMap.get(streamName);
     }
 
@@ -123,21 +118,22 @@ public class JsonStreamService implements StreamService {
             parseJson(jr.readObject());
         } catch (IOException e) {
             Utils.logException(LOG, "Unable to load file: " + jsonFileLocation, e);
+            throw new NotFoundException("Unable to load file: " + jsonFileLocation, e);
         } catch (JsonException e) {
             Utils.logException(LOG, e);
+            throw new NotFoundException(e);
         }
-        streamsAreLoaded = true;
     }
 
-    private void readJsonFromURL() {
+    private void readJsonFromURL() throws NotFoundException {
         try (InputStream is = url.openStream()) {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is));
             JsonReader jr = Json.createReader(rd);
             parseJson(jr.readObject());
         } catch (IOException | NotFoundException e) {
             Utils.logException(LOG, "Unable to load url: " + url.toString(), e);
+            throw new NotFoundException(e);
         }
-        streamsAreLoaded = true;
     }
 
     private void parseJson(JsonObject jsonObject) throws NotFoundException {
@@ -189,19 +185,13 @@ public class JsonStreamService implements StreamService {
         }
     }
 
-    private void checkStreamsLoaded() {
-        if (!streamsAreLoaded)
-            Utils.logWarnMessage(LOG, "Stream data has not yet been loaded, you must call " +
-                    "'JsonStreamService.loadStreamData()' before calling StreamService methods.");
-    }
-
     @Override
-    public List<URL> findAllRepositories() {
+    public List<URL> getAllRepositoryURLs() {
         List<URL> repositories = new ArrayList<>();
 
         List<Stream> streams = getStreams();
         for (Stream stream : streams) {
-            repositories.addAll(findAllRepositoriesInStream(stream.getName()).stream()
+            repositories.addAll(getRepositoryURLsByStream(stream.getName()).stream()
                     .filter(e -> !repositories.contains(e))
                     .collect(Collectors.toList()));
         }
@@ -210,14 +200,14 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public List<URL> findAllRepositoriesInStream(String streamName) {
+    public List<URL> getRepositoryURLsByStream(String streamName) {
         return getStream(streamName).getAllComponents().stream()
                 .map((e) -> e.getRepository().getURL())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Stream> findStreamsBy(Repository repository, Codebase codebase) {
+    public List<Stream> getStreamsBy(Repository repository, Codebase codebase) {
         List<Stream> streams = new ArrayList<>();
         for (Stream stream : getStreams()) {
             for (StreamComponent sc : stream.getAllComponents()) {
@@ -233,7 +223,7 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public String findComponentNameBy(Repository repository, Codebase codebase) {
+    public String getComponentNameBy(Repository repository, Codebase codebase) {
         for (Stream stream : getStreams()) {
             for (StreamComponent sc : stream.getAllComponents()) {
                 if (sc.getRepository().equals(repository) && codebase.equals(sc.getCodebase())) {
