@@ -60,6 +60,7 @@ import java.util.Optional;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
@@ -81,7 +82,7 @@ class IssueWrapper {
     Issue bugzillaBugToIssue(Map<String, Object> bug, URL baseURL) {
         Integer id = (Integer) bug.get(ID);
         URL url = Utils.createURL(baseURL + ID_QUERY + id);
-        Issue issue = new Issue(url);
+        Issue issue = new Issue(url, TrackerType.BUGZILLA);
         issue.setTrackerId(id.toString());
         issue.setAssignee(User.createWithEmail((String) bug.get(ASSIGNEE)));
         issue.setReporter(User.createWithEmail((String) bug.get(REPORTER)));

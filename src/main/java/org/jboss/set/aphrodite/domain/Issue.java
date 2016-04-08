@@ -22,6 +22,8 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import org.jboss.set.aphrodite.config.TrackerType;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,6 +44,8 @@ public class Issue {
 
     // The unique id of an issue within its issue tracker domain e.g WFLY-5048
     private String trackerId;
+
+    private final TrackerType trackerType;
 
     private String product; // E.g EAP6
 
@@ -77,11 +81,12 @@ public class Issue {
 
     private List<Comment> comments;
 
-    public Issue(URL url) {
+    public Issue(URL url, TrackerType type) {
         if (url == null)
             throw new IllegalArgumentException("Issue URL cannot be null");
 
         this.url = url;
+        this.trackerType = type;
         this.stage = new Stage();
         this.status = IssueStatus.UNDEFINED;
         this.type = IssueType.UNDEFINED;
@@ -103,6 +108,10 @@ public class Issue {
 
     public void setTrackerId(String trackerId) {
         this.trackerId = trackerId;
+    }
+
+    public TrackerType getTrackerType() {
+        return this.trackerType;
     }
 
     public Optional<String> getProduct() {
@@ -254,6 +263,7 @@ public class Issue {
         return "Issue{" +
                 "url=" + url +
                 ", trackerId='" + trackerId + '\'' +
+                ", trackerType='" + trackerType + '\'' +
                 ", product='" + product + '\'' +
                 ", component='" + components + '\'' +
                 ", summary='" + summary + '\'' +

@@ -48,6 +48,7 @@ import org.apache.commons.logging.LogFactory;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
@@ -92,7 +93,7 @@ class IssueWrapper {
     }
 
     Issue jiraIssueToIssue(URL url, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        Issue issue = new Issue(url);
+        Issue issue = new Issue(url, TrackerType.JIRA);
 
         issue.setTrackerId(jiraIssue.getKey());
         issue.setSummary(jiraIssue.getSummary());
