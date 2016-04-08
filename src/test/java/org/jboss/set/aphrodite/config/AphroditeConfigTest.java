@@ -31,7 +31,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.Executors;
 
 import static org.jboss.set.aphrodite.config.AphroditeConfigTestUtils.assertDeepEqualsIssueConfig;
 import static org.jboss.set.aphrodite.config.AphroditeConfigTestUtils.assertDeepEqualsRepositoryConfig;
@@ -62,7 +64,8 @@ public class AphroditeConfigTest {
 
         when(template.getIssueTrackerConfigs()).thenReturn(Collections.singletonList(jiraConfig));
         when(template.getRepositoryConfigs()).thenReturn(Collections.singletonList(githubConfig));
-
+        when(template.getStreamConfigs()).thenReturn(new ArrayList<>());
+        when(template.getExecutorService()).thenReturn(Executors.newCachedThreadPool());
     }
 
     @Test

@@ -66,20 +66,19 @@ public class AphroditeConfig {
     }
 
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs) {
-        this.issueTrackerConfigs = issueTrackerConfigs;
-        this.repositoryConfigs = repositoryConfigs;
-        this.streamConfigs = streamConfigs;
-        this.executorService = Executors.newCachedThreadPool();
+        this(Executors.newCachedThreadPool(), issueTrackerConfigs, repositoryConfigs, streamConfigs);
     }
 
     public AphroditeConfig(ExecutorService executorService,
             List<IssueTrackerConfig> issueTrackerConfigs,
             List<RepositoryConfig> repositoryConfigs,
             List<StreamConfig> streamConfigs) {
+        Objects.requireNonNull(executorService, "executorService cannot be null");
+
         this.executorService = executorService;
-        this.issueTrackerConfigs = issueTrackerConfigs;
-        this.repositoryConfigs = repositoryConfigs;
-        this.streamConfigs = streamConfigs;
+        this.issueTrackerConfigs = issueTrackerConfigs == null ? new ArrayList<>() : issueTrackerConfigs;
+        this.repositoryConfigs = repositoryConfigs == null ? new ArrayList<>() : repositoryConfigs;
+        this.streamConfigs = streamConfigs == null ? new ArrayList<>() : streamConfigs;
     }
 
     public AphroditeConfig(AphroditeConfig config) {
@@ -150,7 +149,7 @@ public class AphroditeConfig {
     private static List<StreamConfig> getStreamConfigs(JsonObject jsonObject) {
         JsonArray jsonArray = jsonObject.getJsonArray("streamConfigs");
         if (jsonArray == null)
-            return null;
+            return new ArrayList<>();
 
         return jsonArray.stream()
                 .map(JsonObject.class::cast)
