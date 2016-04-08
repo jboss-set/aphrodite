@@ -38,6 +38,7 @@ import java.util.List;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
@@ -200,7 +201,7 @@ public class JiraIssueWrapperTest {
     }
 
     private Issue createTestIssue01(URL url) throws ParseException {
-        Issue result = new Issue(url);
+        Issue result = new Issue(url, TrackerType.JIRA);
 
         result.setTrackerId("1111111");
         result.setSummary("Test Issue");

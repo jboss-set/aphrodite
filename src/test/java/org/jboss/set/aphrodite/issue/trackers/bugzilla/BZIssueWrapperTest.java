@@ -22,6 +22,7 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
@@ -180,7 +181,7 @@ public class BZIssueWrapperTest {
     }
 
     private Issue createTestIssue01(URL url) throws MalformedURLException, ParseException {
-        Issue result = new Issue(url);
+        Issue result = new Issue(url, TrackerType.BUGZILLA);
 
         result.setTrackerId("1111111");
         result.setAssignee(User.createWithEmail("jboss-set@redhat.com"));
