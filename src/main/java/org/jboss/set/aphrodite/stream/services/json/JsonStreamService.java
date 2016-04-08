@@ -181,23 +181,21 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public List<URL> getAllRepositoryURLs() {
-        List<URL> repositories = new ArrayList<>();
-
-        List<Stream> streams = getStreams();
-        for (Stream stream : streams) {
-            repositories.addAll(getRepositoryURLsByStream(stream.getName()).stream()
-                    .filter(e -> !repositories.contains(e))
-                    .collect(Collectors.toList()));
-        }
-
-        return repositories;
+    public List<Repository> getDistinctURLRepositories() {
+        return getStreams().stream()
+                .flatMap(stream -> getDistinctURLRepositoriesByStream(stream.getName()).stream())
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<URL> getRepositoryURLsByStream(String streamName) {
-        return getStream(streamName).getAllComponents().stream()
-                .map((e) -> e.getRepository().getURL())
+    public List<Repository> getDistinctURLRepositoriesByStream(String streamName) {
+        Stream stream = getStream(streamName);
+        if (stream == null)
+            return new ArrayList<>();
+
+        return stream.getAllComponents().stream()
+                .map(StreamComponent::getRepository)
+                .distinct()
                 .collect(Collectors.toList());
     }
 
@@ -205,29 +203,26 @@ public class JsonStreamService implements StreamService {
     public List<Stream> getStreamsBy(Repository repository, Codebase codebase) {
         List<Stream> streams = new ArrayList<>();
         for (Stream stream : getStreams()) {
-            for (StreamComponent sc : stream.getAllComponents()) {
-                if (sc.getRepository().equals(repository) && sc.getCodebase().equals(codebase)) {
-                    if (!streams.contains(stream)) {
-                        streams.add(stream);
-                    }
+            for (StreamComponent component : stream.getAllComponents()) {
+                if (component.getRepository().equals(repository) && component.getCodebase().equals(codebase)) {
+                    streams.add(stream);
+                    break; // Go to next stream
                 }
             }
         }
-
         return streams;
     }
 
     @Override
-    public String getComponentNameBy(Repository repository, Codebase codebase) {
+    public StreamComponent getComponentBy(Repository repository, Codebase codebase) {
         for (Stream stream : getStreams()) {
-            for (StreamComponent sc : stream.getAllComponents()) {
-                if (sc.getRepository().equals(repository) && codebase.equals(sc.getCodebase())) {
-                    return sc.getName();
+            for (StreamComponent component : stream.getAllComponents()) {
+                if (component.getRepository().equals(repository) && component.getCodebase().equals(codebase)) {
+                    return component;
                 }
             }
         }
-
-        return repository.getURL().toString();
+        return null;
     }
 
 }

@@ -52,6 +52,7 @@ import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
+import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -635,9 +636,10 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param streamName the name of the <code>Stream</code> to be returned.
      * @return Stream the first <code>Stream</code> object which corresponds to the specified streamName
-     *                if it exists at a StreamService, otherwise null.
+     *                if it exists at a StreamService.
+     * @throws NotFoundException if the specified streamName does not exist at any of the loaded StreamServices.
      */
-    public Stream getStream(String streamName) {
+    public Stream getStream(String streamName) throws NotFoundException {
         checkStreamServiceExists();
         Objects.requireNonNull(streamName, "stream name can not be null");
 
@@ -646,34 +648,37 @@ public class Aphrodite implements AutoCloseable {
             if (stream != null)
                 return stream;
         }
-        return null;
+        throw new NotFoundException("No Stream exists with the name '" + streamName + "'");
     }
 
     /**
-     * Retrieve the URLs of all Repositories across all Streams
-     * @return a list of unique Repository URLs
+     * Retrieve all unique Repositories that exists across all Streams.
+     *
+     * @return a list of unique Repositories.
      */
-    public List<URL> getAllRepositoryURLs() {
+    public List<Repository> getDistinctURLRepositoriesFromStreams() {
         checkStreamServiceExists();
 
         return streamServices.stream()
-                .flatMap(streamService -> streamService.getAllRepositoryURLs().stream())
+                .flatMap(streamService -> streamService.getDistinctURLRepositories().stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
 
     /**
-     * Retrieve the URLs of all Repositories associated with a given Stream.
+     * Retrieve all Repositories associated with a given Stream, or an empty lists if no Repositories are associated
+     * with the given streamName.
      *
      * @param streamName the name of the <code>Stream</code> containing the returned repositories.
-     * @return a list of unique Repository URLs
+     * @return a list of unique Repositories, or an empty lists if no Repositories are associated with the given
+     * streamName.
      */
-    public List<URL> getRepositoryURLsByStream(String streamName) {
+    public List<Repository> getDistinctURLRepositoriesByStream(String streamName) {
         checkStreamServiceExists();
-        Objects.requireNonNull(streamName, "stream name can not be null");
+        Objects.requireNonNull(streamName, "streamName can not be null");
 
         return streamServices.stream()
-                .flatMap(streamService -> streamService.getRepositoryURLsByStream(streamName).stream())
+                .flatMap(streamService -> streamService.getDistinctURLRepositoriesByStream(streamName).stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -695,19 +700,26 @@ public class Aphrodite implements AutoCloseable {
     }
 
     /**
-     * Get the component name based on the given repository and codebase.
-     * @param repository the Repository to be searched against
-     * @param codebase the codebase to be searched against
+     * Get the StreamComponent which specifies the given repository and codebase. Note, this returns the first matching
+     * component found in any of the loaded StreamServices.
+     *
+     * @param repository the Repository to be searched against.
+     * @param codebase the codebase to be searched against.
      * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
+     * @throws NotFoundException if a StreamComponent with the specified repository and codebase does not exist at this
+     * stream service.
      */
-    public List<String> getComponentNamesBy(Repository repository, Codebase codebase) {
+    public StreamComponent getComponentBy(Repository repository, Codebase codebase) throws NotFoundException {
         checkStreamServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
         Objects.requireNonNull(codebase, "codebase cannot be null");
 
-        return streamServices.stream()
-                .map(streamService -> streamService.getComponentNameBy(repository, codebase))
-                .collect(Collectors.toList());
+        for (StreamService streamService : streamServices) {
+            StreamComponent streamComponent = streamService.getComponentBy(repository, codebase);
+            if (streamComponent != null)
+                return streamComponent;
+        }
+        throw new NotFoundException("No StreamComponent is associated with '" + repository + "' and '" + codebase + "'");
     }
 
     private void checkIssueTrackerExists() {
