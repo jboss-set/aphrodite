@@ -22,6 +22,7 @@
 
 package org.jboss.set.aphrodite.config;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 
+import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 
 /**
@@ -41,6 +43,7 @@ public class AphroditeConfig {
     private final ExecutorService executorService;
     private final List<IssueTrackerConfig> issueTrackerConfigs;
     private final List<RepositoryConfig> repositoryConfigs;
+    private final List<StreamConfig> streamConfigs;
 
     public static AphroditeConfig singleIssueTracker(IssueTrackerConfig issueTrackerConfig) {
         List<IssueTrackerConfig> list = new ArrayList<>();
@@ -49,7 +52,7 @@ public class AphroditeConfig {
     }
 
     public static AphroditeConfig issueTrackersOnly(List<IssueTrackerConfig> issueTrackerConfigs) {
-        return new AphroditeConfig(issueTrackerConfigs, new ArrayList<>());
+        return new AphroditeConfig(issueTrackerConfigs, new ArrayList<>(), new ArrayList<>());
     }
 
     public static AphroditeConfig singleRepositoryService(RepositoryConfig repositoryConfig) {
@@ -59,26 +62,29 @@ public class AphroditeConfig {
     }
 
     public static AphroditeConfig repositoryServicesOnly(List<RepositoryConfig> repositoryConfigs) {
-        return new AphroditeConfig(new ArrayList<>(), repositoryConfigs);
+        return new AphroditeConfig(new ArrayList<>(), repositoryConfigs, new ArrayList<>());
     }
 
-    public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs) {
+    public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs) {
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;
+        this.streamConfigs = streamConfigs;
         this.executorService = Executors.newCachedThreadPool();
     }
 
     public AphroditeConfig(ExecutorService executorService,
             List<IssueTrackerConfig> issueTrackerConfigs,
-            List<RepositoryConfig> repositoryConfigs) {
+            List<RepositoryConfig> repositoryConfigs,
+            List<StreamConfig> streamConfigs) {
         this.executorService = executorService;
         this.issueTrackerConfigs = issueTrackerConfigs;
         this.repositoryConfigs = repositoryConfigs;
+        this.streamConfigs = streamConfigs;
     }
 
     public AphroditeConfig(AphroditeConfig config) {
-        this(config.getExecutorService(),new ArrayList<>(config.getIssueTrackerConfigs()),
-                new ArrayList<>(config.getRepositoryConfigs()));
+        this(config.getExecutorService(), new ArrayList<>(config.getIssueTrackerConfigs()),
+                new ArrayList<>(config.getRepositoryConfigs()), new ArrayList<>(config.getStreamConfigs()));
     }
 
 
@@ -94,21 +100,29 @@ public class AphroditeConfig {
         return repositoryConfigs;
     }
 
-    @Override
-    public String toString() {
-        return "AphroditeConfig{" +
-                "issueTrackerConfigs=" + issueTrackerConfigs +
-                ", repositoryConfigs=" + repositoryConfigs +
-                '}';
+    public List<StreamConfig> getStreamConfigs(){
+        return streamConfigs;
     }
 
     public static AphroditeConfig fromJson(JsonObject jsonObject) {
         int maxThreadCount = jsonObject.getInt("maxThreadCount", 0);
 
+        List<IssueTrackerConfig> issueTrackerConfigs = getIssueTrackerConfigs(jsonObject);
+        List<RepositoryConfig> repositoryConfigs = getRepositoryConfigs(jsonObject);
+        List<StreamConfig> streamConfigs = getStreamConfigs(jsonObject);
+
+        if (maxThreadCount > 0)
+            return new AphroditeConfig(Executors.newFixedThreadPool(maxThreadCount), issueTrackerConfigs,
+                    repositoryConfigs, streamConfigs);
+
+        // IF maxThreadCount has not been specified, then we refer to the default executorService which is an unlimited cachedThreadPool
+        return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs, streamConfigs);
+    }
+
+    private static List<IssueTrackerConfig> getIssueTrackerConfigs(JsonObject jsonObject) {
         JsonArray jsonArray = jsonObject.getJsonArray("issueTrackerConfigs");
         Objects.requireNonNull(jsonArray, "issueTrackerConfigs array must be specified");
-        List<IssueTrackerConfig> issueTrackerConfigs = jsonArray
-                .stream()
+        return jsonArray.stream()
                 .map(JsonObject.class::cast)
                 .map(json -> new IssueTrackerConfig(
                         json.getString("url", null),
@@ -117,11 +131,12 @@ public class AphroditeConfig {
                         TrackerType.valueOf(json.getString("tracker", null)),
                         json.getInt("defaultIssueLimit", -1)))
                 .collect(Collectors.toList());
+    }
 
-        jsonArray = jsonObject.getJsonArray("repositoryConfigs");
+    private static List<RepositoryConfig> getRepositoryConfigs(JsonObject jsonObject) {
+        JsonArray jsonArray = jsonObject.getJsonArray("repositoryConfigs");
         Objects.requireNonNull(jsonArray, "repositoryConfigs array must be specified");
-        List<RepositoryConfig> repositoryConfigs = jsonArray
-                .stream()
+        return jsonArray.stream()
                 .map(JsonObject.class::cast)
                 .map(json ->
                         new RepositoryConfig(
@@ -130,43 +145,63 @@ public class AphroditeConfig {
                                 json.getString("password", null),
                                 RepositoryType.valueOf(json.getString("type", null))))
                 .collect(Collectors.toList());
+    }
 
-        if (maxThreadCount > 0)
-            return new AphroditeConfig(Executors.newFixedThreadPool(maxThreadCount), issueTrackerConfigs, repositoryConfigs);
+    private static List<StreamConfig> getStreamConfigs(JsonObject jsonObject) {
+        JsonArray jsonArray = jsonObject.getJsonArray("streamConfigs");
+        if (jsonArray == null)
+            return null;
 
-        // IF maxThreadCount has not been specified, then we refer to the default executorService which is an unlimited cachedThreadPool
-        return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);
+        return jsonArray.stream()
+                .map(JsonObject.class::cast)
+                .map(json -> {
+                    StreamType type = StreamType.valueOf(json.getString("type", null));
+                    String url = json.getString("url", null);
+                    String fileLocation = json.getString("file", null);
+
+                    if (url != null && fileLocation != null)
+                        throw new IllegalArgumentException("A StreamConfigs entry cannot contain both a 'file' and 'url' field");
+
+                    if (url != null) {
+                        return new StreamConfig(Utils.createURL(url), type);
+                    }
+
+                    if (fileLocation == null)
+                        throw new IllegalArgumentException("A StreamConfigs entry must have a 'file' or 'url' field set");
+
+                    return new StreamConfig(new File(fileLocation), type);
+                }).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AphroditeConfig that = (AphroditeConfig) o;
+
+        if (issueTrackerConfigs != null ? !issueTrackerConfigs.equals(that.issueTrackerConfigs) : that.issueTrackerConfigs != null)
+            return false;
+        if (repositoryConfigs != null ? !repositoryConfigs.equals(that.repositoryConfigs) : that.repositoryConfigs != null)
+            return false;
+        return streamConfigs != null ? streamConfigs.equals(that.streamConfigs) : that.streamConfigs == null;
+
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((issueTrackerConfigs == null) ? 0 : issueTrackerConfigs.hashCode());
-        result = prime * result + ((repositoryConfigs == null) ? 0 : repositoryConfigs.hashCode());
+        int result = issueTrackerConfigs != null ? issueTrackerConfigs.hashCode() : 0;
+        result = 31 * result + (repositoryConfigs != null ? repositoryConfigs.hashCode() : 0);
+        result = 31 * result + (streamConfigs != null ? streamConfigs.hashCode() : 0);
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        AphroditeConfig other = (AphroditeConfig) obj;
-        if (issueTrackerConfigs == null) {
-            if (other.issueTrackerConfigs != null)
-                return false;
-        } else if (!issueTrackerConfigs.equals(other.issueTrackerConfigs))
-            return false;
-        if (repositoryConfigs == null) {
-            if (other.repositoryConfigs != null)
-                return false;
-        } else if (!repositoryConfigs.equals(other.repositoryConfigs))
-            return false;
-        return true;
+    public String toString() {
+        return "AphroditeConfig{" +
+                "issueTrackerConfigs=" + issueTrackerConfigs +
+                ", repositoryConfigs=" + repositoryConfigs +
+                ",streamConfigs=" + streamConfigs+
+                '}';
     }
-
 }

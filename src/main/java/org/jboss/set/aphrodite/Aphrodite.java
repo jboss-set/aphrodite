@@ -42,6 +42,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
@@ -50,10 +51,12 @@ import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
+import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
+import org.jboss.set.aphrodite.spi.StreamService;
 
 public class Aphrodite implements AutoCloseable {
 
@@ -112,6 +115,8 @@ public class Aphrodite implements AutoCloseable {
 
     private final List<IssueTrackerService> issueTrackers = new ArrayList<>();
     private final List<RepositoryService> repositories = new ArrayList<>();
+    private final List<StreamService> streamServices = new ArrayList<>();
+
     private ExecutorService executorService;
 
     private AphroditeConfig config;
@@ -134,6 +139,9 @@ public class Aphrodite implements AutoCloseable {
     }
 
     private void init(AphroditeConfig config) throws AphroditeException {
+        if (LOG.isInfoEnabled())
+            LOG.info("Initiating Aphrodite ...");
+
         this.config = config;
 
         executorService = config.getExecutorService();
@@ -156,6 +164,29 @@ public class Aphrodite implements AutoCloseable {
             throw new AphroditeException("Unable to initiatilise Aphrodite, as a valid " +
                     IssueTrackerService.class.getName() + " or " + RepositoryService.class.getName()
                     + " does not exist.");
+
+        initialiseStreams(mutableConfig);
+
+        if (LOG.isInfoEnabled())
+            LOG.info("Aphrodite Initialisation Complete");
+    }
+
+    private void initialiseStreams(AphroditeConfig mutableConfig) throws AphroditeException {
+        if (!mutableConfig.getStreamConfigs().isEmpty() && repositories.isEmpty()) {
+            throw new AphroditeException("Unable to initialise any Stream Services as no " +
+                    RepositoryService.class.getName() + " have been created.");
+        }
+
+        for (StreamService ss : ServiceLoader.load(StreamService.class)) {
+            try {
+                boolean initialised = ss.init(this, mutableConfig);
+                if (initialised)
+                    streamServices.add(ss);
+            } catch (NotFoundException e) {
+                throw new AphroditeException("Unable to initiatilise Aphrodite as an error was thrown when initiating "
+                        + ss.getClass().getName() + ": " + e);
+            }
+        }
     }
 
     /**
@@ -163,8 +194,8 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param url the <code>URL</code> of the issue to be retrieved.
      * @return the <code>Issue</code> associated with the provided <code>URK</code>.
-     * @throws NotFoundException if the provided <code>URL</code> is not associated with an issue at any of the active issue
-     * trackers.
+     * @throws NotFoundException if the provided <code>URL</code> is not associated with an issue at any of the active issuetrackers.
+     *
      */
     public Issue getIssue(URL url) throws NotFoundException {
         Objects.requireNonNull(url, "url cannot be null");
@@ -190,7 +221,6 @@ public class Aphrodite implements AutoCloseable {
 
         if (urls.isEmpty())
             return new ArrayList<>();
-
         List<CompletableFuture<List<Issue>>> requests =
                 issueTrackers.stream()
                         .map(tracker -> CompletableFuture.supplyAsync(() -> tracker.getIssues(urls), executorService))
@@ -588,6 +618,98 @@ public class Aphrodite implements AutoCloseable {
         throw new NotFoundException("No commit status found for patch:" + patch.getURL());
     }
 
+    /**
+     * Returns the streams discovered by all of the active StreamServices
+     * @return a list of all streams discovered by all <code>StreamService</code> instances.
+     */
+    public List<Stream> getAllStreams() {
+        checkStreamServiceExists();
+
+        return streamServices.stream()
+                .flatMap(streamService -> streamService.getStreams().stream())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get a specific <code>Stream</code> object based upon its String name.
+     *
+     * @param streamName the name of the <code>Stream</code> to be returned.
+     * @return Stream the first <code>Stream</code> object which corresponds to the specified streamName
+     *                if it exists at a StreamService, otherwise null.
+     */
+    public Stream getStream(String streamName) {
+        checkStreamServiceExists();
+        Objects.requireNonNull(streamName, "stream name can not be null");
+
+        for (StreamService ss : streamServices) {
+            Stream stream = ss.getStream(streamName);
+            if (stream != null)
+                return stream;
+        }
+        return null;
+    }
+
+    /**
+     * Retrieve the URLs of all Repositories across all Streams
+     * @return a list of unique Repository URLs
+     */
+    public List<URL> getAllRepositoryURLs() {
+        checkStreamServiceExists();
+
+        return streamServices.stream()
+                .flatMap(streamService -> streamService.getAllRepositoryURLs().stream())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieve the URLs of all Repositories associated with a given Stream.
+     *
+     * @param streamName the name of the <code>Stream</code> containing the returned repositories.
+     * @return a list of unique Repository URLs
+     */
+    public List<URL> getRepositoryURLsByStream(String streamName) {
+        checkStreamServiceExists();
+        Objects.requireNonNull(streamName, "stream name can not be null");
+
+        return streamServices.stream()
+                .flatMap(streamService -> streamService.getRepositoryURLsByStream(streamName).stream())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Find all streams associated with a given repository and codebase.
+     * @param repository the Repository to be searched against
+     * @param codebase the codebase to be searched against
+     * @return a list of Streams associated with the given repository and codebase.
+     */
+    public List<Stream> getStreamsBy(Repository repository, Codebase codebase) {
+        checkStreamServiceExists();
+        Objects.requireNonNull(repository, "repository cannot be null");
+        Objects.requireNonNull(codebase, "codebase cannot be null");
+
+        return streamServices.stream()
+                .flatMap(streamService -> streamService.getStreamsBy(repository, codebase).stream())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get the component name based on the given repository and codebase.
+     * @param repository the Repository to be searched against
+     * @param codebase the codebase to be searched against
+     * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
+     */
+    public List<String> getComponentNamesBy(Repository repository, Codebase codebase) {
+        checkStreamServiceExists();
+        Objects.requireNonNull(repository, "repository cannot be null");
+        Objects.requireNonNull(codebase, "codebase cannot be null");
+
+        return streamServices.stream()
+                .map(streamService -> streamService.getComponentNameBy(repository, codebase))
+                .collect(Collectors.toList());
+    }
+
     private void checkIssueTrackerExists() {
         if (issueTrackers.isEmpty())
             throw new IllegalStateException("Unable to retrieve issues as a valid " +
@@ -598,6 +720,12 @@ public class Aphrodite implements AutoCloseable {
         if (repositories.isEmpty())
             throw new IllegalStateException("Unable to find any repository data as a valid " +
                     RepositoryService.class.getName() + " has not been created.");
+    }
+
+    private void checkStreamServiceExists(){
+        if(streamServices.isEmpty())
+            throw new IllegalStateException("Unable to retrieve streamas a valid " +
+                    StreamService.class.getName() + " has not been created.");
     }
 
 }

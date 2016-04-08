@@ -20,14 +20,19 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.set.aphrodite;
+package org.jboss.set.aphrodite.stream.services.json;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,7 +47,11 @@ import javax.json.JsonValue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.config.StreamConfig;
+import org.jboss.set.aphrodite.config.StreamType;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.Stream;
@@ -51,7 +60,7 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.StreamService;
 
 /**
- * A stream service which reads stream date from the specified JSON file.  This implementation
+ * A stream service which reads stream data from the specified JSON file.  This implementation
  * assumes that streams are written in order in the json file, i.e. the most recent (upstream) issue
  * is specified as the first JSON object in the "streams" JSON array. An example JSON file can be
  * found at https://github.com/jboss-set/jboss-streams
@@ -59,44 +68,67 @@ import org.jboss.set.aphrodite.spi.StreamService;
  * @author Ryan Emerson
  */
 public class JsonStreamService implements StreamService {
-    private static final String FILE_PROPERTY = "streams.json";
     private static final Log LOG = LogFactory.getLog(JsonStreamService.class);
 
     private final Map<String, Stream> streamMap = new HashMap<>();
-    private final String jsonFileLocation;
-    private final Aphrodite aphrodite;
-    private boolean streamsAreLoaded = false;
+    private Aphrodite aphrodite;
 
-    public JsonStreamService(Aphrodite aphrodite) {
-        this(aphrodite, System.getProperty(FILE_PROPERTY));
+    @Override
+    public boolean init(Aphrodite aphrodite, AphroditeConfig config) throws NotFoundException {
+        this.aphrodite = aphrodite;
+        Iterator<StreamConfig> i = config.getStreamConfigs().iterator();
+        while (i.hasNext()) {
+            StreamConfig streamConfig = i.next();
+            if (streamConfig.getStreamType() == StreamType.JSON) {
+                i.remove();
+                return init(streamConfig);
+            }
+        }
+        return false;
     }
 
-    public JsonStreamService(Aphrodite aphrodite, String jsonFileLocation) {
-        this.aphrodite = aphrodite;
-        this.jsonFileLocation = jsonFileLocation;
+    private boolean init(StreamConfig config) throws NotFoundException {
+        if (config.getURL().isPresent()) {
+            readJsonFromURL(config.getURL().get());
+        } else if (config.getStreamFile().isPresent()) {
+            readJsonFromFile(config.getStreamFile().get());
+        } else {
+            throw new IllegalArgumentException("StreamConfig requires either a URL or File to be specified");
+        }
+        return true;
     }
 
     @Override
     public List<Stream> getStreams() {
-        checkStreamsLoaded();
         return new ArrayList<>(streamMap.values());
     }
 
     @Override
     public Stream getStream(String streamName) {
-        checkStreamsLoaded();
         return streamMap.get(streamName);
     }
 
-    public void loadStreamData() throws NotFoundException {
-        try (JsonReader jr = Json.createReader(new FileInputStream(jsonFileLocation))) {
+    private void readJsonFromFile(File file) throws NotFoundException {
+        try (JsonReader jr = Json.createReader(new FileInputStream(file))) {
             parseJson(jr.readObject());
         } catch (IOException e) {
-            Utils.logException(LOG, "Unable to load file: " + jsonFileLocation, e);
+            Utils.logException(LOG, "Unable to load file: " + file.getPath(), e);
+            throw new NotFoundException("Unable to load file: " + file.getPath(), e);
         } catch (JsonException e) {
             Utils.logException(LOG, e);
+            throw new NotFoundException(e);
         }
-        streamsAreLoaded = true;
+    }
+
+    private void readJsonFromURL(URL url) throws NotFoundException {
+        try (InputStream is = url.openStream()) {
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+            JsonReader jr = Json.createReader(rd);
+            parseJson(jr.readObject());
+        } catch (IOException | NotFoundException e) {
+            Utils.logException(LOG, "Unable to load url: " + url.toString(), e);
+            throw new NotFoundException(e);
+        }
     }
 
     private void parseJson(JsonObject jsonObject) throws NotFoundException {
@@ -148,40 +180,34 @@ public class JsonStreamService implements StreamService {
         }
     }
 
-    private void checkStreamsLoaded() {
-        if (!streamsAreLoaded)
-            Utils.logWarnMessage(LOG, "Stream data has not yet been loaded, you must call " +
-                    "'JsonStreamService.loadStreamData()' before calling StreamService methods.");
-    }
-
     @Override
-    public List<URL> findAllRepositories() {
+    public List<URL> getAllRepositoryURLs() {
         List<URL> repositories = new ArrayList<>();
 
         List<Stream> streams = getStreams();
         for (Stream stream : streams) {
-            repositories.addAll(findAllRepositoriesInStream(stream.getName()).stream()
-                .filter(e -> !repositories.contains(e))
-                .collect(Collectors.toList()));
+            repositories.addAll(getRepositoryURLsByStream(stream.getName()).stream()
+                    .filter(e -> !repositories.contains(e))
+                    .collect(Collectors.toList()));
         }
 
         return repositories;
     }
 
     @Override
-    public List<URL> findAllRepositoriesInStream(String streamName) {
+    public List<URL> getRepositoryURLsByStream(String streamName) {
         return getStream(streamName).getAllComponents().stream()
-            .map((e) -> e.getRepository().getURL())
-            .collect(Collectors.toList());
+                .map((e) -> e.getRepository().getURL())
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Stream> findStreamsBy(Repository repository, Codebase codebase) {
+    public List<Stream> getStreamsBy(Repository repository, Codebase codebase) {
         List<Stream> streams = new ArrayList<>();
-        for(Stream stream : getStreams()) {
-            for(StreamComponent sc : stream.getAllComponents()) {
-                if(sc.getRepository().equals(repository) && sc.getCodebase().equals(codebase)) {
-                    if(!streams.contains(stream)) {
+        for (Stream stream : getStreams()) {
+            for (StreamComponent sc : stream.getAllComponents()) {
+                if (sc.getRepository().equals(repository) && sc.getCodebase().equals(codebase)) {
+                    if (!streams.contains(stream)) {
                         streams.add(stream);
                     }
                 }
@@ -192,11 +218,10 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public String findComponentNameBy(Repository repository, Codebase codebase) {
-
-        for(Stream stream : getStreams()) {
-            for(StreamComponent sc : stream.getAllComponents()) {
-                if(sc.getRepository().equals(repository) && codebase.equals(sc.getCodebase())) {
+    public String getComponentNameBy(Repository repository, Codebase codebase) {
+        for (Stream stream : getStreams()) {
+            for (StreamComponent sc : stream.getAllComponents()) {
+                if (sc.getRepository().equals(repository) && codebase.equals(sc.getCodebase())) {
                     return sc.getName();
                 }
             }
@@ -204,4 +229,5 @@ public class JsonStreamService implements StreamService {
 
         return repository.getURL().toString();
     }
+
 }
