@@ -34,9 +34,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -165,7 +167,9 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         try {
             List<Issue> issues = new ArrayList<>();
             SearchRestClient searchClient = restClient.getSearchClient();
-            SearchResult result = searchClient.searchJql(jql, maxResults, null, null).get();
+            Set<String> fields = new HashSet<>();
+            fields.add("*all");
+            SearchResult result = searchClient.searchJql(jql, maxResults, null, fields).get();
             result.getIssues().forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
             return issues;
         } catch (Exception e) {
