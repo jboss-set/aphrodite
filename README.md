@@ -60,8 +60,11 @@ RepositoryConfig githubService = new RepositoryConfig("https://github.com/", "yo
 List<RepositoryConfig> repositoryConfigs = new ArrayList<>();
 repositoryConfigs.add(githubService);
 
+StreamConfig streamService=new StreamConfig(new URL("https://raw.githubusercontent.com/jboss-set/jboss-streams/master/streams.json"), StreamType.JSON);
+List<StreamConfig> streamConfigs=new ArrayList<>();
+streamConfigs.add(streamService);
 
-AphroditeConfig config = new AphroditeConfig(issueTrackerConfigs, repositoryConfigs);
+AphroditeConfig config = new AphroditeConfig(issueTrackerConfigs, repositoryConfigs, streamConfigs);
 Aphrodite aphrodite = Aphrodite.instance(config);
 ```
 ##### Closing Aphrodite Resources
@@ -87,7 +90,7 @@ Or
 Issue issue = aphrodite.getIssue(new URL("https://issues.stage.jboss.org/browse/WFLY-100"));
 
 // 2.Update issue
-issue.setAssignee("ryanemerson");
+issue.setAssignee(new User("abc@redhat.com","redhat"));
 aphrodite.updateIssue(issue);
 
 // 3.Get issues
@@ -149,4 +152,50 @@ aphrodite.addLabelToPatch(patch, "bug");
 // 7.Find patches related with the patch
 List<Patch> patches=aphrodite.findPatchesRelatedTo(patch);
 
+// 8.Retrieve all labels associated with the repository
+Repository repo=new Repository(new URL(""https://github.com/jboss-set/aphrodite_test""));
+List<Label> labels=aphrodite.getLabelsFromRepository(repo);
+
+// 9.Retrieve all labels associated from the patch
+List<Label> labelss=aphrodite.getLabelsFromPatch(patch);
+
+// 10.delete a label from patch
+aphrodite.removeLabelFromPatch(patch, "Test");
+
+// 11.Set the labels for the provided patch
+List<Label> labels=new ArrayList<>();
+labels.add(new Label("Test"));
+labels.add(new Label("TestLabel"));
+aphrodite.setLabelsToPatch(patch, labels);
+
+// 12.Retrieve the current CI status of the latest commit associated with a given patch
+ CommitStatus status=aphrodite.getCommitStatusFromPatch(patch); 
+ 
+```
+##### stream example
+```java
+// 1.Get all streams from a url
+List<Stream> ss=aphrodite.getAllStreams();
+
+// 2.Get stream by stream's name eg:"wildfly"
+Stream stream=aphrodite.getStream("wildfly");
+
+// 3.Retrieve all unique Repositories that exists across all Streams
+List<Repository> repositories=aphrodite.getDistinctURLRepositoriesFromStreams();
+
+// 4.Retrieve all Repositories associated with a given Stream eg:"wildfly"
+List<Repository> urls=aphrodite.getDistinctURLRepositoriesByStream("wildfly");
+
+// 5.Find all the streams associated to the given repository and codebase
+//repository_url,eg:"https://github.com/aeshell/aesh"
+//code_branch,eg:"master"
+Repository repo=new Repository(new URL("https://github.com/aeshell/aesh"));
+Codebase code=new Codebase("master");
+List<Stream> ss=aphrodite.getStreamsBy(repo, code);
+
+// 6.Get the StreamComponent which specifies the given repository and codebase
+Repository repo=new Repository(new URL("https://github.com/aeshell/aesh"));
+Codebase code=new Codebase("master");
+StreamComponent name=aphrodite.getComponentBy(repo, code);
+		
 ```
