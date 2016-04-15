@@ -153,7 +153,7 @@ aphrodite.addLabelToPatch(patch, "bug");
 List<Patch> patches=aphrodite.findPatchesRelatedTo(patch);
 
 // 8.Retrieve all labels associated with the repository
-Repository repo=new Repository(new URL(""https://github.com/jboss-set/aphrodite_test""));
+Repository repo=new Repository(new URL("https://github.com/jboss-set/aphrodite_test"));
 List<Label> labels=aphrodite.getLabelsFromRepository(repo);
 
 // 9.Retrieve all labels associated from the patch
