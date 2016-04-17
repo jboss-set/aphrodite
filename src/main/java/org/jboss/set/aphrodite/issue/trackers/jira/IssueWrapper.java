@@ -233,7 +233,7 @@ class IssueWrapper {
     private void setIssueType(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         String type = jiraIssue.getIssueType().getName();
         try {
-            issue.setType(IssueType.valueOf(type.toUpperCase()));
+            issue.setType(IssueType.valueOf(type.replaceAll("\\s+","_").toUpperCase()));
         } catch (IllegalArgumentException e) {
             issue.setType(IssueType.UNDEFINED);
         }
