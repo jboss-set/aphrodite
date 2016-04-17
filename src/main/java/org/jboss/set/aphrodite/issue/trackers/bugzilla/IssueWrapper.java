@@ -102,7 +102,7 @@ class IssueWrapper {
 
         String type = (String) bug.get(ISSUE_TYPE);
         try {
-            issue.setType(IssueType.valueOf(type.toUpperCase()));
+            issue.setType(IssueType.valueOf(type.replaceAll("\\s+","_").toUpperCase()));
         } catch (IllegalArgumentException e) {
             issue.setType(IssueType.UNDEFINED);
         }
