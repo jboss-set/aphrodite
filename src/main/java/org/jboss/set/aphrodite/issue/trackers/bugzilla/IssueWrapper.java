@@ -257,18 +257,4 @@ class IssueWrapper {
 
         return issue;
     }
-
-    private IssueType getIssueType(String type) {
-        try {
-            type = type.toUpperCase();
-            switch (type) {
-                case "COMPONENT UPGRADE":
-                    return IssueType.UPGRADE;
-                default:
-                    return IssueType.valueOf(type);
-            }
-        } catch (IllegalArgumentException e) {
-            return IssueType.UNDEFINED;
-        }
-    }
 }
