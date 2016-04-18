@@ -236,6 +236,7 @@ class IssueWrapper {
     }
 
     private IssueType getIssueType(String type) {
+        type = type.trim().replaceAll(" +", " ");
         switch (type) {
             case "SUPPORT PATCH":
                 // Counter-intuitave as you would think this would be SUPPORT_PATCH,
