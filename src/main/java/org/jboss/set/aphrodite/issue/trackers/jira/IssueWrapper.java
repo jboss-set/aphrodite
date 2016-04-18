@@ -232,10 +232,19 @@ class IssueWrapper {
 
     private void setIssueType(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         String type = jiraIssue.getIssueType().getName();
-        try {
-            issue.setType(IssueType.valueOf(type.toUpperCase()));
-        } catch (IllegalArgumentException e) {
-            issue.setType(IssueType.UNDEFINED);
+        issue.setType(getIssueType(type));
+    }
+
+    private IssueType getIssueType(String type) {
+        switch (type) {
+            case "SUPPORT PATCH":
+                // Counter-intuitave as you would think this would be SUPPORT_PATCH,
+                // but this makes sense based upon JIRA description. See <jira domain>/rest/api/2/issuetype
+                return IssueType.ONE_OFF;
+            case "PATCH":
+                return IssueType.SUPPORT_PATCH;
+            default:
+                return IssueType.getMatchingIssueType(type);
         }
     }
 

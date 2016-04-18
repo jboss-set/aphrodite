@@ -101,11 +101,7 @@ class IssueWrapper {
         issue.setStatus(IssueStatus.valueOf(((String) bug.get(STATUS)).toUpperCase()));
 
         String type = (String) bug.get(ISSUE_TYPE);
-        try {
-            issue.setType(IssueType.valueOf(type.toUpperCase()));
-        } catch (IllegalArgumentException e) {
-            issue.setType(IssueType.UNDEFINED);
-        }
+        issue.setType(IssueType.getMatchingIssueType(type));
 
         String version = (String) ((Object[]) bug.get(VERSION))[0];
         List<Release> releases = new ArrayList<>();
@@ -152,7 +148,7 @@ class IssueWrapper {
         params.put(FLAGS, getStageAndStreamsMap(issue.getStreamStatus(), issue.getStage().getStateMap()));
 
         if (issue.getType() != IssueType.UNDEFINED)
-            params.put(ISSUE_TYPE, issue.getType().toString());
+            params.put(ISSUE_TYPE, issue.getType().get());
 
         addReleaseToUpdate(issue, params);
         addURLCollectionToParameters(issue.getDependsOn(), DEPENDS_ON, params);
@@ -260,5 +256,19 @@ class IssueWrapper {
             issue.getStateMap().putIfAbsent(flag, FlagStatus.NO_SET);
 
         return issue;
+    }
+
+    private IssueType getIssueType(String type) {
+        try {
+            type = type.toUpperCase();
+            switch (type) {
+                case "COMPONENT UPGRADE":
+                    return IssueType.UPGRADE;
+                default:
+                    return IssueType.valueOf(type);
+            }
+        } catch (IllegalArgumentException e) {
+            return IssueType.UNDEFINED;
+        }
     }
 }

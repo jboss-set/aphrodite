@@ -152,7 +152,7 @@ public class BZIssueWrapperTest {
         result.put(BugzillaFields.STATUS, "NEW");
         result.put(BugzillaFields.COMPONENT, new String[] { "CLI" });
         result.put(BugzillaFields.PRODUCT, "EAP");
-        result.put(BugzillaFields.ISSUE_TYPE, "BUG");
+        result.put(BugzillaFields.ISSUE_TYPE, IssueType.BUG.get());
         result.put(BugzillaFields.VERSION, new String[] { "6.4.4" });
         result.put(BugzillaFields.TARGET_MILESTONE, "---");
         result.put(BugzillaFields.DEPENDS_ON, new String[] {
