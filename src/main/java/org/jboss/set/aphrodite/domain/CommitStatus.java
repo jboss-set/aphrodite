@@ -24,7 +24,7 @@ package org.jboss.set.aphrodite.domain;
 
 public enum CommitStatus {
 
-    ERROR("error"), FAILURE("failure"), PENDING("pending"), SUCCESS("success");
+    ERROR("error"), FAILURE("failure"), PENDING("pending"), SUCCESS("success"), UNKNOWN("unknown");
 
     private final String status;
 

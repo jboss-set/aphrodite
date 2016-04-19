@@ -438,7 +438,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         if (status != null) {
             return status;
         } else {
-            throw new NotFoundException("No commit status found for patch:" + patch.getURL());
+            return org.jboss.set.aphrodite.domain.CommitStatus.UNKNOWN;
         }
     }
 
