@@ -43,8 +43,10 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.atlassian.jira.rest.client.api.domain.Project;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.jboss.set.aphrodite.common.Utils;
@@ -70,6 +72,7 @@ import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldVal
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
+
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 /**
@@ -93,7 +96,7 @@ class IssueWrapper {
     }
 
     Issue jiraIssueToIssue(URL url, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        Issue issue = new Issue(url, TrackerType.JIRA);
+        JiraIssue issue = new JiraIssue(url, TrackerType.JIRA);
 
         issue.setTrackerId(jiraIssue.getKey());
         issue.setSummary(jiraIssue.getSummary());
@@ -121,7 +124,7 @@ class IssueWrapper {
         setIssueComments(issue, jiraIssue);
         setCreationTime(issue, jiraIssue);
         setLastUpdated(issue, jiraIssue);
-
+        setPullRequests(issue,jiraIssue);
         return issue;
     }
 
@@ -295,6 +298,30 @@ class IssueWrapper {
         jiraIssue.getComments()
                 .forEach(c -> comments.add(new Comment(issue.getTrackerId().get(), Long.toString(c.getId()), c.getBody(), false)));
         issue.getComments().addAll(comments);
+    }
+
+    private void setPullRequests(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        IssueField fieldContent = jiraIssue.getFieldByName("Git Pull Request");//Git Pull Request
+        if ( fieldContent != null ) {
+            extractPullRequests(issue, (JSONArray) fieldContent.getValue());
+        }
+    }
+
+    private static void extractPullRequests(JiraIssue issue, JSONArray urls) {
+        if (urls.length() > 0 ) {
+            List<URL> prUrls = new ArrayList<URL>(urls.length());
+            for ( int index = 0 ; index < urls.length(); index++ )
+                prUrls.add(Utils.createURL(getFromJSONArray(index,urls).toString()));
+            issue.setPullRequests(prUrls);
+        }
+    }
+
+    private static Object getFromJSONArray(int i, JSONArray urls) {
+        try {
+            return urls.get(i);
+        } catch (JSONException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private URL trackerIdToBrowsableUrl(URL url, String trackerId) {
