@@ -298,7 +298,7 @@ class IssueWrapper {
     }
 
     private static void extractPullRequests(JiraIssue issue, JSONArray urls) {
-        if (urls.length() > 0 ) {
+        if (urls != null && urls.length() > 0 ) {
             List<URL> prUrls = new ArrayList<URL>(urls.length());
             for ( int index = 0 ; index < urls.length(); index++ )
                 prUrls.add(Utils.createURL(getFromJSONArray(index,urls).toString()));
