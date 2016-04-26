@@ -30,6 +30,7 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.CRE
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.DEPENDS_ON;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.DESCRIPTION;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ESTIMATED_TIME;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.EXTERNAL_URL;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FLAGS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FLAG_NAME;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FLAG_STATUS;
@@ -49,8 +50,10 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.VER
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.getAphroditeFlag;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.getBugzillaFlag;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -107,8 +110,9 @@ class IssueWrapper {
         List<Release> releases = new ArrayList<>();
         releases.add(new Release(version, (String) bug.get(TARGET_MILESTONE)));
         issue.setReleases(releases);
-
-        issue.setDependsOn(getListOfURlsFromIds(bug, baseURL, DEPENDS_ON));
+        List<URL> dependsOn = getListOfURlsFromIds(bug, baseURL, DEPENDS_ON);
+        dependsOn.addAll(getListOfExternalURLsFromIds(bug, EXTERNAL_URL));
+        issue.setDependsOn(dependsOn);
         issue.setBlocks(getListOfURlsFromIds(bug, baseURL, BLOCKS));
 
         checkIsNullEstimation(bug,issue);
@@ -222,6 +226,31 @@ class IssueWrapper {
         for (Object id : ids)
             list.add(Utils.createURL(baseURL + BugzillaFields.ID_QUERY + id));
         return list;
+    }
+
+    private List<URL> getListOfExternalURLsFromIds(Map<String, Object> bug, String externalBugField) {
+        if(!bug.containsKey(externalBugField)) {
+            return Collections.emptyList();
+        }
+        List<URL> externalURL = new ArrayList<>();
+        Object[] eBugs = (Object[]) bug.get(externalBugField);
+
+        for(Object tmp : eBugs) {
+            try {
+                Map<String, Object> bz = (Map<String, Object>) tmp;
+                Map<String, Object> bzType = (Map<String, Object>) bz.get("type");
+                if(!("JIRA".equals(bzType.get("type")))) {
+                    continue;
+                }
+                String bugId = (String) bz.get("ext_bz_bug_id");
+                String urlBase = (String) bzType.get("full_url");
+                String url = urlBase.replace("%id%", bugId);
+                externalURL.add(URI.create(url).toURL());
+            } catch (Exception e) {
+                Utils.logException(LOG, "cannot convert the url", e);
+            }
+        }
+        return externalURL;
     }
 
     private void extractStageAndStreams(Map<String, Object> bug, Issue issue) {

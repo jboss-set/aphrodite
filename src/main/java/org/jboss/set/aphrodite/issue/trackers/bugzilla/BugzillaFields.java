@@ -47,6 +47,7 @@ class BugzillaFields {
     static final String COMPONENT = "component";
     static final String CREATION_TIME = "creation_time";
     static final String DEPENDS_ON = "depends_on";
+    static final String EXTERNAL_URL = "external_bugs";
     static final String DESCRIPTION = "description";
     static final String ESTIMATED_TIME = "estimated_time";
     static final String FILTER_SHARER_ID = "sharer_id";
@@ -94,7 +95,7 @@ class BugzillaFields {
 
     static final Object[] RESULT_FIELDS = { ASSIGNEE, BLOCKS, COMPONENT, CREATION_TIME, LAST_UPDATED, DEPENDS_ON, SUMMARY,
             DESCRIPTION, ESTIMATED_TIME, FLAGS, HOURS_WORKED, ID, ISSUE_TYPE, PRODUCT, REPORTER, STATUS, TARGET_MILESTONE,
-            TARGET_RELEASE, VERSION };
+            TARGET_RELEASE, VERSION, EXTERNAL_URL};
 
     static final Object[] COMMENT_FIELDS = { COMMENT_BUG_ID, COMMENT_ID, COMMENT_BODY, COMMENT_IS_PRIVATE };
 
