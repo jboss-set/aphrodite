@@ -155,7 +155,11 @@ public class JsonStreamService implements StreamService {
             JsonObject json = (JsonObject) value;
             String componentName = json.getString("component_name");
             String codebaseName = json.getString("codebase");
-            URL repositoryUrl = parseUrl(json.getString("repository_url"));
+            String url = json.getString("repository_url");
+            if (!url.endsWith("/")) {
+                url = url + "/";
+            }
+            URL repositoryUrl = parseUrl(url);
             Repository repository;
             try {
                 repository = aphrodite.getRepository(repositoryUrl);
