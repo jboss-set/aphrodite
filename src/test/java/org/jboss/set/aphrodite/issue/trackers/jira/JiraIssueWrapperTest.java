@@ -43,6 +43,7 @@ import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssueEstimation;
+import org.jboss.set.aphrodite.domain.IssuePriority;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
@@ -58,6 +59,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.atlassian.jira.rest.client.api.domain.BasicPriority;
 import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
@@ -146,8 +148,12 @@ public class JiraIssueWrapperTest {
         Status statusMock = mock(Status.class);
         when(statusMock.getName()).thenReturn("open");
 
+        BasicPriority priority = mock(BasicPriority.class);
+        when(priority.getName()).thenReturn("MAJOR");
+        
         when(jiraIssue01.getSummary()).thenReturn("Test Issue");
         when(jiraIssue01.getStatus()).thenReturn(statusMock);
+        when(jiraIssue01.getPriority()).thenReturn(priority);
         when(jiraIssue01.getTimeTracking()).thenReturn(timeTracking);
         when(timeTracking.getOriginalEstimateMinutes()).thenReturn(480);
         when(timeTracking.getTimeSpentMinutes()).thenReturn(480);
@@ -210,6 +216,7 @@ public class JiraIssueWrapperTest {
         result.setAssignee(new User("jboss-set@redhat.com", "jboss-set"));
         result.setDescription("Test jira");
         result.setStatus(IssueStatus.NEW);
+        result.setPriority(IssuePriority.MAJOR);
         result.setComponents(Collections.singletonList("CLI"));
         result.setProduct("EAP");
         result.setType(org.jboss.set.aphrodite.domain.IssueType.BUG);

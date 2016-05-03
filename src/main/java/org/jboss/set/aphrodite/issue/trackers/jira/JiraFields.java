@@ -24,6 +24,7 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.IssuePriority;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 
@@ -66,6 +67,15 @@ class JiraFields {
             .put("closed", IssueStatus.CLOSED)
             .build();
 
+    static final BiMap<String, IssuePriority> PRIORITY_MAP = initPriorityMap();
+
+    static BiMap<String, IssuePriority> initPriorityMap() {
+        ImmutableBiMap.Builder<String, IssuePriority> mapBuilder = new ImmutableBiMap.Builder<String, IssuePriority>();
+        for (IssuePriority priority : IssuePriority.values())
+            mapBuilder.put(priority.toString().toLowerCase(), priority);
+        return mapBuilder.build();
+    }
+
     static final BiMap<Flag, String> FLAG_MAP = new ImmutableBiMap.Builder<Flag, String>()
             .put(Flag.DEV, DEV_ACK)
             .put(Flag.PM, PM_ACK)
@@ -86,6 +96,11 @@ class JiraFields {
             }
         }
         return issueStatus;
+    }
+
+    static IssuePriority getAphroditePriority(String priority) {
+        IssuePriority issueStatus = PRIORITY_MAP.get(priority.toLowerCase());
+        return (issueStatus == null ? IssuePriority.UNDEFINED : issueStatus);
     }
 
     static String getJiraStatus(IssueStatus status) {

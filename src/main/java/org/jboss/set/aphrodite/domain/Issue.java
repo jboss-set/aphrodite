@@ -63,6 +63,8 @@ public class Issue {
 
     private IssueStatus status;
 
+    private IssuePriority priority;
+
     private IssueType type;
 
     private List<Release> releases;
@@ -180,6 +182,15 @@ public class Issue {
         this.status = status;
     }
 
+    public IssuePriority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(IssuePriority priority) {
+        Objects.requireNonNull(status, "An Issue's priority cannot be set to null");
+        this.priority = priority;
+    }
+
     public IssueType getType() {
         return type;
     }
@@ -272,6 +283,7 @@ public class Issue {
                 ", reporter='" + reporter + '\'' +
                 ", stage=" + stage +
                 ", status=" + status +
+                ", priority=" + priority +
                 ", type=" + type +
                 ", release=" + releases +
                 ", streamStatus=" + streamStatus +

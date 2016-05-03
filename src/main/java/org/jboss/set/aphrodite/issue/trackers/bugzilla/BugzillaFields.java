@@ -68,6 +68,7 @@ class BugzillaFields {
     static final String REPORTER = "creator";
     static final String SUMMARY = "summary";
     static final String STATUS = "status";
+    static final String PRIORITY = "priority";
     static final String TARGET_MILESTONE = "target_milestone";
     static final String TARGET_RELEASE = "target_release";
     static final String UPDATE_FIELDS = "updates";
@@ -94,8 +95,8 @@ class BugzillaFields {
     static final String SEARCH_VALUE = "v";
 
     static final Object[] RESULT_FIELDS = { ASSIGNEE, BLOCKS, COMPONENT, CREATION_TIME, LAST_UPDATED, DEPENDS_ON, SUMMARY,
-            DESCRIPTION, ESTIMATED_TIME, FLAGS, HOURS_WORKED, ID, ISSUE_TYPE, PRODUCT, REPORTER, STATUS, TARGET_MILESTONE,
-            TARGET_RELEASE, VERSION, EXTERNAL_URL};
+            DESCRIPTION, ESTIMATED_TIME, FLAGS, HOURS_WORKED, ID, ISSUE_TYPE, PRODUCT, REPORTER, STATUS, PRIORITY, TARGET_MILESTONE,
+            TARGET_RELEASE, VERSION, EXTERNAL_URL };
 
     static final Object[] COMMENT_FIELDS = { COMMENT_BUG_ID, COMMENT_ID, COMMENT_BODY, COMMENT_IS_PRIVATE };
 
