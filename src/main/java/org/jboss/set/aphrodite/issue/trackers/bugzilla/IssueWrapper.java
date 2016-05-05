@@ -44,6 +44,7 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.MET
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.REPORTER;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.STATUS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIORITY;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.SUMMARY;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_MILESTONE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.VERSION;
@@ -94,6 +95,8 @@ class IssueWrapper {
         issue.setSummary((String) bug.get(SUMMARY));
         issue.setDescription((String) bug.get(DESCRIPTION));
         issue.setStatus(IssueStatus.valueOf((String) bug.get(STATUS)));
+        issue.setPriority(IssuePriorityTranslatorUtil.translateFromBugzilla((String) bug.get(PRIORITY)));
+
         Object[] components = (Object[]) bug.get(COMPONENT);
         List<String> tmp = new ArrayList<>();
         for(Object component : components) {

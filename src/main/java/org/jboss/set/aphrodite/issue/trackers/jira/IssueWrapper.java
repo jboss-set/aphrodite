@@ -30,6 +30,7 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditePriority;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -102,6 +103,7 @@ class IssueWrapper {
         issue.setSummary(jiraIssue.getSummary());
         issue.setDescription(jiraIssue.getDescription());
         issue.setStatus(getAphroditeStatus(jiraIssue.getStatus().getName()));
+        issue.setPriority(getAphroditePriority(jiraIssue.getPriority().getName()));
 
         TimeTracking timeTracking = jiraIssue.getTimeTracking();
         if(timeTracking != null) {
