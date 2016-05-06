@@ -149,16 +149,16 @@ public class JsonStreamService implements StreamService {
         }
     }
 
-    private Map<String, StreamComponent> parseStreamCodebases(JsonArray codebases) throws NotFoundException {
+    private Map<String, StreamComponent> parseStreamCodebases(JsonArray codebases) {
         Map<String, StreamComponent> codebaseMap = new HashMap<>();
         for (JsonValue value : codebases) {
             JsonObject json = (JsonObject) value;
             String componentName = json.getString("component_name");
             String codebaseName = json.getString("codebase");
             URL repositoryUrl = parseUrl(json.getString("repository_url"));
-            // ignore until it supports svn repository
-            if (!repositoryUrl.toString().contains("svn.jboss.org")) {
-                Repository repository = aphrodite.getRepository(repositoryUrl);
+            Repository repository;
+            try {
+                repository = aphrodite.getRepository(repositoryUrl);
                 Codebase codebase = new Codebase(codebaseName);
                 if (!repository.getCodebases().contains(codebase)) {
                     Utils.logWarnMessage(LOG, "The specified codebase '" + codebaseName + "' " +
@@ -167,6 +167,8 @@ public class JsonStreamService implements StreamService {
                     StreamComponent component = new StreamComponent(componentName, repository, codebase);
                     codebaseMap.put(component.getName(), component);
                 }
+            } catch (NotFoundException e) {
+                Utils.logWarnMessage(LOG, e.getMessage());
             }
         }
         return codebaseMap;

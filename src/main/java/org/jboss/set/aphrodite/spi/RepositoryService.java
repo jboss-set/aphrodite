@@ -66,6 +66,13 @@ public interface RepositoryService {
     boolean urlExists(URL url);
 
     /**
+     * Checks whether the provided <code>URL</code> is accessable.
+     * @param url the <code>URL</code> to check.
+     * @return true if the provided <code>URL</code> is accessable, otherwise false.
+     */
+    boolean repositoryAccessable(URL url);
+
+    /**
      * Get the repository located at the provided <code>URL</code>.
      *
      * @param url the <code>URL</code> of the repository to be retrieved.

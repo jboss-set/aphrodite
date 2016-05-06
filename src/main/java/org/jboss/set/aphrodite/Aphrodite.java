@@ -389,7 +389,7 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(url, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(url))
+            if (repositoryService.repositoryAccessable(url) && repositoryService.urlExists(url))
                 return repositoryService.getRepository(url);
         }
         throw new NotFoundException("No repositories found which correspond to url: " + url);
@@ -446,7 +446,7 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(url, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(url))
+            if (repositoryService.repositoryAccessable(url) && repositoryService.urlExists(url))
                 return repositoryService.getPatch(url);
         }
         throw new NotFoundException("No patch found which corresponds to url: " + url);

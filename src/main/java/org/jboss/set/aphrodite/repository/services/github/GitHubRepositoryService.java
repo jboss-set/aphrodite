@@ -474,4 +474,22 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         return (flag == 0) ? "success" : null;
     }
 
+    @Override
+    public boolean repositoryAccessable(URL url) {
+        if (url.toString().contains("svn.jboss.org")) {
+            // svn repository is not supported
+            Utils.logWarnMessage(LOG, "svn repository : " + url + " is not supported.");
+            return false;
+        }
+        RepositoryId id = RepositoryId.createFromUrl(url);
+        RepositoryService rs = new RepositoryService(gitHubClient);
+        try {
+            rs.getBranches(id); // action to test account repository accessibility
+        } catch (IOException e) {
+            Utils.logWarnMessage(LOG,
+                    "repository : " + url + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
+            return false;
+        }
+        return true;
+    }
 }
