@@ -24,13 +24,13 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditePriority;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -42,8 +42,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
-import com.atlassian.jira.rest.client.api.domain.Project;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,20 +59,20 @@ import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.domain.User;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.IssueFieldId;
 import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
+import com.atlassian.jira.rest.client.api.domain.Project;
 import com.atlassian.jira.rest.client.api.domain.TimeTracking;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
-
-import org.jboss.set.aphrodite.spi.NotFoundException;
 
 /**
  * @author Ryan Emerson
@@ -121,6 +119,7 @@ class IssueWrapper {
 
         setIssueStage(issue, jiraIssue);
         setIssueType(issue, jiraIssue);
+        setIssueAffectedVersions(issue, jiraIssue);
         setIssueReleases(issue, jiraIssue);
         setIssueDependencies(url, issue, jiraIssue.getIssueLinks());
         setIssueComments(issue, jiraIssue);
@@ -128,6 +127,15 @@ class IssueWrapper {
         setLastUpdated(issue, jiraIssue);
         setPullRequests(issue,jiraIssue);
         return issue;
+    }
+
+    private static void setIssueAffectedVersions(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        if ( jiraIssue.getAffectedVersions() != null ) {
+            List<String> affectedVersion = new ArrayList<String>(0);
+            for ( Version version : jiraIssue.getAffectedVersions() )
+                affectedVersion.add(version.getName());
+            issue.setAffectedVersions(affectedVersion);
+        }
     }
 
     // TODO find a solution for updating time estimates, see https://github.com/jboss-set/aphrodite/issues/23
