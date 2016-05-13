@@ -67,6 +67,8 @@ public class Issue {
 
     private IssueType type;
 
+    private List<String> affectedVersions;
+
     private List<Release> releases;
 
     private Map<String, FlagStatus> streamStatus;
@@ -114,6 +116,10 @@ public class Issue {
 
     public TrackerType getTrackerType() {
         return this.trackerType;
+    }
+
+    public List<String> getAffectedVersions() {
+        return this.affectedVersions;
     }
 
     public Optional<String> getProduct() {
@@ -199,6 +205,12 @@ public class Issue {
         Objects.requireNonNull(type, "An Issue's Type cannot be set to null");
         this.type = type;
     }
+
+    public void setAffectedVersions(List<String> affectedVersions) {
+        Objects.requireNonNull(affectedVersions);
+        this.affectedVersions = affectedVersions;
+    }
+
 
     public List<Release> getReleases() {
         return releases;
