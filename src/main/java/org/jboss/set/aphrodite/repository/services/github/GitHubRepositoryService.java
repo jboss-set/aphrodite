@@ -458,7 +458,8 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             } else {
                 flag = 1;
                 // The Travis CI and TeamCity Build has different rules
-                if (status.getDescription().contains("Travis")) {
+                String description = status.getDescription();
+                if (description != null && description.contains("Travis")) {
                     return stas.contains("success") ? "success" : "pending";
                 }
                 if (comStatuses.size() > 2 * count) {
