@@ -191,6 +191,11 @@
             <version>${xmlrpc.client.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-rest-java-client-api</artifactId>
+            <version>${jira.client.version}</version>
+        </dependency>
+        <dependency>
        	    <groupId>com.atlassian.jira</groupId>
             <artifactId>jira-rest-java-client-core</artifactId>
             <version>${jira.client.version}</version>
