@@ -493,4 +493,19 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         }
         return true;
     }
+
+    @Override
+    public int getRequestLimit() {
+        return gitHubClient.getRequestLimit();
+    }
+
+    @Override
+    public int getRemainingRequests() {
+        return gitHubClient.getRemainingRequests();
+    }
+
+    @Override
+    public RepositoryType getRepositoryType() {
+        return REPOSITORY_TYPE;
+    }
 }

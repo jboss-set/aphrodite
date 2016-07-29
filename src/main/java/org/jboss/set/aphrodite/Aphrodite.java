@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.List;
@@ -53,6 +55,7 @@ import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -450,6 +453,26 @@ public class Aphrodite implements AutoCloseable {
                 return repositoryService.getPatch(url);
         }
         throw new NotFoundException("No patch found which corresponds to url: " + url);
+    }
+
+    public Map<RepositoryType, Integer> getRequestLimit() {
+        Map<RepositoryType, Integer> requestLimits = new HashMap<>();
+        for (RepositoryService repositoryService : repositories) {
+            RepositoryType repositoryType = repositoryService.getRepositoryType();
+            int requestLimit = repositoryService.getRequestLimit();
+            requestLimits.put(repositoryType, requestLimit);
+        }
+        return Collections.unmodifiableMap(requestLimits);
+    }
+
+    public Map<RepositoryType, Integer> getRemainingRequests() {
+        Map<RepositoryType, Integer> remainingRequests = new HashMap<>();
+        for (RepositoryService repositoryService : repositories) {
+            RepositoryType repositoryType = repositoryService.getRepositoryType();
+            int remainingRequest = repositoryService.getRemainingRequests();
+            remainingRequests.put(repositoryType, remainingRequest);
+        }
+        return Collections.unmodifiableMap(remainingRequests);
     }
 
     /**
