@@ -96,6 +96,27 @@ public class Patch {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        Patch patch = (Patch) o;
+
+        return url.equals(patch.url);
+
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "Patch{" +
                 "url=" + url +
