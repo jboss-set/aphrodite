@@ -272,6 +272,8 @@ class IssueWrapper {
 
                     FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
                     issueStage.setStatus(flag.get(), status);
+                } else if (name.equals("needinfo") || name.equals("requires_doc_text")) {
+                    continue;
                 } else { // Else Stream
                     FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
                     streams.put(name, status);
