@@ -33,6 +33,7 @@ import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 
 public interface RepositoryService {
 
@@ -195,4 +196,21 @@ public interface RepositoryService {
      */
     default void destroy() {
     }
+
+    /**
+     * If rate limiting present, get number of requests that getRemainingRequests() counts down from as each request is made
+     * @return requestLimit or -1 if not present
+     */
+    int getRequestLimit();
+
+    /**
+     * If rate limiting present, get number of requests remaining before rate limiting occurs
+     * @return remainingRequests or -1 if not present
+     */
+    int getRemainingRequests();
+
+    /** Get Repository type
+     * @return RepositoryType
+     */
+    RepositoryType getRepositoryType();
 }
