@@ -22,18 +22,21 @@
 
 package org.jboss.set.aphrodite.repository.services.github;
 
-import org.eclipse.egit.github.core.PullRequest;
-import org.eclipse.egit.github.core.RepositoryBranch;
 import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
 import org.jboss.set.aphrodite.domain.Repository;
-import org.jboss.set.aphrodite.domain.Label;
+import org.kohsuke.github.GHBranch;
+import org.kohsuke.github.GHIssueState;
+import org.kohsuke.github.GHLabel;
+import org.kohsuke.github.GHPullRequest;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,7 +45,7 @@ import java.util.stream.Collectors;
  */
 class GitHubWrapper {
 
-    Repository toAphroditeRepository(URL url, List<RepositoryBranch> branches) {
+    Repository toAphroditeRepository(URL url, Collection<GHBranch> branches) {
         Repository repo = new Repository(url);
         List<Codebase> branchNames = branches.stream()
                 .map(this::repositoryBranchToCodebase)
@@ -51,16 +54,16 @@ class GitHubWrapper {
         return repo;
     }
 
-    List<Patch> toAphroditePatches(List<PullRequest> pullRequests) {
+    List<Patch> toAphroditePatches(List<GHPullRequest> pullRequests) {
         return pullRequests.stream()
                 .map(this::pullRequestToPatch)
                 .collect(Collectors.toList());
     }
 
-    Patch pullRequestToPatch(PullRequest pullRequest) {
+    Patch pullRequestToPatch(GHPullRequest pullRequest) {
         try {
             String id = Integer.toString(pullRequest.getNumber());
-            URL url = new URL(pullRequest.getHtmlUrl());
+            URL url = pullRequest.getHtmlUrl();
             Codebase codebase = new Codebase(pullRequest.getBase().getRef());
             PatchState state = getPatchState(pullRequest.getState());
             String title = pullRequest.getTitle().replaceFirst("\\u2026", "");
@@ -79,9 +82,9 @@ class GitHubWrapper {
         }
     }
 
-    public List<Label> pullRequestLabeltoPatchLabel(List<org.eclipse.egit.github.core.Label> labels) {
+    public List<Label> pullRequestLabeltoPatchLabel(Collection<GHLabel> labels) {
         List<Label> patchLabels = new ArrayList<>();
-        for (org.eclipse.egit.github.core.Label label : labels) {
+        for (GHLabel label : labels) {
             String name = label.getName();
             String color = label.getColor();
             String url = label.getUrl();
@@ -91,15 +94,15 @@ class GitHubWrapper {
         return patchLabels;
     }
 
-    private PatchState getPatchState(String state) {
+    public static PatchState getPatchState(GHIssueState state) {
         try {
-            return PatchState.valueOf(state.toUpperCase());
+            return PatchState.valueOf(state.toString().toUpperCase());
         } catch (IllegalArgumentException e) {
             return PatchState.UNDEFINED;
         }
     }
 
-    private Codebase repositoryBranchToCodebase(RepositoryBranch branch) {
+    private Codebase repositoryBranchToCodebase(GHBranch branch) {
         return new Codebase(branch.getName());
     }
 }
