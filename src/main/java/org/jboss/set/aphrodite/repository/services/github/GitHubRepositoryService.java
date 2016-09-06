@@ -22,6 +22,7 @@
 
 package org.jboss.set.aphrodite.repository.services.github;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -61,6 +62,12 @@ import org.kohsuke.github.GHRateLimit;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
+import org.kohsuke.github.extras.OkHttpConnector;
+
+import com.squareup.okhttp.Cache;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.OkUrlFactory;
 
 
 /**
@@ -70,6 +77,13 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
     private final GitHubWrapper WRAPPER = new GitHubWrapper();
+    private static final int DEFAULT_CACHE_SIZE = 20;
+
+    private String cacheDir;
+    private String cacheName;
+    private String cacheSize;
+    private File cacheFile;
+    private Cache cache;
     private GitHub github;
 
     public GitHubRepositoryService() {
@@ -87,9 +101,37 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         if (!parentInitiated)
             return false;
 
+        // Cache
+        cacheDir = System.getProperty("cacheDir");
+        cacheName = System.getProperty("cacheName");
+
         try {
-            // password id oauthAccessToken here, if use text password call GitHub.connectUsingPassword()
-            github = GitHub.connect(config.getUsername(), config.getPassword());
+            if (cacheDir == null || cacheName == null) {
+                // no cache specified
+                github = GitHub.connect(config.getUsername(), config.getPassword());
+            } else {
+                // use cache
+                cacheFile = new File(cacheDir, cacheName);
+                cacheSize = System.getProperty("cacheSize");
+                if (cacheSize == null) {
+                    cache = new Cache(cacheFile, DEFAULT_CACHE_SIZE * 1024 * 1024); // default 20MB cache
+                } else {
+                    int size = DEFAULT_CACHE_SIZE;
+                    try {
+                        size = Integer.valueOf(cacheSize);
+                    } catch (NumberFormatException e) {
+                        Utils.logWarnMessage(LOG, cacheSize + " is not a valid cache size. Use default size 20MB.");
+                    }
+                    cache = new Cache(cacheFile, size * 1024 * 1024); // default 20MB cache
+                }
+
+                // oauthAccessToken here, if you use text password, call .withPassword()
+                github = new GitHubBuilder()
+                        .withOAuthToken(config.getPassword(), config.getUsername())
+                        .withConnector(new OkHttpConnector(new OkUrlFactory(new OkHttpClient().setCache(cache))))
+                        .build();
+
+            }
         } catch (IOException e) {
             Utils.logException(LOG, "Authentication failed for RepositoryService: " + this.getClass().getName(), e);
             return false;

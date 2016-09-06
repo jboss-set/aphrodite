@@ -31,6 +31,7 @@
 
         <!-- Dependency versions, please keep alphabetically -->
         <com.google.guava.version>18.0</com.google.guava.version>
+        <com.squareup.okhttp>2.7.5</com.squareup.okhttp>
         <commons.logging.version>1.1.3</commons.logging.version>
         <commons.beanutils.version>1.9.2</commons.beanutils.version>
         <fugue.version>2.2.1</fugue.version>
@@ -158,6 +159,11 @@
             <groupId>org.kohsuke</groupId>
             <artifactId>github-api</artifactId>
             <version>${org.kohsuke.github-api}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp-urlconnection</artifactId>
+            <version>${com.squareup.okhttp}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlrpc</groupId>
