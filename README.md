@@ -81,6 +81,24 @@ Or
  // perform some aphrodite operations
  aphrodite.close();
  ```
+##### Cache configuration
+Aphrodite supports **[conditional-requests](https://developer.github.com/v3/#conditional-requests)** by using OkHttp to provide a pluggable connector through HttpConnector.
+
+In order to use the HTTP response cache, you need to define the cache attributes through system properties:
+
+* cacheDir: cache directory
+* cacheName: cache name
+* cacheSize: cache size in MB
+
+e.g. Configuration in WildFly / JBoss EAP Server Standalone.xml
+
+```xml
+<property name="cacheDir" value="/path/to/cache"/>
+<property name="cacheName" value="github-cache"/>
+<property name="cacheSize" value="10"/>
+```
+
+_Aphrodite starts with no cache mode if there is no cache properties configuration._
 ## Example Usage
 ------------
 ##### jira example
