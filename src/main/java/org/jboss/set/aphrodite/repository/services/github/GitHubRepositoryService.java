@@ -22,36 +22,26 @@
 
 package org.jboss.set.aphrodite.repository.services.github;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.egit.github.core.CommitStatus;
-import org.eclipse.egit.github.core.PullRequest;
-import org.eclipse.egit.github.core.RepositoryBranch;
-import org.eclipse.egit.github.core.RepositoryCommit;
-import org.eclipse.egit.github.core.RepositoryId;
-import org.eclipse.egit.github.core.client.RequestException;
-import org.eclipse.egit.github.core.service.CollaboratorService;
-import org.eclipse.egit.github.core.service.CommitService;
-import org.eclipse.egit.github.core.service.IssueService;
-import org.eclipse.egit.github.core.service.LabelService;
-import org.eclipse.egit.github.core.service.PullRequestService;
-import org.eclipse.egit.github.core.service.RepositoryService;
-import org.eclipse.egit.github.core.service.UserService;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
-import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
@@ -59,6 +49,25 @@ import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.kohsuke.github.GHBranch;
+import org.kohsuke.github.GHCommitState;
+import org.kohsuke.github.GHCommitStatus;
+import org.kohsuke.github.GHIssue;
+import org.kohsuke.github.GHIssueState;
+import org.kohsuke.github.GHLabel;
+import org.kohsuke.github.GHMyself;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestCommitDetail;
+import org.kohsuke.github.GHRateLimit;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHUser;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
+import org.kohsuke.github.extras.OkHttpConnector;
+
+import com.squareup.okhttp.Cache;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.OkUrlFactory;
 
 
 /**
@@ -68,7 +77,14 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
     private final GitHubWrapper WRAPPER = new GitHubWrapper();
-    private CustomGitHubClient gitHubClient;
+    private static final int DEFAULT_CACHE_SIZE = 20;
+
+    private String cacheDir;
+    private String cacheName;
+    private String cacheSize;
+    private File cacheFile;
+    private Cache cache;
+    private GitHub github;
 
     public GitHubRepositoryService() {
         super(RepositoryType.GITHUB);
@@ -85,23 +101,42 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         if (!parentInitiated)
             return false;
 
+        // Cache
+        cacheDir = System.getProperty("cacheDir");
+        cacheName = System.getProperty("cacheName");
+
         try {
-            gitHubClient = CustomGitHubClient.createClient(baseUrl.toString());
-            gitHubClient.setCredentials(config.getUsername(), config.getPassword());
-            new UserService(gitHubClient).getUser();
+            if (cacheDir == null || cacheName == null) {
+                // no cache specified
+                github = GitHub.connect(config.getUsername(), config.getPassword());
+            } else {
+                // use cache
+                cacheFile = new File(cacheDir, cacheName);
+                cacheSize = System.getProperty("cacheSize");
+                if (cacheSize == null) {
+                    cache = new Cache(cacheFile, DEFAULT_CACHE_SIZE * 1024 * 1024); // default 20MB cache
+                } else {
+                    int size = DEFAULT_CACHE_SIZE;
+                    try {
+                        size = Integer.valueOf(cacheSize);
+                    } catch (NumberFormatException e) {
+                        Utils.logWarnMessage(LOG, cacheSize + " is not a valid cache size. Use default size 20MB.");
+                    }
+                    cache = new Cache(cacheFile, size * 1024 * 1024); // default 20MB cache
+                }
+
+                // oauthAccessToken here, if you use text password, call .withPassword()
+                github = new GitHubBuilder()
+                        .withOAuthToken(config.getPassword(), config.getUsername())
+                        .withConnector(new OkHttpConnector(new OkUrlFactory(new OkHttpClient().setCache(cache))))
+                        .build();
+
+            }
         } catch (IOException e) {
             Utils.logException(LOG, "Authentication failed for RepositoryService: " + this.getClass().getName(), e);
             return false;
         }
         return true;
-    }
-
-    private Patch getPatch(String url) {
-        try {
-            return getPatch(new URL(url));
-        } catch (MalformedURLException | NotFoundException e) {
-            return null;
-        }
     }
 
     @Override
@@ -110,11 +145,10 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 
         String[] elements = url.getPath().split("/");
         int pullId = Integer.parseInt(elements[elements.length - 1]);
-        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
-
-        PullRequestService pullRequestService = new PullRequestService(gitHubClient);
+        String repositoryId = createFromUrl(url);
         try {
-            PullRequest pullRequest = pullRequestService.getPullRequest(repositoryId, pullId);
+            GHRepository repository = github.getRepository(repositoryId);
+            GHPullRequest pullRequest = repository.getPullRequest(pullId);
             return WRAPPER.pullRequestToPatch(pullRequest);
         } catch (IOException e) {
             Utils.logException(LOG, e);
@@ -126,10 +160,10 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     public Repository getRepository(URL url) throws NotFoundException {
         checkHost(url);
 
-        RepositoryId id = RepositoryId.createFromUrl(url);
-        RepositoryService rs = new RepositoryService(gitHubClient);
+        String repositoryId = createFromUrl(url);
         try {
-            List<RepositoryBranch> branches = rs.getBranches(id);
+            GHRepository repository = github.getRepository(repositoryId);
+            Collection<GHBranch> branches = repository.getBranches().values();
             return WRAPPER.toAphroditeRepository(url, branches);
         } catch (IOException e) {
             Utils.logException(LOG, e);
@@ -137,32 +171,38 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         }
     }
 
-    @Override
-    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
-        String trackerId = issue.getTrackerId().orElseThrow(() -> new IllegalArgumentException("Issue.trackerId must be set."));
-        try {
-            GitHubGlobalSearchService searchService = new GitHubGlobalSearchService(gitHubClient);
-            List<SearchResult> searchResults = searchService.searchAllPullRequests(trackerId);
-            return searchResults.stream()
-                    .map(pr -> getPatch(pr.getUrl()))
-                    .filter(patch -> patch != null)
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            Utils.logException(LOG, e);
-            throw new NotFoundException(e);
-        }
-    }
+//    @Override
+//    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+//        String trackerId = issue.getTrackerId().orElseThrow(() -> new IllegalArgumentException("Issue.trackerId must be set."));
+//        try {
+//            GitHubGlobalSearchService searchService = new GitHubGlobalSearchService(gitHubClient);
+//            List<SearchResult> searchResults = searchService.searchAllPullRequests(trackerId);
+//            return searchResults.stream()
+//                    .map(pr -> getPatch(pr.getUrl()))
+//                    .filter(patch -> patch != null)
+//                    .collect(Collectors.toList());
+//        } catch (IOException e) {
+//            Utils.logException(LOG, e);
+//            throw new NotFoundException(e);
+//        }
+//    }
 
     @Override
     public List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException {
         URL url = repository.getURL();
         checkHost(url);
 
-        RepositoryId id = RepositoryId.createFromUrl(url);
-        PullRequestService pullRequestService = new PullRequestService(gitHubClient);
+        String repositoryId = createFromUrl(url);
         try {
-            String githubState = state.toString().toLowerCase();
-            List<PullRequest> pullRequests = pullRequestService.getPullRequests(id, githubState);
+            // String githubState = state.toString().toLowerCase();
+            GHRepository githubRepository = github.getRepository(repositoryId);
+            GHIssueState issueState;
+            try {
+                issueState = GHIssueState.valueOf(state.toString().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                issueState = GHIssueState.OPEN;
+            }
+            List<GHPullRequest> pullRequests = githubRepository.getPullRequests(issueState);
             return WRAPPER.toAphroditePatches(pullRequests);
         } catch (IOException e) {
             Utils.logException(LOG, e);
@@ -175,11 +215,12 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         URL url = patch.getURL();
         checkHost(url);
 
-        int pullId = Integer.parseInt(patch.getId());
-        RepositoryId id = RepositoryId.createFromUrl(url);
+        int id = Integer.parseInt(patch.getId());
+        String repositoryId = createFromUrl(url);
         try {
-            IssueService is = new IssueService(gitHubClient);
-            is.createComment(id, pullId, comment);
+            GHRepository repository = github.getRepository(repositoryId);
+            GHIssue issue = repository.getIssue(id);
+            issue.comment(comment);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -191,13 +232,17 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         URL url = repository.getURL();
         checkHost(url);
 
-        RepositoryId id = RepositoryId.createFromUrl(url);
+        String repositoryId = createFromUrl(url);
         try {
-            return new CollaboratorService(gitHubClient).isCollaborator(id, gitHubClient.getUser());
-        } catch (IOException e) {
-            if (e instanceof RequestException && ((RequestException) e).getStatus() == 403)
+            GHMyself myself = github.getMyself();
+            GHRepository githubRepository = github.getRepository(repositoryId);
+            Set<GHUser> collaborators = githubRepository.listCollaborators().asSet();
+            return collaborators.stream().anyMatch(e -> e.getLogin().equals(myself.getLogin()));
+        } catch (Throwable t) {
+            if (t.getMessage().contains("Must have push access")) {
                 return false;
-
+            }
+            Exception e = (Exception) t;
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
@@ -209,41 +254,38 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         checkHost(url);
 
         int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
-        IssueService issueService = new IssueService(gitHubClient);
+        String repositoryId = createFromUrl(url);
         try {
-            org.eclipse.egit.github.core.Label newLabel = getLabel(repositoryId, labelName);
-            org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
-            List<org.eclipse.egit.github.core.Label> issueLabels = issue.getLabels();
-            if (issueLabels.contains(newLabel))
+            GHRepository repository = github.getRepository(repositoryId);
+            GHLabel newLabel = getLabel(repository, labelName);
+            GHIssue issue = repository.getIssue(patchId);
+            Collection<GHLabel> labels = issue.getLabels();
+            if (labels.contains(newLabel)) {
                 return;
+            }
 
-            issueLabels.add(newLabel);
-            issue.setLabels(issueLabels);
-            issueService.editIssue(repositoryId, issue);
+            List<String> list = labels.stream().map(e -> e.getName()).collect(Collectors.toList());
+            list.add(newLabel.getName());
+            String[] labelArray = list.toArray(new String[list.size()]);
+            issue.setLabels(labelArray);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
     }
 
-    private org.eclipse.egit.github.core.Label getLabel(RepositoryId repositoryId, String labelName)
-            throws NotFoundException, IOException {
-        LabelService labelService = new LabelService(gitHubClient);
-        List<org.eclipse.egit.github.core.Label> labels = labelService.getLabels(repositoryId);
-        return getLabel(repositoryId, labelName, labels);
+    private GHLabel getLabel(GHRepository repository, String labelName) throws NotFoundException, IOException {
+        List<GHLabel> labels = repository.listLabels().asList();
+        return getLabel(repository, labelName, labels);
     }
 
-    private org.eclipse.egit.github.core.Label getLabel(RepositoryId repositoryId, String labelName,
-            List<org.eclipse.egit.github.core.Label> validLabels)
-            throws NotFoundException {
-        for (org.eclipse.egit.github.core.Label label : validLabels) {
+    private GHLabel getLabel(GHRepository repository, String labelName, List<GHLabel> validLabels) throws NotFoundException {
+        for (GHLabel label : validLabels) {
             if (label.getName().equalsIgnoreCase(labelName))
                 return label;
         }
-
         throw new NotFoundException("No label exists with the name '" + labelName +
-                "' at repository '" + repositoryId.getName() + "'");
+                "' at repository '" + repository.getName() + "'");
     }
 
     @Override
@@ -251,11 +293,11 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         URL url = repository.getURL();
         checkHost(url);
 
-        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
-        LabelService labelService = new LabelService(gitHubClient);
-        List<org.eclipse.egit.github.core.Label> labels;
+        String repositoryId = createFromUrl(url);
+        List<GHLabel> labels;
         try {
-            labels = labelService.getLabels(repositoryId);
+            GHRepository githubRepository = github.getRepository(repositoryId);
+            labels = githubRepository.listLabels().asList();
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -268,13 +310,12 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     public List<Label> getLabelsFromPatch(Patch patch) throws NotFoundException {
         URL url = patch.getURL();
         checkHost(url);
-        String patchId = patch.getId();
-        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
-        IssueService issueService = new IssueService(gitHubClient);
+        String repositoryId = createFromUrl(url);
         try {
-            org.eclipse.egit.github.core.Issue issue = issueService.getIssue(repositoryId, patchId);
+            GHRepository repository = github.getRepository(repositoryId);
+            GHIssue issue = repository.getIssue(Integer.parseInt(patch.getId()));
             return WRAPPER.pullRequestLabeltoPatchLabel(issue.getLabels());
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
@@ -286,17 +327,20 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         checkHost(url);
 
         int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
-        LabelService labelService = new LabelService(gitHubClient);
+        String repositoryId = createFromUrl(url);
         try {
-            List<org.eclipse.egit.github.core.Label> issueLabels = new ArrayList<>();
-            List<org.eclipse.egit.github.core.Label> existingLabels = labelService.getLabels(repositoryId);
+            GHRepository repository = github.getRepository(repositoryId);
+            GHIssue issue = repository.getIssue(patchId);
+            List<GHLabel> issueLabels = new ArrayList<>();
+            List<GHLabel> existingLabels = repository.listLabels().asList();
 
             for (Label label : labels) {
-                issueLabels.add(getLabel(repositoryId, label.getName(), existingLabels));
+                issueLabels.add(getLabel(repository, label.getName(), existingLabels));
             }
             issueLabels.add(existingLabels.get(0));
-            labelService.setLabels(repositoryId, Long.toString(patchId), issueLabels);
+            List<String> list = issueLabels.stream().map(e -> e.getName()).collect(Collectors.toList());
+            String[] labelArray = list.toArray(new String[list.size()]);
+            issue.setLabels(labelArray);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -308,16 +352,20 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         URL url = patch.getURL();
         checkHost(url);
 
-        IssueService issueService = new IssueService(gitHubClient);
-        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+        int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        String repositoryId = createFromUrl(url);
         try {
-            List<org.eclipse.egit.github.core.Label> labels = issueService.getIssue(repositoryId, patch.getId()).getLabels();
+            GHRepository repository = github.getRepository(repositoryId);
+            GHIssue issue = repository.getIssue(patchId);
+            Collection<GHLabel> labels = issue.getLabels();
 
-            for (org.eclipse.egit.github.core.Label label : labels)
+            for (GHLabel label : labels)
                 if (label.getName().equalsIgnoreCase(name)) {
-                    // Currently does not support labels with spaces in the name
-//                    new LabelService(gitHubClient).deleteLabel(repositoryId, label.getName());
-                    deleteLabelWithEscapedName(repositoryId, patch, label);
+                    // remove the label and reset
+                    List<String> list = labels.stream().map(e -> e.getName()).collect(Collectors.toList());
+                    list.remove(label.getName());
+                    String[] labelArray = list.toArray(new String[list.size()]);
+                    issue.setLabels(labelArray);
                     return;
                 }
         } catch (IOException e) {
@@ -326,18 +374,6 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         }
         throw new NotFoundException("No label exists with the name '" + name +
                 "' at repository '" + repositoryId + "'");
-    }
-
-    // Workaround for issue with egit GH client: https://github.com/jboss-set/aphrodite/issues/59
-    private void deleteLabelWithEscapedName(RepositoryId repositoryId, Patch patch, org.eclipse.egit.github.core.Label label) throws IOException {
-        String path = "/repos/" + repositoryId.generateId() + "/issues/" + patch.getId() + "/labels/" + label.getName();
-        try {
-            URI uri = new URI(baseUrl.getProtocol(), baseUrl.getHost(), path, null);
-            path = uri.toASCIIString().substring(baseUrl.toString().length() - 1); // -1 to keep / at start
-            gitHubClient.deleteWith200Response(path);
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        }
     }
 
     private static final Pattern RELATED_PR_PATTERN = Pattern
@@ -409,26 +445,30 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public org.jboss.set.aphrodite.domain.CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException {
+    public CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException {
         URL url = patch.getURL();
         checkHost(url);
 
-        PullRequestService pullrequestService = new PullRequestService(gitHubClient);
-        CommitService commitService = new CommitService(gitHubClient);
-        org.jboss.set.aphrodite.domain.CommitStatus status = null;
+        CommitStatus status = null;
         int patchId = Integer.parseInt(patch.getId());
-        RepositoryId repositoryId = RepositoryId.createFromUrl(url);
+        String repositoryId = createFromUrl(url);
         try {
             String sha = null;
-            List<RepositoryCommit> commits = pullrequestService.getCommits(repositoryId, patchId);
+
+            GHRepository repository = github.getRepository(repositoryId);
+            GHPullRequest pullRequest = repository.getPullRequest(patchId);
+
+            List<GHPullRequestCommitDetail> commits = pullRequest.listCommits().asList();
             if (commits.size() > 0) {
                 sha = commits.get(commits.size() - 1).getSha();
             }
+
             // statuses contains Finished and Started TeamCity Build
-            List<CommitStatus> statuses = commitService.getStatuses(repositoryId, sha);
+            List<GHCommitStatus> statuses = repository.listCommitStatuses(sha).asList();
             if (statuses.size() > 0) {
-                String sta = getCombineStatus(statuses);
-                status = org.jboss.set.aphrodite.domain.CommitStatus.fromString(sta);
+                GHCommitState sta = getCombineStatus(statuses);
+                if (sta != null)
+                    status = CommitStatus.fromString(sta.toString());
             }
         } catch (IOException e) {
             Utils.logException(LOG, e);
@@ -438,41 +478,41 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         if (status != null) {
             return status;
         } else {
-            return org.jboss.set.aphrodite.domain.CommitStatus.UNKNOWN;
+            return CommitStatus.UNKNOWN;
         }
     }
 
-    private String getCombineStatus(List<CommitStatus> comStatuses) {
+    private GHCommitState getCombineStatus(List<GHCommitStatus> comStatuses) {
         int count = 0, flag = 0;
-        List<String> stas = new ArrayList<>();
-        for (CommitStatus status : comStatuses) {
-            String sta = status.getState();
+        List<GHCommitState> stas = new ArrayList<>();
+        for (GHCommitStatus status : comStatuses) {
+            GHCommitState sta = status.getState();
             stas.add(sta);
             // until sta="pending"
-            if (!sta.equals("pending")) {
-                if (sta.equals("failure")) {
-                    return "failure";
-                } else if (sta.equals("error")) {
-                    return "error";
+            if (!sta.equals(GHCommitState.PENDING)) {
+                if (sta.equals(GHCommitState.FAILURE)) {
+                    return GHCommitState.FAILURE;
+                } else if (sta.equals(GHCommitState.ERROR)) {
+                    return GHCommitState.ERROR;
                 }
             } else {
                 flag = 1;
                 // The Travis CI and TeamCity Build has different rules
                 String description = status.getDescription();
                 if (description != null && description.contains("Travis")) {
-                    return stas.contains("success") ? "success" : "pending";
+                    return stas.contains(GHCommitState.SUCCESS) ? GHCommitState.SUCCESS : GHCommitState.PENDING;
                 }
                 if (comStatuses.size() > 2 * count) {
-                    String temp = comStatuses.get(2 * count).getState();
-                    return temp.equals("pending") ? "pending" : "success";
+                    GHCommitState temp = comStatuses.get(2 * count).getState();
+                    return temp.equals(GHCommitState.PENDING) ? GHCommitState.PENDING : GHCommitState.SUCCESS;
                 } else if (comStatuses.size() == 2 * count) {
-                    return "success";
+                    return GHCommitState.SUCCESS;
                 }
             }
             count++;
         }
 
-        return (flag == 0) ? "success" : null;
+        return (flag == 0) ? GHCommitState.SUCCESS : null;
     }
 
     @Override
@@ -482,10 +522,11 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             Utils.logWarnMessage(LOG, "svn repository : " + url + " is not supported.");
             return false;
         }
-        RepositoryId id = RepositoryId.createFromUrl(url);
-        RepositoryService rs = new RepositoryService(gitHubClient);
+
+        String repositoryId = createFromUrl(url);
         try {
-            rs.getBranches(id); // action to test account repository accessibility
+            GHRepository repository = github.getRepository(repositoryId);
+            repository.getBranches(); // action to test account repository accessibility
         } catch (IOException e) {
             Utils.logWarnMessage(LOG,
                     "repository : " + url + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
@@ -495,13 +536,13 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public int getRequestLimit() {
-        return gitHubClient.getRequestLimit();
-    }
-
-    @Override
-    public int getRemainingRequests() {
-        return gitHubClient.getRemainingRequests();
+    public GHRateLimit getRateLimit() throws NotFoundException {
+        try {
+            return github.getRateLimit();
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+            throw new NotFoundException(e);
+        }
     }
 
     @Override

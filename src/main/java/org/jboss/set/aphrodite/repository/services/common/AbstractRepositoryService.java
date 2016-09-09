@@ -121,4 +121,24 @@ public abstract class AbstractRepositoryService implements RepositoryService {
             throw new NotFoundException("The requested Repository cannot be found as it is not " +
                     "hosted on this server.");
     }
+
+    public String createFromUrl(URL url) {
+        return url != null ? createFromId(url.getPath()) : null;
+    }
+
+    public String createFromId(String id) {
+        if (id == null || id.length() == 0)
+            return null;
+        String owner = null;
+        String name = null;
+        for (String segment : id.split("/")) //$NON-NLS-1$
+            if (segment.length() > 0)
+                if (owner == null)
+                    owner = segment;
+                else if (name == null)
+                    name = segment;
+                else
+                    break;
+        return owner != null && owner.length() > 0 && name != null && name.length() > 0 ? owner + "/" + name : null;
+    }
 }

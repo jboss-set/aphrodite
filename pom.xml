@@ -31,13 +31,14 @@
 
         <!-- Dependency versions, please keep alphabetically -->
         <com.google.guava.version>18.0</com.google.guava.version>
+        <com.squareup.okhttp>2.7.5</com.squareup.okhttp>
         <commons.logging.version>1.1.3</commons.logging.version>
         <commons.beanutils.version>1.9.2</commons.beanutils.version>
         <fugue.version>2.2.1</fugue.version>
         <javax.json.version>1.0.4</javax.json.version>
         <jira.client.version>4.0.0</jira.client.version>
         <junit.version>4.12</junit.version>
-        <org.eclipse.egit.github.core.version>2.1.5</org.eclipse.egit.github.core.version>
+        <org.kohsuke.github-api>1.77</org.kohsuke.github-api>
         <org.mockito.version>1.10.19</org.mockito.version>
         <org.wildfly.checkstyle-config.version>1.0.4.Final</org.wildfly.checkstyle-config.version>
         <xmlrpc.client.version>3.1.3</xmlrpc.client.version>
@@ -155,9 +156,14 @@
             <version>${commons.logging.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.mylyn.github</groupId>
-            <artifactId>org.eclipse.egit.github.core</artifactId>
-            <version>${org.eclipse.egit.github.core.version}</version>
+            <groupId>org.kohsuke</groupId>
+            <artifactId>github-api</artifactId>
+            <version>${org.kohsuke.github-api}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp-urlconnection</artifactId>
+            <version>${com.squareup.okhttp}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlrpc</groupId>

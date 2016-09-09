@@ -61,6 +61,7 @@ import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
 import org.jboss.set.aphrodite.spi.StreamService;
+import org.kohsuke.github.GHRateLimit;
 
 public class Aphrodite implements AutoCloseable {
 
@@ -405,16 +406,16 @@ public class Aphrodite implements AutoCloseable {
      * @return a list of all <code>Patch</code> objects, or an empty list if no patches can be found.
      * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve patches from a RepositoryService
      */
-    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
-        checkRepositoryServiceExists();
-        Objects.requireNonNull(issue, "issue cannot be null");
-
-        List<Patch> patches = new ArrayList<>();
-        for (RepositoryService repositoryService : repositories) {
-            patches.addAll(repositoryService.getPatchesAssociatedWith(issue));
-        }
-        return patches;
-    }
+//    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+//        checkRepositoryServiceExists();
+//        Objects.requireNonNull(issue, "issue cannot be null");
+//
+//        List<Patch> patches = new ArrayList<>();
+//        for (RepositoryService repositoryService : repositories) {
+//            patches.addAll(repositoryService.getPatchesAssociatedWith(issue));
+//        }
+//        return patches;
+//    }
 
     /**
      * Retrieve all Patches associated with the provided <code>Repository</code> object, which have a
@@ -455,24 +456,14 @@ public class Aphrodite implements AutoCloseable {
         throw new NotFoundException("No patch found which corresponds to url: " + url);
     }
 
-    public Map<RepositoryType, Integer> getRequestLimit() {
-        Map<RepositoryType, Integer> requestLimits = new HashMap<>();
+    public Map<RepositoryType, GHRateLimit> getRateLimits() throws NotFoundException {
+        Map<RepositoryType, GHRateLimit> rateLimits = new HashMap<>();
         for (RepositoryService repositoryService : repositories) {
             RepositoryType repositoryType = repositoryService.getRepositoryType();
-            int requestLimit = repositoryService.getRequestLimit();
-            requestLimits.put(repositoryType, requestLimit);
+            GHRateLimit requestLimit = repositoryService.getRateLimit();
+            rateLimits.put(repositoryType, requestLimit);
         }
-        return Collections.unmodifiableMap(requestLimits);
-    }
-
-    public Map<RepositoryType, Integer> getRemainingRequests() {
-        Map<RepositoryType, Integer> remainingRequests = new HashMap<>();
-        for (RepositoryService repositoryService : repositories) {
-            RepositoryType repositoryType = repositoryService.getRepositoryType();
-            int remainingRequest = repositoryService.getRemainingRequests();
-            remainingRequests.put(repositoryType, remainingRequest);
-        }
-        return Collections.unmodifiableMap(remainingRequests);
+        return Collections.unmodifiableMap(rateLimits);
     }
 
     /**
