@@ -47,6 +47,7 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.STA
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIORITY;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.SUMMARY;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_MILESTONE;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.VERSION;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.getAphroditeFlag;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.getBugzillaFlag;
@@ -109,10 +110,9 @@ class IssueWrapper {
         String type = (String) bug.get(ISSUE_TYPE);
         issue.setType(IssueType.getMatchingIssueType(type));
 
-        String version = (String) ((Object[]) bug.get(VERSION))[0];
-        List<Release> releases = new ArrayList<>();
-        releases.add(new Release(version, (String) bug.get(TARGET_MILESTONE)));
-        issue.setReleases(releases);
+        setAffectedVersions(issue, (Object[]) (bug.get(VERSION)) );
+        setReleases(issue, bug);
+
         List<URL> dependsOn = getListOfURlsFromIds(bug, baseURL, DEPENDS_ON);
         dependsOn.addAll(getListOfExternalURLsFromIds(bug, EXTERNAL_URL));
         issue.setDependsOn(dependsOn);
@@ -121,6 +121,26 @@ class IssueWrapper {
         checkIsNullEstimation(bug,issue);
         extractStageAndStreams(bug, issue);
         return issue;
+    }
+
+    private static void setReleases(Issue issue, Map<String, Object> bug ) {
+        List<Release> releases = new ArrayList<>();
+        if ( bug.containsKey(TARGET_RELEASE) && bug.get(TARGET_RELEASE) != null ) {
+            if ( bug.containsKey(TARGET_MILESTONE) && bug.get(TARGET_MILESTONE) != null )
+                releases.add(new Release( bug.get(TARGET_RELEASE).toString(), (String) bug.get(TARGET_MILESTONE)));
+            else
+                releases.add(new Release( (String) bug.get(TARGET_RELEASE)) );
+        }
+        issue.setReleases(releases);
+    }
+
+    private void setAffectedVersions(Issue issue, Object[] affectedVersions) {
+        if ( affectedVersions != null && affectedVersions.length > 0 ) {
+            List<String> affectedVersionsList = new ArrayList<String>(affectedVersions.length);
+            for ( Object affectedVersion: affectedVersions )
+              affectedVersionsList.add(affectedVersion.toString());
+            issue.setAffectedVersions(affectedVersionsList);
+        }
     }
 
     private void checkIsNullEstimation(Map<String, Object> bug, Issue issue) {
