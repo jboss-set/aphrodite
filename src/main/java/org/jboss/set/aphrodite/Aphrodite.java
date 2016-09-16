@@ -30,7 +30,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -121,7 +122,7 @@ public class Aphrodite implements AutoCloseable {
     private final List<RepositoryService> repositories = new ArrayList<>();
     private final List<StreamService> streamServices = new ArrayList<>();
 
-    private ExecutorService executorService;
+    private ScheduledExecutorService executorService;
 
     private AphroditeConfig config;
 
@@ -170,7 +171,8 @@ public class Aphrodite implements AutoCloseable {
                     + " does not exist.");
 
         initialiseStreams(mutableConfig);
-
+        //TODO: make this configurable.
+        this.executorService.scheduleAtFixedRate(new UpdateStreamServices(), 10, 10, TimeUnit.MINUTES);
         if (LOG.isInfoEnabled())
             LOG.info("Aphrodite Initialisation Complete");
     }
@@ -763,4 +765,19 @@ public class Aphrodite implements AutoCloseable {
                     StreamService.class.getName() + " has not been created.");
     }
 
+    private class UpdateStreamServices implements Runnable{
+
+        @Override
+        public void run() {
+            for(StreamService ss: streamServices){
+                try {
+                    ss.updateStreams();
+                } catch (NotFoundException e) {
+                    if(LOG.isErrorEnabled()){
+                        LOG.error("Failed to update stream service: "+ss, e);
+                    }
+                }
+            }
+        }
+    }
 }

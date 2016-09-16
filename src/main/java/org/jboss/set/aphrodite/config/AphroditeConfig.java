@@ -26,8 +26,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 import javax.json.JsonArray;
@@ -40,7 +40,7 @@ import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
  * @author Ryan Emerson
  */
 public class AphroditeConfig {
-    private final ExecutorService executorService;
+    private final ScheduledExecutorService executorService;
     private final List<IssueTrackerConfig> issueTrackerConfigs;
     private final List<RepositoryConfig> repositoryConfigs;
     private final List<StreamConfig> streamConfigs;
@@ -66,10 +66,10 @@ public class AphroditeConfig {
     }
 
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs) {
-        this(Executors.newCachedThreadPool(), issueTrackerConfigs, repositoryConfigs, streamConfigs);
+        this(Executors.newScheduledThreadPool(3), issueTrackerConfigs, repositoryConfigs, streamConfigs);
     }
 
-    public AphroditeConfig(ExecutorService executorService,
+    public AphroditeConfig(ScheduledExecutorService executorService,
             List<IssueTrackerConfig> issueTrackerConfigs,
             List<RepositoryConfig> repositoryConfigs,
             List<StreamConfig> streamConfigs) {
@@ -87,7 +87,7 @@ public class AphroditeConfig {
     }
 
 
-    public ExecutorService getExecutorService() {
+    public ScheduledExecutorService getExecutorService() {
         return executorService;
     }
 
@@ -111,7 +111,7 @@ public class AphroditeConfig {
         List<StreamConfig> streamConfigs = getStreamConfigs(jsonObject);
 
         if (maxThreadCount > 0)
-            return new AphroditeConfig(Executors.newFixedThreadPool(maxThreadCount), issueTrackerConfigs,
+            return new AphroditeConfig(Executors.newScheduledThreadPool(maxThreadCount), issueTrackerConfigs,
                     repositoryConfigs, streamConfigs);
 
         // IF maxThreadCount has not been specified, then we refer to the default executorService which is an unlimited cachedThreadPool

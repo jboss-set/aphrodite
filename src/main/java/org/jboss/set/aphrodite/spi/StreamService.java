@@ -1,5 +1,6 @@
 package org.jboss.set.aphrodite.spi;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.jboss.set.aphrodite.Aphrodite;
@@ -15,9 +16,23 @@ public interface StreamService {
      * Initialize the stream service.
      *
      * @throws NotFoundException
+     * @throws NoSuchAlgorithmException
      */
     boolean init(Aphrodite aphrodite, AphroditeConfig config) throws NotFoundException;
 
+    /**
+     * Trigger for updating streams information. Generally implementation if free to decide if updtes only on change
+     *  on method being triggered or via other means(timed). Note, that internally, service is free to keep information up2date by any means
+     * is sees fit.
+     * @return
+     * <ul>
+     * <li><b>true</b> - if streams information has been updated</li>
+     * <li><b>false</b> - if streams information remain unchanged</li>
+     * </ul>
+     * @throws NotFoundException
+     */
+
+    boolean updateStreams() throws NotFoundException;
     /**
      * Returns all streams discovered by this service.
      *
