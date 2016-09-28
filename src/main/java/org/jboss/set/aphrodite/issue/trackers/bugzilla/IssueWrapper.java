@@ -123,13 +123,17 @@ class IssueWrapper {
         return issue;
     }
 
-    private static void setReleases(Issue issue, Map<String, Object> bug ) {
+    private static void setReleases(Issue issue, Map<String, Object> bug) {
         List<Release> releases = new ArrayList<>();
-        if ( bug.containsKey(TARGET_RELEASE) && bug.get(TARGET_RELEASE) != null ) {
-            if ( bug.containsKey(TARGET_MILESTONE) && bug.get(TARGET_MILESTONE) != null )
-                releases.add(new Release( bug.get(TARGET_RELEASE).toString(), (String) bug.get(TARGET_MILESTONE)));
-            else
-                releases.add(new Release( (String) bug.get(TARGET_RELEASE)) );
+        if (bug.containsKey(TARGET_RELEASE) && bug.get(TARGET_RELEASE) != null) {
+            Object[] targetReleases = (Object[]) bug.get(TARGET_RELEASE);
+            for (Object targetRelease : targetReleases) {
+                if (bug.containsKey(TARGET_MILESTONE) && bug.get(TARGET_MILESTONE) != null) {
+                    releases.add(new Release((String) targetRelease, (String) bug.get(TARGET_MILESTONE)));
+                } else {
+                    releases.add(new Release((String) targetRelease));
+                }
+            }
         }
         issue.setReleases(releases);
     }
@@ -292,7 +296,7 @@ class IssueWrapper {
 
                     FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
                     issueStage.setStatus(flag.get(), status);
-                } else if (name.equals("needinfo") || name.equals("requires_doc_text")) {
+                } else if (name.equals("needinfo") || name.equals("requires_doc_text") || name.equals("qe_test_coverage")) {
                     continue;
                 } else { // Else Stream
                     FlagStatus status = FlagStatus.getMatchingFlag((String) flagMap.get(FLAG_STATUS));
