@@ -65,7 +65,7 @@ public class AphroditeConfigTest {
         when(template.getIssueTrackerConfigs()).thenReturn(Collections.singletonList(jiraConfig));
         when(template.getRepositoryConfigs()).thenReturn(Collections.singletonList(githubConfig));
         when(template.getStreamConfigs()).thenReturn(new ArrayList<>());
-        when(template.getExecutorService()).thenReturn(Executors.newCachedThreadPool());
+        when(template.getExecutorService()).thenReturn(Executors.newScheduledThreadPool(1));
     }
 
     @Test

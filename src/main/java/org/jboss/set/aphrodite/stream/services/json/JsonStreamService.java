@@ -72,19 +72,12 @@ public class JsonStreamService implements StreamService {
 
     private final Map<String, Stream> streamMap = new HashMap<>();
     private Aphrodite aphrodite;
-
+    private AphroditeConfig config;
     @Override
     public boolean init(Aphrodite aphrodite, AphroditeConfig config) throws NotFoundException {
         this.aphrodite = aphrodite;
-        Iterator<StreamConfig> i = config.getStreamConfigs().iterator();
-        while (i.hasNext()) {
-            StreamConfig streamConfig = i.next();
-            if (streamConfig.getStreamType() == StreamType.JSON) {
-                i.remove();
-                return init(streamConfig);
-            }
-        }
-        return false;
+        this.config = config;
+        return updateStreams();
     }
 
     private boolean init(StreamConfig config) throws NotFoundException {
@@ -99,12 +92,25 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public List<Stream> getStreams() {
+    public synchronized boolean updateStreams() throws NotFoundException {
+        Iterator<StreamConfig> i = this.config.getStreamConfigs().iterator();
+        while (i.hasNext()) {
+            StreamConfig streamConfig = i.next();
+            if (streamConfig.getStreamType() == StreamType.JSON) {
+                i.remove();
+                return init(streamConfig);
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public synchronized List<Stream> getStreams() {
         return new ArrayList<>(streamMap.values());
     }
 
     @Override
-    public Stream getStream(String streamName) {
+    public synchronized Stream getStream(String streamName) {
         return streamMap.get(streamName);
     }
 
