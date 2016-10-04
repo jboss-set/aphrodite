@@ -193,7 +193,7 @@ public class JiraIssueWrapperTest {
         when(targetField.getValue()).thenReturn(targetObject);
 
         Version versionMock = mock(Version.class);
-        when(versionMock.getName()).thenReturn("6.4.4");
+        when(versionMock.getName()).thenReturn("6.4.5");
         when(jiraIssue01.getFixVersions()).thenReturn(Collections.singletonList(versionMock));
 
         IssueType issueTypeMock = mock(IssueType.class);
@@ -222,7 +222,7 @@ public class JiraIssueWrapperTest {
         result.setType(org.jboss.set.aphrodite.domain.IssueType.BUG);
 
         List<Release> releases = new ArrayList<>();
-        releases.add(new Release("6.4.4"));
+        releases.add(new Release("6.4.5"));
         result.setReleases(releases);
 
         result.setDependsOn(Collections.emptyList());
