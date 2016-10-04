@@ -34,8 +34,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -56,6 +58,7 @@ import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
@@ -113,13 +116,13 @@ public class Aphrodite implements AutoCloseable {
     @Override
     public void close() throws Exception {
         executorService.shutdown();
-        issueTrackers.forEach(IssueTrackerService::destroy);
+        issueTrackers.values().forEach(IssueTrackerService::destroy);
         issueTrackers.clear();
         repositories.forEach(RepositoryService::destroy);
         repositories.clear();
     }
 
-    private final List<IssueTrackerService> issueTrackers = new ArrayList<>();
+    private final Map<String,IssueTrackerService> issueTrackers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final List<RepositoryService> repositories = new ArrayList<>();
     private final List<StreamService> streamServices = new ArrayList<>();
 
@@ -157,7 +160,7 @@ public class Aphrodite implements AutoCloseable {
         for (IssueTrackerService is : ServiceLoader.load(IssueTrackerService.class)) {
             boolean initialised = is.init(mutableConfig);
             if (initialised)
-                issueTrackers.add(is);
+                issueTrackers.put(is.getTrackerID(),is);
         }
 
         for (RepositoryService rs : ServiceLoader.load(RepositoryService.class)) {
@@ -207,10 +210,9 @@ public class Aphrodite implements AutoCloseable {
     public Issue getIssue(URL url) throws NotFoundException {
         Objects.requireNonNull(url, "url cannot be null");
         checkIssueTrackerExists();
-
-        for (IssueTrackerService trackerService : issueTrackers) {
-            if (trackerService.urlExists(url))
-                return trackerService.getIssue(url);
+        final IssueTrackerService its = getTrackerFor(url);
+        if(its != null){
+           return its.getIssue(url);
         }
         throw new NotFoundException("No issues found which correspond to url: " + url);
     }
@@ -229,7 +231,7 @@ public class Aphrodite implements AutoCloseable {
         if (urls.isEmpty())
             return new ArrayList<>();
         List<CompletableFuture<List<Issue>>> requests =
-                issueTrackers.stream()
+                issueTrackers.values().stream()
                         .map(tracker -> CompletableFuture.supplyAsync(() -> tracker.getIssues(urls), executorService))
                         .collect(Collectors.toList());
 
@@ -254,7 +256,7 @@ public class Aphrodite implements AutoCloseable {
             return new ArrayList<>();
 
         List<CompletableFuture<List<Issue>>> searchRequests =
-                issueTrackers.stream()
+                issueTrackers.values().stream()
                         .map(tracker -> CompletableFuture.supplyAsync(() -> tracker.searchIssues(searchCriteria), executorService))
                         .collect(Collectors.toList());
 
@@ -275,10 +277,11 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(filterUrl, "filterUrl cannot be null");
         checkIssueTrackerExists();
 
-        for (IssueTrackerService trackerService : issueTrackers) {
-            if (trackerService.urlExists(filterUrl))
-                return trackerService.searchIssuesByFilter(filterUrl);
+        final IssueTrackerService its = getTrackerFor(filterUrl);
+        if(its != null){
+           return its.searchIssuesByFilter(filterUrl);
         }
+
         throw new NotFoundException("No filter found which correspond to url: " + filterUrl);
     }
 
@@ -298,10 +301,11 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(issue, "issue cannot be null");
         checkIssueTrackerExists();
 
-        for (IssueTrackerService trackerService : issueTrackers) {
-            if (trackerService.urlExists(issue.getURL()))
-                return trackerService.updateIssue(issue);
+        final IssueTrackerService its = getTrackerFor(issue.getURL());
+        if(its != null){
+           return its.updateIssue(issue);
         }
+
         throw new NotFoundException("No issues found which correspond to url: " + issue.getURL());
     }
 
@@ -316,12 +320,12 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(comment, "comment cannot be null");
         checkIssueTrackerExists();
 
-        for (IssueTrackerService trackerService : issueTrackers) {
-            if (trackerService.urlExists(issue.getURL())) {
-                trackerService.addCommentToIssue(issue, comment);
-                return;
-            }
+        final IssueTrackerService its = getTrackerFor(issue.getURL());
+        if(its != null){
+            its.addCommentToIssue(issue, comment);
+            return;
         }
+
         throw new NotFoundException("No issues found which correspond to url: " + issue.getURL());
     }
 
@@ -337,10 +341,20 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(commentMap, "commentMap cannot be null");
 
         boolean isSuccess = true;
-        for (IssueTrackerService trackerService : issueTrackers) {
-            if (!trackerService.addCommentToIssue(commentMap))
+        for(Entry<Issue, Comment> ie:commentMap.entrySet()){
+            final IssueTrackerService its = getTrackerFor(ie.getKey().getURL());
+            if(its != null){
+                try {
+                    its.addCommentToIssue(ie.getKey(), ie.getValue());
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                    isSuccess = false;
+                }
+            } else {
                 isSuccess = false;
+            }
         }
+
         return isSuccess;
     }
 
@@ -357,9 +371,18 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(comment, "comment cannot be null");
 
         boolean isSuccess = true;
-        for (IssueTrackerService trackerService : issueTrackers) {
-            if (!trackerService.addCommentToIssue(issues, comment))
+        for (Issue i : issues) {
+            final IssueTrackerService its = getTrackerFor(i.getURL());
+            if (its != null) {
+                try {
+                    its.addCommentToIssue(i, comment);
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                    isSuccess = false;
+                }
+            } else {
                 isSuccess = false;
+            }
         }
         return isSuccess;
     }
@@ -376,7 +399,7 @@ public class Aphrodite implements AutoCloseable {
         checkIssueTrackerExists();
         Objects.requireNonNull(patch, "patch cannot be null");
 
-        return issueTrackers.stream()
+        return issueTrackers.values().stream()
                 .map(service -> service.getIssuesAssociatedWith(patch))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
@@ -770,5 +793,13 @@ public class Aphrodite implements AutoCloseable {
                 }
             }
         }
+    }
+
+    private IssueTrackerService getTrackerFor(final URL url){
+        final String id = AbstractIssueTracker.convertToTrackerID(url);
+        if(this.issueTrackers.containsKey(id)){
+           return this.issueTrackers.get(id);
+        }
+        return null;
     }
 }

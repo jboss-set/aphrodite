@@ -28,6 +28,7 @@ import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
+import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 
 import java.net.URL;
 import java.util.Collection;
@@ -64,6 +65,12 @@ public interface IssueTrackerService {
      * @throws NullPointerException if the provided <code>URL</code> is null.
      */
     boolean urlExists(URL url);
+
+    /**
+     * Return string format of tracker id, this value, can be used as key/index and compared to {@link AbstractIssueTracker#convertToTrackerID()}.
+     * @return
+     */
+    String getTrackerID();
 
     /**
      * Retrieve all Issues associated with the provided patch object.
