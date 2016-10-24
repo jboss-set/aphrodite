@@ -137,7 +137,21 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     @Override
     public boolean urlExists(URL url) {
         Objects.requireNonNull(url);
-        return url.getHost().equals(baseUrl.getHost());
+        return convertToTrackerID(url).equals(getTrackerID());
+    }
+
+    @Override
+    public String getTrackerID() {
+        return convertToTrackerID(this.baseUrl);
+    }
+
+    public static String convertToTrackerID(URL url) {
+        Objects.requireNonNull(url);
+        StringBuilder stringBuilder = new StringBuilder(40);
+        stringBuilder.append(url.getProtocol()).append("://").append(url.getHost());
+        if(url.getPort()>0)
+            stringBuilder.append(":").append(url.getPort());
+        return stringBuilder.toString();
     }
 
     protected Map<Issue, Comment> filterIssuesByHost(Map<Issue, Comment> commentMap) {
