@@ -125,7 +125,9 @@ class IssueWrapper {
         setIssueComments(issue, jiraIssue);
         setCreationTime(issue, jiraIssue);
         setLastUpdated(issue, jiraIssue);
+        // Set JIRA specific fields
         setPullRequests(issue,jiraIssue);
+        setIssueSprintRelease(issue, jiraIssue);
         return issue;
     }
 
@@ -260,6 +262,31 @@ class IssueWrapper {
             default:
                 return IssueType.getMatchingIssueType(type);
         }
+    }
+
+    private void setIssueSprintRelease(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        final IssueField issueField = jiraIssue.getFieldByName("Sprint");
+        if ( issueField != null && issueField.getValue() != null ) {
+            JSONArray fieldValue = (JSONArray) issueField.getValue();
+            if ( fieldValue.length() > 0 )
+                issue.setSprintRelease(extractSprintName(fieldValue));
+        }
+    }
+
+    /*
+     * Horrible hack :( - but no other options apparently
+     * See https://answers.atlassian.com/questions/92681/how-to-get-sprints-using-greenhopper-api
+    */
+    private static final String NAME_FIELD_ATTRIBUTE = "name=";
+    private String extractSprintName(JSONArray fieldValue) {
+        try {
+            String value = (String) fieldValue.get(0);
+            value = value.substring(value.indexOf(NAME_FIELD_ATTRIBUTE));
+            return value.substring(NAME_FIELD_ATTRIBUTE.length(), value.indexOf(','));
+        } catch ( JSONException e) {
+            return "";
+        }
+
     }
 
     private void setIssueStream(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {

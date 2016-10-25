@@ -14,6 +14,8 @@ public class JiraIssue extends Issue {
 
     private List<URL> pullRequests = new ArrayList<URL>();
 
+    private String sprintRelease = "";
+
     public JiraIssue(URL url, TrackerType type) {
         super(url, type);
         if ( ! type.equals(TrackerType.JIRA) )
@@ -26,6 +28,14 @@ public class JiraIssue extends Issue {
 
     public void setPullRequests(List<URL> pullRequests) {
         this.pullRequests = pullRequests;
+    }
+
+    public String getSprintRelease() {
+        return sprintRelease;
+    }
+
+    public void setSprintRelease(String sprintRelease) {
+        this.sprintRelease = sprintRelease;
     }
 
 }
