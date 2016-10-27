@@ -153,8 +153,7 @@ public class BZIssueWrapperTest {
         result.put(BugzillaFields.COMPONENT, new String[] { "CLI" });
         result.put(BugzillaFields.PRODUCT, "EAP");
         result.put(BugzillaFields.ISSUE_TYPE, IssueType.BUG.get());
-        result.put(BugzillaFields.VERSION, new String[] { "6.4.5" });
-        result.put(BugzillaFields.TARGET_RELEASE, "6.4.5");
+        result.put(BugzillaFields.VERSION, new String[] { "6.4.4" });
         result.put(BugzillaFields.TARGET_MILESTONE, "---");
         result.put(BugzillaFields.DEPENDS_ON, new String[] {
                 "1111112",
@@ -196,7 +195,7 @@ public class BZIssueWrapperTest {
         result.setType(IssueType.BUG);
 
         List<Release> releases = new ArrayList<>();
-        releases.add(new Release("6.4.5", "---"));
+        releases.add(new Release("6.4.4", "---"));
         result.setReleases(releases);
 
         result.setDependsOn(Arrays.asList(
@@ -233,8 +232,11 @@ public class BZIssueWrapperTest {
         assertEquals("bug product mismatch", expected.get(BugzillaFields.PRODUCT), other.get(BugzillaFields.PRODUCT));
         assertEquals("bug type mismatch", expected.get(BugzillaFields.ISSUE_TYPE), other.get(BugzillaFields.ISSUE_TYPE));
 
-        assertEquals("bug release mismatch", expected.get(BugzillaFields.TARGET_RELEASE),
-                other.get(BugzillaFields.TARGET_RELEASE));
+        Object expectedVersions[] = (Object[]) expected.get(BugzillaFields.VERSION);
+        assertEquals("bug version mismatch", expectedVersions[0], other.get(BugzillaFields.VERSION));
+
+        assertEquals("bug milestone mismatch", expected.get(BugzillaFields.TARGET_MILESTONE),
+                other.get(BugzillaFields.TARGET_MILESTONE));
 
         String expectedDependsOn[] = (String[]) expected.get(BugzillaFields.DEPENDS_ON);
 
