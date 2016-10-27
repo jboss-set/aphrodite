@@ -110,10 +110,9 @@ class IssueWrapper {
         String type = (String) bug.get(ISSUE_TYPE);
         issue.setType(IssueType.getMatchingIssueType(type));
 
-        String version = (String) ((Object[]) bug.get(VERSION))[0];
-        List<Release> releases = new ArrayList<>();
-        releases.add(new Release((String) bug.get(TARGET_RELEASE), (String) bug.get(TARGET_MILESTONE)));
-        issue.setReleases(releases);
+        setAffectedVersions(issue, (Object[]) (bug.get(VERSION)) );
+        setReleases(issue, bug);
+
         List<URL> dependsOn = getListOfURlsFromIds(bug, baseURL, DEPENDS_ON);
         dependsOn.addAll(getListOfExternalURLsFromIds(bug, EXTERNAL_URL));
         issue.setDependsOn(dependsOn);
@@ -210,7 +209,7 @@ class IssueWrapper {
         List<Release> releases = issue.getReleases();
         if (!releases.isEmpty()) {
             Release release = releases.get(0);
-            release.getVersion().ifPresent(version -> params.put(TARGET_RELEASE, version));
+            release.getVersion().ifPresent(version -> params.put(VERSION, version));
             release.getMilestone().ifPresent(milestone -> params.put(TARGET_MILESTONE, milestone));
 
             if (releases.size() > 1) {
