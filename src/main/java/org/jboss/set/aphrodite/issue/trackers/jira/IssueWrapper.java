@@ -126,15 +126,29 @@ class IssueWrapper {
         setCreationTime(issue, jiraIssue);
         setLastUpdated(issue, jiraIssue);
         // Set JIRA specific fields
-        setPullRequests(issue,jiraIssue);
+        setPullRequests(issue, jiraIssue);
         setIssueSprintRelease(issue, jiraIssue);
+        setResolution(issue, jiraIssue);
         return issue;
     }
 
+    private void setResolution(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        if (jiraIssue.getResolution() != null && !"".equals(jiraIssue.getResolution())) {
+            if (!JiraIssueResolution.hasId(jiraIssue.getResolution().getId())) {
+                String msg = String.format("Could not convert issue resolution: %1$s (%2$s) for issue: %3$s", jiraIssue
+                        .getResolution().getName(), jiraIssue.getResolution().getId(), jiraIssue.getKey());
+                Utils.logWarnMessage(LOG, msg);
+            } else
+                issue.setResolution(JiraIssueResolution.getById(jiraIssue.getResolution().getId()));
+        } else
+            issue.setResolution(JiraIssueResolution.UNRESOLVED);
+
+    }
+
     private static void setIssueAffectedVersions(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        if ( jiraIssue.getAffectedVersions() != null ) {
+        if (jiraIssue.getAffectedVersions() != null) {
             List<String> affectedVersion = new ArrayList<String>(0);
-            for ( Version version : jiraIssue.getAffectedVersions() )
+            for (Version version : jiraIssue.getAffectedVersions())
                 affectedVersion.add(version.getName());
             issue.setAffectedVersions(affectedVersion);
         }

@@ -16,9 +16,19 @@ public class JiraIssue extends Issue {
 
     private String sprintRelease = "";
 
+    private JiraIssueResolution resolution;
+
+    public JiraIssueResolution getResolution() {
+        return resolution;
+    }
+
+    public void setResolution(JiraIssueResolution resolution) {
+        this.resolution = resolution;
+    }
+
     public JiraIssue(URL url, TrackerType type) {
         super(url, type);
-        if ( ! type.equals(TrackerType.JIRA) )
+        if (!type.equals(TrackerType.JIRA))
             throw new IllegalStateException("Can't instantiate if issue is not of JIRA type");
     }
 
