@@ -239,10 +239,15 @@ class IssueWrapper {
 
     private void setIssueStage(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         Stage stage = new Stage();
-        stage.setStatus(Flag.PM, FlagStatus.getMatchingFlag((String) jiraIssue.getField(JSON_CUSTOM_FIELD + PM_ACK).getValue()));
-        stage.setStatus(Flag.DEV, FlagStatus.getMatchingFlag((String) jiraIssue.getField(JSON_CUSTOM_FIELD + DEV_ACK).getValue()));
-        stage.setStatus(Flag.QE, FlagStatus.getMatchingFlag((String) jiraIssue.getField(JSON_CUSTOM_FIELD + QE_ACK).getValue()));
+        setFlag(jiraIssue, stage, Flag.PM, JSON_CUSTOM_FIELD + PM_ACK);
+        setFlag(jiraIssue, stage, Flag.DEV, JSON_CUSTOM_FIELD + DEV_ACK);
+        setFlag(jiraIssue, stage, Flag.QE, JSON_CUSTOM_FIELD + QE_ACK);
         issue.setStage(stage);
+    }
+
+    private void setFlag(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, Stage stage, Flag flag, String fieldname) {
+        if (jiraIssue.getField(fieldname) != null && jiraIssue.getField(fieldname).getValue() != null)
+            stage.setStatus(flag, FlagStatus.getMatchingFlag((String) jiraIssue.getField(fieldname).getValue()));
     }
 
     private void setIssueType(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
