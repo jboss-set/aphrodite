@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.json.JsonArray;
@@ -44,6 +46,33 @@ public class AphroditeConfig {
     private final List<IssueTrackerConfig> issueTrackerConfigs;
     private final List<RepositoryConfig> repositoryConfigs;
     private final List<StreamConfig> streamConfigs;
+
+    static class DefaultThreadFactory implements ThreadFactory {
+        private static final AtomicInteger poolNumber = new AtomicInteger(1);
+        private final ThreadGroup group;
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+        private final String namePrefix;
+
+        DefaultThreadFactory() {
+            SecurityManager s = System.getSecurityManager();
+            group = (s != null) ? s.getThreadGroup() :
+                    Thread.currentThread().getThreadGroup();
+            namePrefix = "pool-" +
+                    poolNumber.getAndIncrement() +
+                    "-thread-";
+        }
+
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(group, r,
+                    namePrefix + threadNumber.getAndIncrement(),
+                    0);
+            if (!t.isDaemon())
+                t.setDaemon(true);
+            if (t.getPriority() != Thread.NORM_PRIORITY)
+                t.setPriority(Thread.NORM_PRIORITY);
+            return t;
+        }
+    }
 
     public static AphroditeConfig singleIssueTracker(IssueTrackerConfig issueTrackerConfig) {
         List<IssueTrackerConfig> list = new ArrayList<>();
@@ -66,7 +95,7 @@ public class AphroditeConfig {
     }
 
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs) {
-        this(Executors.newScheduledThreadPool(3), issueTrackerConfigs, repositoryConfigs, streamConfigs);
+        this(Executors.newScheduledThreadPool(3, new DefaultThreadFactory()), issueTrackerConfigs, repositoryConfigs, streamConfigs);
     }
 
     public AphroditeConfig(ScheduledExecutorService executorService,
@@ -111,7 +140,7 @@ public class AphroditeConfig {
         List<StreamConfig> streamConfigs = getStreamConfigs(jsonObject);
 
         if (maxThreadCount > 0)
-            return new AphroditeConfig(Executors.newScheduledThreadPool(maxThreadCount), issueTrackerConfigs,
+            return new AphroditeConfig(Executors.newScheduledThreadPool(maxThreadCount, new DefaultThreadFactory()), issueTrackerConfigs,
                     repositoryConfigs, streamConfigs);
 
         // IF maxThreadCount has not been specified, then we refer to the default executorService which is an unlimited cachedThreadPool
