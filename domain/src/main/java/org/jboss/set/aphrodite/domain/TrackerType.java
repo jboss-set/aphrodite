@@ -25,4 +25,5 @@ package org.jboss.set.aphrodite.domain;
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
 public interface TrackerType {
+    String toString();
 }
