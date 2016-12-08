@@ -95,7 +95,11 @@ class IssueWrapper {
 
     Issue jiraIssueToIssue(URL url, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         JiraIssue issue = new JiraIssue(url);
+        copy(url, jiraIssue, issue);
+        return issue;
+    }
 
+    void copy(final URL url, final com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, final JiraIssue issue) {
         issue.setTrackerId(jiraIssue.getKey());
         issue.setSummary(jiraIssue.getSummary());
         issue.setDescription(jiraIssue.getDescription());
@@ -128,7 +132,6 @@ class IssueWrapper {
         setPullRequests(issue, jiraIssue);
         setIssueSprintRelease(issue, jiraIssue);
         setResolution(issue, jiraIssue);
-        return issue;
     }
 
     private void setResolution(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
