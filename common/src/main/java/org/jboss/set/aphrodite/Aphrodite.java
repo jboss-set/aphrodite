@@ -27,8 +27,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-//import java.util.Collections;
-//import java.util.HashMap;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -54,18 +54,18 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
-//import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
+import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
 import org.jboss.set.aphrodite.spi.StreamService;
-//import org.kohsuke.github.GHRateLimit;
 
 public class Aphrodite implements AutoCloseable {
 
@@ -481,15 +481,15 @@ public class Aphrodite implements AutoCloseable {
         throw new NotFoundException("No patch found which corresponds to url: " + url);
     }
 
-//    public Map<RepositoryType, GHRateLimit> getRateLimits() throws NotFoundException {
-//        Map<RepositoryType, GHRateLimit> rateLimits = new HashMap<>();
-//        for (RepositoryService repositoryService : repositories) {
-//            RepositoryType repositoryType = repositoryService.getRepositoryType();
-//            GHRateLimit requestLimit = repositoryService.getRateLimit();
-//            rateLimits.put(repositoryType, requestLimit);
-//        }
-//        return Collections.unmodifiableMap(rateLimits);
-//    }
+    public Map<RepositoryType, RateLimit> getRateLimits() throws NotFoundException {
+        Map<RepositoryType, RateLimit> rateLimits = new HashMap<>();
+        for (RepositoryService repositoryService : repositories) {
+            RepositoryType repositoryType = repositoryService.getRepositoryType();
+            RateLimit requestLimit = repositoryService.getRateLimit();
+            rateLimits.put(repositoryType, requestLimit);
+        }
+        return Collections.unmodifiableMap(rateLimits);
+    }
 
     /**
      * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.

@@ -26,11 +26,13 @@ import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRateLimit;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -100,6 +102,10 @@ class GitHubWrapper {
         } catch (IllegalArgumentException e) {
             return PatchState.UNDEFINED;
         }
+    }
+
+    public RateLimit ghRateLimittoRateLimit(GHRateLimit ghRateLimit) {
+        return new RateLimit(ghRateLimit.remaining, ghRateLimit.limit, ghRateLimit.reset);
     }
 
     private Codebase repositoryBranchToCodebase(GHBranch branch) {
