@@ -33,7 +33,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +45,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import com.atlassian.jira.rest.client.api.IssueRestClient;
-import com.atlassian.jira.rest.client.api.domain.Project;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
@@ -61,14 +58,16 @@ import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
+import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.jira.rest.client.api.domain.Filter;
 import com.atlassian.jira.rest.client.api.domain.IssueLink;
+import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
+import com.atlassian.jira.rest.client.api.domain.Project;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Transition;
-import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.LinkIssuesInput;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
@@ -165,17 +164,37 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     private List<Issue> searchIssues(String jql, int maxResults) {
         try {
-            List<Issue> issues = new ArrayList<>();
-            SearchRestClient searchClient = restClient.getSearchClient();
             Set<String> fields = new HashSet<>();
             fields.add("*all");
-            SearchResult result = searchClient.searchJql(jql, maxResults, null, fields).get();
-            result.getIssues().forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
-            return issues;
-        } catch (Exception e) {
-            LOG.error("Problem executing jql " + jql, e);
-            return Collections.emptyList();
+
+            return paginateResults(restClient.getSearchClient(), jql, fields, maxResults);
+        } catch (InterruptedException | ExecutionException e) {
+            LOG.error("Exception raised while executing jql " + jql);
+            LOG.error("Max number of results was: " + maxResults);
+
+            throw new RuntimeException(e);
         }
+    }
+
+    private static int NB_TOTAL_ISSUE_NOT_INITIATED = -1;
+    private List<Issue> paginateResults(SearchRestClient searchClient, String jql, Set<String> fields, int maxResults) throws InterruptedException, ExecutionException {
+        List<Issue> issues = new ArrayList<>();
+        int startPosition = 0;
+        int nbTotalIssue = NB_TOTAL_ISSUE_NOT_INITIATED;
+        if ( LOG.isDebugEnabled() ) LOG.debug("Max Results:" + maxResults);
+
+        do {
+            if ( LOG.isDebugEnabled() ) LOG.debug("Start Position:" + startPosition);
+            SearchResult result = searchClient.searchJql(jql, maxResults, startPosition, fields).get();
+            if ( nbTotalIssue == NB_TOTAL_ISSUE_NOT_INITIATED ) {
+                nbTotalIssue = result.getTotal();
+                if ( LOG.isDebugEnabled() ) LOG.debug("Total Issues in result:" + nbTotalIssue);
+            }
+            result.getIssues().forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
+            startPosition += maxResults;
+        } while ( startPosition < nbTotalIssue );
+        if ( LOG.isDebugEnabled() ) LOG.debug("Total issues:" + issues.size());
+        return issues;
     }
 
     @Override
