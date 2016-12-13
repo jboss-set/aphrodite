@@ -19,14 +19,13 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.set.payload.report.jira.rest.client.internal.json;
+package org.jboss.set.aphrodite.jira.rest.client.internal.json;
 
-import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
 import com.atlassian.jira.rest.client.internal.json.JsonParseUtil;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.jboss.set.payload.report.jira.rest.client.api.domain.Board;
+import org.jboss.set.aphrodite.jira.rest.client.api.domain.Board;
 
 import java.net.URI;
 

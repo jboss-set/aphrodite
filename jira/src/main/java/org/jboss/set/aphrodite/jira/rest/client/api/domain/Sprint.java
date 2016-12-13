@@ -19,9 +19,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.set.payload.report.jira.rest.client.api.domain;
-
-import org.joda.time.DateTime;
+package org.jboss.set.aphrodite.jira.rest.client.api.domain;
 
 import java.net.URI;
 import java.util.Date;

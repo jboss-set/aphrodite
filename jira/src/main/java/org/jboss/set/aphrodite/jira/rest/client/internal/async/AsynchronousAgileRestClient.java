@@ -19,19 +19,18 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.set.payload.report.jira.rest.client.internal.async;
+package org.jboss.set.aphrodite.jira.rest.client.internal.async;
 
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.internal.async.AbstractAsynchronousRestClient;
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
 import com.atlassian.util.concurrent.Promise;
-import org.jboss.set.payload.report.jira.rest.client.api.domain.Board;
-import org.jboss.set.payload.report.jira.rest.client.api.domain.Page;
-import org.jboss.set.payload.report.jira.rest.client.api.domain.Sprint;
-import org.jboss.set.payload.report.jira.rest.client.internal.json.BoardParser;
-import org.jboss.set.payload.report.jira.rest.client.internal.json.BoardsParser;
-import org.jboss.set.payload.report.jira.rest.client.internal.json.PageParser;
-import org.jboss.set.payload.report.jira.rest.client.internal.json.SprintParser;
+import org.jboss.set.aphrodite.jira.rest.client.api.domain.Board;
+import org.jboss.set.aphrodite.jira.rest.client.api.domain.Page;
+import org.jboss.set.aphrodite.jira.rest.client.api.domain.Sprint;
+import org.jboss.set.aphrodite.jira.rest.client.internal.json.BoardParser;
+import org.jboss.set.aphrodite.jira.rest.client.internal.json.PageParser;
+import org.jboss.set.aphrodite.jira.rest.client.internal.json.SprintParser;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;

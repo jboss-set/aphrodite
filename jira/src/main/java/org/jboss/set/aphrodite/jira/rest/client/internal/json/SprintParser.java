@@ -19,14 +19,13 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.set.payload.report.jira.rest.client.internal.json;
+package org.jboss.set.aphrodite.jira.rest.client.internal.json;
 
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
 import com.atlassian.jira.rest.client.internal.json.JsonParseUtil;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.jboss.set.payload.report.jira.rest.client.api.domain.Sprint;
-import org.joda.time.DateTime;
+import org.jboss.set.aphrodite.jira.rest.client.api.domain.Sprint;
 
 import java.net.URI;
 import java.text.DateFormat;
@@ -38,7 +37,7 @@ import java.util.Date;
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
 public class SprintParser implements JsonObjectParser<Sprint> {
-    private final static DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @Override
     public Sprint parse(final JSONObject json) throws JSONException {
