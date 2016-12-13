@@ -9,19 +9,69 @@
     </parent>
 
     <groupId>org.jboss.set</groupId>
-    <artifactId>aphrodite</artifactId>
-    <version>0.5.3-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <artifactId>jboss-aphrodite-parent</artifactId>
+    <version>0.6.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
     <name>Aphrodite</name>
     <description>An api for retrieving and updating SET issues from multiple issue trackers
     </description>
+
+    <modules>
+        <module>bugzilla</module>
+        <module>common</module>
+        <module>dist</module>
+        <module>domain</module>
+        <module>github</module>
+        <module>jira</module>
+        <module>test</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-bugzilla</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-github</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-jira</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <scm>
         <connection>scm:git:git://github.com/jboss-set/aphrodite.git</connection>
         <developerConnection>scm:git:git@github.com:jboss-set/aphrodite.git</developerConnection>
         <url>https://github.com/jboss-set/aphrodite</url>
-      <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -30,18 +80,11 @@
         <jdk.min.version>1.8</jdk.min.version>
 
         <!-- Dependency versions, please keep alphabetically -->
-        <com.google.guava.version>18.0</com.google.guava.version>
-        <com.squareup.okhttp>2.7.5</com.squareup.okhttp>
         <commons.logging.version>1.1.3</commons.logging.version>
-        <commons.beanutils.version>1.9.2</commons.beanutils.version>
-        <fugue.version>2.2.1</fugue.version>
         <javax.json.version>1.0.4</javax.json.version>
-        <jira.client.version>4.0.0</jira.client.version>
         <junit.version>4.12</junit.version>
-        <org.kohsuke.github-api>1.77</org.kohsuke.github-api>
         <org.mockito.version>1.10.19</org.mockito.version>
         <org.wildfly.checkstyle-config.version>1.0.4.Final</org.wildfly.checkstyle-config.version>
-        <xmlrpc.client.version>3.1.3</xmlrpc.client.version>
     </properties>
 
 
@@ -140,50 +183,17 @@
     </build>
 
     <dependencies>
+        <!-- TODO: isolate? -->
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.json</artifactId>
             <version>${javax.json.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${com.google.guava.version}</version>
-        </dependency>
+        <!-- TODO: get rid of this one -->
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>${commons.logging.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.kohsuke</groupId>
-            <artifactId>github-api</artifactId>
-            <version>${org.kohsuke.github-api}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.okhttp</groupId>
-            <artifactId>okhttp-urlconnection</artifactId>
-            <version>${com.squareup.okhttp}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.xmlrpc</groupId>
-            <artifactId>xmlrpc-client</artifactId>
-            <version>${xmlrpc.client.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.jira</groupId>
-            <artifactId>jira-rest-java-client-api</artifactId>
-            <version>${jira.client.version}</version>
-        </dependency>
-        <dependency>
-       	    <groupId>com.atlassian.jira</groupId>
-            <artifactId>jira-rest-java-client-core</artifactId>
-            <version>${jira.client.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.fugue</groupId>
-            <artifactId>fugue</artifactId>
-            <version>${fugue.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
