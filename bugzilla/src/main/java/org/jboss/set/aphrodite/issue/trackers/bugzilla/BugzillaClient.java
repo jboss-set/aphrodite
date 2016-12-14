@@ -58,13 +58,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -93,6 +96,9 @@ public class BugzillaClient {
     static final Pattern ID_PARAM_PATTERN = Pattern.compile("id=([^&]+)");
     static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("namedcmd=([^&]+)");
     static final Pattern SHARER_ID_PARAM_PATTERN = Pattern.compile("sharer_id=([^&]+)");
+
+    private static final Pattern RELATED_PR_PATTERN = Pattern
+            .compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
 
     private final ExecutorService executorService;
     private final IssueWrapper WRAPPER = new IssueWrapper();
@@ -168,6 +174,7 @@ public class BugzillaClient {
     public Issue getIssueWithComments(String trackerId) throws NotFoundException {
         Issue issue = getIssue(trackerId);
         setCommentsForIssue(issue);
+        setPullRequestsForIssue(issue); // order matters, depends on comments
         return issue;
     }
 
@@ -231,6 +238,27 @@ public class BugzillaClient {
         String body = (String) comment.get(COMMENT_BODY);
         boolean isPrivate = (Boolean) comment.get(COMMENT_IS_PRIVATE);
         return new Comment(id, body, isPrivate);
+    }
+
+    private void setPullRequestsForIssue(Issue issue) {
+        Set<URL> pullRequests = new HashSet<>();
+        issue.getComments().stream().forEach(e -> extractPullRequests(pullRequests, e.getBody()));
+        issue.setPullRequests(pullRequests);
+    }
+
+    private void extractPullRequests(Set<URL> pullRequests, String messageBody) {
+        Matcher matcher = RELATED_PR_PATTERN.matcher(messageBody);
+        while (matcher.find()) {
+            if (matcher.groupCount() == 3) {
+                String urlStr = "https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pull/" + matcher.group(3);
+                try {
+                    URL url = new URL(urlStr);
+                    pullRequests.add(url);
+                } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException("Invalid URL:" + urlStr, e);
+                }
+            }
+        }
     }
 
     private Object[] extractIssueIdsList(Collection<Issue> collection) {

@@ -36,8 +36,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -367,7 +369,7 @@ class IssueWrapper {
 
     private static void extractPullRequests(JiraIssue issue, JSONArray urls) {
         if (urls != null && urls.length() > 0 ) {
-            List<URL> prUrls = new ArrayList<URL>(urls.length());
+            Set<URL> prUrls = new HashSet<URL>(urls.length());
             for ( int index = 0 ; index < urls.length(); index++ )
                 prUrls.add(Utils.createURL(getFromJSONArray(index,urls).toString()));
             issue.setPullRequests(prUrls);
