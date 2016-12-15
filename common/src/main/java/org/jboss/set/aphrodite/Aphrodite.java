@@ -695,7 +695,8 @@ public class Aphrodite implements AutoCloseable {
      *
      * @return a list of unique Repositories.
      */
-    public List<Repository> getDistinctURLRepositoriesFromStreams() {
+    @Deprecated
+    public List<URL> getDistinctURLRepositoriesFromStreams() {
         checkStreamServiceExists();
 
         return streamServices.stream()
@@ -712,7 +713,8 @@ public class Aphrodite implements AutoCloseable {
      * @return a list of unique Repositories, or an empty lists if no Repositories are associated with the given
      * streamName.
      */
-    public List<Repository> getDistinctURLRepositoriesByStream(String streamName) {
+    @Deprecated
+    public List<URL> getDistinctURLRepositoriesByStream(String streamName) {
         checkStreamServiceExists();
         Objects.requireNonNull(streamName, "streamName can not be null");
 
@@ -728,7 +730,8 @@ public class Aphrodite implements AutoCloseable {
      * @param codebase the codebase to be searched against
      * @return a list of Streams associated with the given repository and codebase.
      */
-    public List<Stream> getStreamsBy(Repository repository, Codebase codebase) {
+    @Deprecated
+    public List<Stream> getStreamsBy(URL repository, Codebase codebase) {
         checkStreamServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
         Objects.requireNonNull(codebase, "codebase cannot be null");
@@ -748,7 +751,8 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException if a StreamComponent with the specified repository and codebase does not exist at this
      * stream service.
      */
-    public StreamComponent getComponentBy(Repository repository, Codebase codebase) throws NotFoundException {
+    @Deprecated
+    public StreamComponent getComponentBy(URL repository, Codebase codebase) throws NotFoundException {
         checkStreamServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
         Objects.requireNonNull(codebase, "codebase cannot be null");

@@ -22,6 +22,7 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import java.net.URL;
 import java.util.Optional;
 
 /**
@@ -29,12 +30,12 @@ import java.util.Optional;
  */
 public class StreamComponent {
     private final String name;
-    private final Repository repository;
+    private final URL repositoryURL;
     private final Codebase codebase;
 
-    public StreamComponent(String name, Repository repository, Codebase codebase) {
+    public StreamComponent(String name, URL repositoryURL, Codebase codebase) {
         this.name = name.toLowerCase();
-        this.repository = repository;
+        this.repositoryURL = repositoryURL;
         this.codebase = codebase;
     }
 
@@ -42,8 +43,8 @@ public class StreamComponent {
         return name;
     }
 
-    public Repository getRepository() {
-        return repository;
+    public URL getRepositoryURL() {
+        return repositoryURL;
     }
 
     public Codebase getCodebase() {
@@ -53,7 +54,7 @@ public class StreamComponent {
     // Returns a String only if a rule has been established for the host.
     // This is necessary to cater for any components hosted outside of github.
     public Optional<String> getCodeBasePath() {
-        String url = repository.getURL().toExternalForm();
+        String url = repositoryURL.toExternalForm();
         System.out.println(url);
         if (url.contains("github.com")) {
             if (!url.endsWith("/"))
@@ -83,7 +84,7 @@ public class StreamComponent {
     public String toString() {
         return "StreamComponent{" +
                 "name='" + name + '\'' +
-                ", repository=" + repository +
+                ", repository=" + repositoryURL +
                 ", codebase=" + codebase +
                 '}';
     }

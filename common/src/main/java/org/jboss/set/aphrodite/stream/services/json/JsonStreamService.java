@@ -22,6 +22,25 @@
 
 package org.jboss.set.aphrodite.stream.services.json;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.set.aphrodite.Aphrodite;
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.config.StreamConfig;
+import org.jboss.set.aphrodite.config.StreamType;
+import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Stream;
+import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.jboss.set.aphrodite.spi.StreamService;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,27 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonException;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jboss.set.aphrodite.Aphrodite;
-import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.config.AphroditeConfig;
-import org.jboss.set.aphrodite.config.StreamConfig;
-import org.jboss.set.aphrodite.config.StreamType;
-import org.jboss.set.aphrodite.domain.Codebase;
-import org.jboss.set.aphrodite.domain.Repository;
-import org.jboss.set.aphrodite.domain.Stream;
-import org.jboss.set.aphrodite.domain.StreamComponent;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-import org.jboss.set.aphrodite.spi.StreamService;
 
 /**
  * A stream service which reads stream data from the specified JSON file.  This implementation
@@ -166,20 +164,9 @@ public class JsonStreamService implements StreamService {
                 url = url + "/";
             }
             URL repositoryUrl = parseUrl(url);
-            Repository repository;
-            try {
-                repository = aphrodite.getRepository(repositoryUrl);
-                Codebase codebase = new Codebase(codebaseName);
-                if (!repository.getCodebases().contains(codebase)) {
-                    Utils.logWarnMessage(LOG, "The specified codebase '" + codebaseName + "' " +
-                            "does not belong to the Repository at " + repository.getURL());
-                } else {
-                    StreamComponent component = new StreamComponent(componentName, repository, codebase);
-                    codebaseMap.put(component.getName(), component);
-                }
-            } catch (NotFoundException e) {
-                Utils.logWarnMessage(LOG, e.getMessage());
-            }
+            Codebase codebase = new Codebase(codebaseName);
+            StreamComponent component = new StreamComponent(componentName, repositoryUrl, codebase);
+            codebaseMap.put(component.getName(), component);
         }
         return codebaseMap;
     }
@@ -193,30 +180,30 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public List<Repository> getDistinctURLRepositories() {
+    public List<URL> getDistinctURLRepositories() {
         return getStreams().stream()
                 .flatMap(stream -> getDistinctURLRepositoriesByStream(stream.getName()).stream())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Repository> getDistinctURLRepositoriesByStream(String streamName) {
+    public List<URL> getDistinctURLRepositoriesByStream(String streamName) {
         Stream stream = getStream(streamName);
         if (stream == null)
             return new ArrayList<>();
 
         return stream.getAllComponents().stream()
-                .map(StreamComponent::getRepository)
+                .map(StreamComponent::getRepositoryURL)
                 .distinct()
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Stream> getStreamsBy(Repository repository, Codebase codebase) {
+    public List<Stream> getStreamsBy(URL repositoryURL, Codebase codebase) {
         List<Stream> streams = new ArrayList<>();
         for (Stream stream : getStreams()) {
             for (StreamComponent component : stream.getAllComponents()) {
-                if (component.getRepository().equals(repository) && component.getCodebase().equals(codebase)) {
+                if (component.getRepositoryURL().equals(repositoryURL) && component.getCodebase().equals(codebase)) {
                     streams.add(stream);
                     break; // Go to next stream
                 }
@@ -226,10 +213,10 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public StreamComponent getComponentBy(Repository repository, Codebase codebase) {
+    public StreamComponent getComponentBy(URL repositoryURL, Codebase codebase) {
         for (Stream stream : getStreams()) {
             for (StreamComponent component : stream.getAllComponents()) {
-                if (component.getRepository().equals(repository) && component.getCodebase().equals(codebase)) {
+                if (component.getRepositoryURL().equals(repositoryURL) && component.getCodebase().equals(codebase)) {
                     return component;
                 }
             }
