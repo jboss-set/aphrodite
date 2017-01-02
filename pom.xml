@@ -19,10 +19,12 @@
     <modules>
         <module>bugzilla</module>
         <module>common</module>
+        <module>container</module>
         <module>dist</module>
         <module>domain</module>
         <module>github</module>
         <module>jira</module>
+        <module>simplecontainer</module>
         <module>test</module>
     </modules>
 
@@ -41,6 +43,11 @@
             <dependency>
                 <groupId>org.jboss.set</groupId>
                 <artifactId>jboss-aphrodite-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-container</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
