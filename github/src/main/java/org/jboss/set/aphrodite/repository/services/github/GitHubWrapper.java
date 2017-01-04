@@ -56,7 +56,7 @@ class GitHubWrapper {
         return repo;
     }
 
-    List<PullRequest> toAphroditePullRequestes(List<GHPullRequest> pullRequests) {
+    List<PullRequest> toAphroditePullRequests(List<GHPullRequest> pullRequests) {
         return pullRequests.stream()
                 .map(this::pullRequestToPullRequest)
                 .collect(Collectors.toList());

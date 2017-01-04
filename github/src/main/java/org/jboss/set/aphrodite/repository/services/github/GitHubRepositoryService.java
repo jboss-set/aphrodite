@@ -173,7 +173,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
 //    @Override
-//    public List<PullRequest> getPullRequestesAssociatedWith(Issue issue) throws NotFoundException {
+//    public List<PullRequest> getPullRequestsAssociatedWith(Issue issue) throws NotFoundException {
 //        String trackerId = issue.getTrackerId().orElseThrow(() -> new IllegalArgumentException("Issue.trackerId must be set."));
 //        try {
 //            GitHubGlobalSearchService searchService = new GitHubGlobalSearchService(gitHubClient);
@@ -204,7 +204,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
                 issueState = GHIssueState.OPEN;
             }
             List<GHPullRequest> pullRequests = githubRepository.getPullRequests(issueState);
-            return WRAPPER.toAphroditePullRequestes(pullRequests);
+            return WRAPPER.toAphroditePullRequests(pullRequests);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
