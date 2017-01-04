@@ -30,7 +30,7 @@ import java.util.List;
 import static org.mockito.Mockito.when;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Label;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -61,7 +61,7 @@ public class GitHubLabelTest {
     @Mock
     private Aphrodite aphrodite;
     @Mock
-    private Patch patch;
+    private PullRequest pullRequest;
     @Mock
     private Repository repository;
 
@@ -127,7 +127,7 @@ public class GitHubLabelTest {
 
     @Test
     public void getLabelsfromPatchTest() throws NotFoundException {
-        prlabelsTest = aphrodite.getLabelsFromPatch(patch);
+        prlabelsTest = aphrodite.getLabelsFromPullRequest(pullRequest);
 
         Label label1 = prlabelsTest.get(0);
         assertEquals("bug color mismatch", "fc2929", label1.getColor());
@@ -167,9 +167,9 @@ public class GitHubLabelTest {
                 else
                     throw new RuntimeException();
             }
-        }).when(aphrodite).setLabelsToPatch(patch, addlabel);
+        }).when(aphrodite).setLabelsToPullRequest(pullRequest, addlabel);
 
-        aphrodite.setLabelsToPatch(patch, addlabel);
+        aphrodite.setLabelsToPullRequest(pullRequest, addlabel);
     }
 
     @Test
@@ -190,9 +190,9 @@ public class GitHubLabelTest {
                 else
                     throw new RuntimeException();
             }
-        }).when(aphrodite).removeLabelFromPatch(patch, labelname);
+        }).when(aphrodite).removeLabelFromPullRequest(pullRequest, labelname);
 
-        aphrodite.removeLabelFromPatch(patch, labelname);
+        aphrodite.removeLabelFromPullRequest(pullRequest, labelname);
         ;
     }
 
@@ -223,7 +223,7 @@ public class GitHubLabelTest {
 
     private void mockLabel() throws NotFoundException {
         when(aphrodite.getLabelsFromRepository(repository)).thenReturn(labels);
-        when(aphrodite.getLabelsFromPatch(patch)).thenReturn(prlabels);
+        when(aphrodite.getLabelsFromPullRequest(pullRequest)).thenReturn(prlabels);
 
     }
 }

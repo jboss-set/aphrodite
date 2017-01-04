@@ -52,8 +52,8 @@ import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
-import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.PullRequest;
+import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
@@ -388,19 +388,19 @@ public class Aphrodite implements AutoCloseable {
     }
 
     /**
-     * Retrieve all Issues associated with the provided patch object.
+     * Retrieve all Issues associated with the provided pull request object.
      * Implementations of this method assume that the urls of the related issues are present in the
-     * patch's description field.
+     * pullRequest's description field.
      *
-     * @param patch the <code>Patch</code> object whoms associated Issues should be returned.
+     * @param pullRequest the <code>PullRequest</code> object whoms associated Issues should be returned.
      * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
      */
-    public List<Issue> getIssuesAssociatedWith(Patch patch) {
+    public List<Issue> getIssuesAssociatedWith(PullRequest pullRequest) {
         checkIssueTrackerExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
 
         return issueTrackers.values().stream()
-                .map(service -> service.getIssuesAssociatedWith(patch))
+                .map(service -> service.getIssuesAssociatedWith(pullRequest))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
@@ -425,60 +425,60 @@ public class Aphrodite implements AutoCloseable {
     }
 
     /**
-     * Retrieve all Patches associated with the provided <code>Issue</code> object
+     * Retrieve all pull requests associated with the provided <code>Issue</code> object
      *
-     * @param issue the <code>Issue</code> object whose associated Patches should be returned.
-     * @return a list of all <code>Patch</code> objects, or an empty list if no patches can be found.
-     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve patches from a RepositoryService
+     * @param issue the <code>Issue</code> object whose associated pull requests should be returned.
+     * @return a list of all <code>PullRequest</code> objects, or an empty list if no pull request can be found.
+     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve pull requests from a RepositoryService
      */
-//    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+//    public List<PullRequest> getPullRequestAssociatedWith(Issue issue) throws NotFoundException {
 //        checkRepositoryServiceExists();
 //        Objects.requireNonNull(issue, "issue cannot be null");
 //
-//        List<Patch> patches = new ArrayList<>();
+//        List<PullRequest> pullRequests = new ArrayList<>();
 //        for (RepositoryService repositoryService : repositories) {
-//            patches.addAll(repositoryService.getPatchesAssociatedWith(issue));
+//            pullRequests.addAll(repositoryService.getPullRequestsAssociatedWith(issue));
 //        }
-//        return patches;
+//        return pullRequests;
 //    }
 
     /**
-     * Retrieve all Patches associated with the provided <code>Repository</code> object, which have a
-     * state that matches the provided <code>PatchState</code> object.
+     * Retrieve all PullRequests associated with the provided <code>Repository</code> object, which have a
+     * state that matches the provided <code>PullRequestState</code> object.
      *
-     * @param repository the <code>Repository</code> object whose associated Patches should be returned.
-     * @param state the <code>PatchState</code> which the returned <code>Patch</code> objects must have.
-     * @return a list of all matching <code>Patch</code> objects, or an empty list if no patches can be found.
-     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve patches from a RepositoryService
+     * @param repository the <code>Repository</code> object whose associated PullRequests should be returned.
+     * @param state the <code>PullRequestState</code> which the returned <code>PullRequest</code> objects must have.
+     * @return a list of all matching <code>PullRequest</code> objects, or an empty list if no pullRequests can be found.
+     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve pullRequests from a RepositoryService
      */
-    public List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException {
+    public List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
         Objects.requireNonNull(state, "state cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             if (repositoryService.urlExists(repository.getURL()))
-                return repositoryService.getPatchesByState(repository, state);
+                return repositoryService.getPullRequestsByState(repository, state);
         }
         return new ArrayList<>();
     }
 
     /**
-     * Get the <code>Patch</code> located at the provided <code>URL</code>.
+     * Get the <code>PullRequest</code> located at the provided <code>URL</code>.
      *
-     * @param url the <code>URL</code> of the patch to be retrieved.
-     * @return the <code>Patch</code> object.
-     * @throws NotFoundException if a <code>Patch</code> cannot be found at the provided base url.
+     * @param url the <code>URL</code> of the pullRequest to be retrieved.
+     * @return the <code>PullRequest</code> object.
+     * @throws NotFoundException if a <code>PullRequest</code> cannot be found at the provided base url.
      */
-    public Patch getPatch(URL url) throws NotFoundException {
+    public PullRequest getPullRequest(URL url) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(url, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             if (repositoryService.repositoryAccessable(url) && repositoryService.urlExists(url))
-                return repositoryService.getPatch(url);
+                return repositoryService.getPullRequest(url);
         }
-        throw new NotFoundException("No patch found which corresponds to url: " + url);
+        throw new NotFoundException("No pull request found which corresponds to url: " + url);
     }
 
     public Map<RepositoryType, RateLimit> getRateLimits() throws NotFoundException {
@@ -492,7 +492,7 @@ public class Aphrodite implements AutoCloseable {
     }
 
     /**
-     * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.
+     * Retrieve all labels associated with the provided <code>PullRequest</code> in <code>Repository</code> object.
      * @param repository the <code>Repository<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no labels can be found.
      * @throws a <code>NotFoundException</code> if an error is encountered when trying to retrieve labels from a RepositoryService
@@ -509,25 +509,25 @@ public class Aphrodite implements AutoCloseable {
     }
 
     /**
-     * Retrieve all labels associated with the provided <code>Patch</code> object.
-     * @param patch the <code>Patch<code> object whose associated labels should be returned.
-     * @return a list of all matching <code>Label<code> objects, or an empty list if no patches can be found.
+     * Retrieve all labels associated with the provided <code>PullRequest</code> object.
+     * @param pull request the <code>PullRequest<code> object whose associated labels should be returned.
+     * @return a list of all matching <code>Label<code> objects, or an empty list if no pull request can be found.
      * @throws a <code>NotFoundException</code> if an error is encountered when trying to retrieve labels from a RepositoryService
      */
-    public List<Label> getLabelsFromPatch(Patch patch) throws NotFoundException {
+    public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(patch.getURL()))
-                return repositoryService.getLabelsFromPatch(patch);
+            if (repositoryService.urlExists(pullRequest.getURL()))
+                return repositoryService.getLabelsFromPullRequest(pullRequest);
         }
         return new ArrayList<>();
     }
 
     /**
      * Discover if the user logged into a <code>RepositoryService</code> has the correct permissions to apply/remove
-     * labels to patches in the provided <code>Repository</code>
+     * labels to pull request in the provided <code>Repository</code>
      *
      * @param repository the <code>Repository</code> whose permissions are to be checked
      * @return true if the user has permission, otherwise false.
@@ -545,117 +545,117 @@ public class Aphrodite implements AutoCloseable {
     }
 
     /**
-     * Set the labels for the provided <code>Patch</code> object.
-     * @param patch the <code>Patch</code> object whose will be set.
-     * @param labels the <code>Label</code> apply to the <code>Patch</code>
-     * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>Patch</code>
+     * Set the labels for the provided <code>PullRequest</code> object.
+     * @param pullRequest the <code>PullRequest</code> object whose will be set.
+     * @param labels the <code>Label</code> apply to the <code>PullRequest</code>
+     * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>PullRequest</code>
      * @throws AphroditeException if add the <code>Label<code> is not consistent with get labels
      */
-    public void setLabelsToPatch(Patch patch, List<Label> labels) throws NotFoundException, AphroditeException {
+    public void setLabelsToPullRequest(PullRequest pullRequest, List<Label> labels) throws NotFoundException, AphroditeException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
         Objects.requireNonNull(labels, "labels cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(patch.getURL()))
-                repositoryService.setLabelsToPatch(patch, labels);
+            if (repositoryService.urlExists(pullRequest.getURL()))
+                repositoryService.setLabelsToPullRequest(pullRequest, labels);
         }
     }
 
     /**
-     * Delete a label from the provided <code>Patch</code> object.
-     * @param patch the <code>Patch</code> whose label will be removed.
+     * Delete a label from the provided <code>PullRequest</code> object.
+     * @param pullRequest the <code>PullRequest</code> whose label will be removed.
      * @param name the <code>Label</code> name will be removed.
-     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>Patch</code>, or an
+     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>PullRequest</code>, or an
      * exception occurs when contacting the RepositoryService
      */
-    public void removeLabelFromPatch(Patch patch, String name) throws NotFoundException {
+    public void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
         Objects.requireNonNull(name, "labelname cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(patch.getURL()))
-                repositoryService.removeLabelFromPatch(patch, name);
+            if (repositoryService.urlExists(pullRequest.getURL()))
+                repositoryService.removeLabelFromPullRequest(pullRequest, name);
         }
     }
 
     /**
-     * Add a <code>Comment</code> to the specified <code>Patch</code> object, and propagate the changes
+     * Add a <code>Comment</code> to the specified <code>PullRequest</code> object, and propagate the changes
      * to the remote repository.
      *
-     * @param patch the <code>Patch</code> on which the comment will be made.
+     * @param pullRequest the <code>PullRequest</code> on which the comment will be made.
      * @param comment the new <code>Comment</code>.
-     * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
+     * @throws NotFoundException if the <code>PullRequest</code> cannot be found at the remote repository.
      */
-    public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
+    public void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
         Objects.requireNonNull(comment, "comment cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(patch.getURL())) {
-                repositoryService.addCommentToPatch(patch, comment);
+            if (repositoryService.urlExists(pullRequest.getURL())) {
+                repositoryService.addCommentToPullRequest(pullRequest, comment);
                 return;
             }
         }
-        throw new NotFoundException("No patch found which corresponds to patch.");
+        throw new NotFoundException("No pull request found which corresponds to pull request.");
     }
 
     /**
-     * Attach a label to the specified patch.  Note the label must already exist at remote repository,
+     * Attach a label to the specified pull request.  Note the label must already exist at remote repository,
      * otherwise it will not be applied. If the specified label is already
-     * associated with the provided patch then no further action is taken.
+     * associated with the provided pull request then no further action is taken.
      *
-     * @param patch the <code>Patch</code> to which the label will be applied.
+     * @param pullRequest the <code>PullRequest</code> to which the label will be applied.
      * @param labelName the name of the label to be applied.
-     * @throws a <code>NotFoundException</code> if the <code>Patch</code> cannot be found, or the labelName does not exist.
+     * @throws a <code>NotFoundException</code> if the <code>PullRequest</code> cannot be found, or the labelName does not exist.
      */
-    public void addLabelToPatch(Patch patch, String labelName) throws NotFoundException {
+    public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
         Objects.requireNonNull(labelName, "labelName cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(patch.getURL()))
-                repositoryService.addLabelToPatch(patch, labelName);
+            if (repositoryService.urlExists(pullRequest.getURL()))
+                repositoryService.addLabelToPullRequest(pullRequest, labelName);
         }
     }
 
     /**
-     * Retrieve all <code>Patch</code> objects related to the supplied patch. A patch is related if its URL is referenced in the
-     * provided patch object. Note, this method fails silently if a patch cannot be retrieved from a URL, with the error message
+     * Retrieve all <code>PullRequest</code> objects related to the supplied pull request. A pull request is related if its URL is referenced in the
+     * provided pull request object. Note, this method fails silently if a pull request cannot be retrieved from a URL, with the error message
      * simply logged.
      *
-     * @param patch the <code>Patch</code> object to be queried against
-     * @return a list of Patch objects that are related to the supplied patch object
+     * @param pull request the <code>PullRequest</code> object to be queried against
+     * @return a list of PullRequest objects that are related to the supplied pull request object
      */
-    public List<Patch> findPatchesRelatedTo(Patch patch) {
+    public List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest) {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
 
         return repositories.stream()
-                .filter(service -> service.urlExists(patch.getURL()))
-                .flatMap(service -> service.findPatchesRelatedTo(patch).stream())
+                .filter(service -> service.urlExists(pullRequest.getURL()))
+                .flatMap(service -> service.findPullRequestsRelatedTo(pullRequest).stream())
                 .collect(Collectors.toList());
     }
 
     /**
-     * Retrieve the current CI status of the latest commit associated with a given patch.
+     * Retrieve the current CI status of the latest commit associated with a given pull request.
      *
-     * @param patch the <code>Patch</code> object whose status is to be queried
-     * @return the CI status of the latest commit associated with the given patch
-     * @throws NotFoundException if no commit status can be found for the provided patch
+     * @param pullRequest the <code>PullRequest</code> object whose status is to be queried
+     * @return the CI status of the latest commit associated with the given pull request
+     * @throws NotFoundException if no commit status can be found for the provided pull request
      */
-    public CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException {
+    public CommitStatus getCommitStatusFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(patch, "patch cannot be null");
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(patch.getURL()))
-                return repositoryService.getCommitStatusFromPatch(patch);
+            if (repositoryService.urlExists(pullRequest.getURL()))
+                return repositoryService.getCommitStatusFromPullRequest(pullRequest);
         }
-        throw new NotFoundException("No commit status found for patch:" + patch.getURL());
+        throw new NotFoundException("No commit status found for pull request:" + pullRequest.getURL());
     }
 
     /**

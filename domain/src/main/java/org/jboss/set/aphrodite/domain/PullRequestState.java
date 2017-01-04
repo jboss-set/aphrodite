@@ -22,6 +22,6 @@
 
 package org.jboss.set.aphrodite.domain;
 
-public enum PatchState {
+public enum PullRequestState {
     UNDEFINED, OPEN, CLOSED
 }

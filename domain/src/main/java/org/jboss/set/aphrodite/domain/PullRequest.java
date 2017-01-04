@@ -24,17 +24,17 @@ package org.jboss.set.aphrodite.domain;
 
 import java.net.URL;
 
-public class Patch {
+public class PullRequest {
 
     private final String id;
     private final URL url;
     private final Codebase codebase;
-    private PatchState state;
+    private PullRequestState state;
     private String title;
     private String body;
     private Repository repository;
 
-    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchState state, String title, String body) {
+    public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state, String title, String body) {
         this.id = id;
         this.url = url;
         this.codebase = codebase;
@@ -44,7 +44,7 @@ public class Patch {
         this.repository = repository;
     }
 
-    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchState state) {
+    public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state) {
         this(id, url, repository, codebase, state, null, null);
 
     }
@@ -62,11 +62,11 @@ public class Patch {
         return codebase;
     }
 
-    public PatchState getState() {
+    public PullRequestState getState() {
         return state;
     }
 
-    public void setState(PatchState state) {
+    public void setState(PullRequestState state) {
         this.state = state;
     }
 
@@ -102,9 +102,9 @@ public class Patch {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        Patch patch = (Patch) o;
+        PullRequest pullRequset = (PullRequest) o;
 
-        return url.equals(patch.url);
+        return url.equals(pullRequset.url);
 
     }
 
@@ -118,7 +118,7 @@ public class Patch {
 
     @Override
     public String toString() {
-        return "Patch{" +
+        return "PullRequest{" +
                 "url=" + url +
                 ", state=" + state +
                 ", title='" + title + '\'' +

@@ -29,7 +29,7 @@ import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
@@ -100,9 +100,9 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     }
 
     @Override
-    public List<Issue> getIssuesAssociatedWith(Patch patch) {
+    public List<Issue> getIssuesAssociatedWith(PullRequest pullRequest) {
         List<Issue> issues = new ArrayList<>();
-        Matcher m = URL_REGEX.matcher(patch.getTitle() + patch.getBody());
+        Matcher m = URL_REGEX.matcher(pullRequest.getTitle() + pullRequest.getBody());
         while (m.find()) {
             String link = m.group();
             try {

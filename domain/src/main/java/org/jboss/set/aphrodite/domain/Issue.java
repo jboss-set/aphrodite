@@ -82,6 +82,8 @@ public class Issue {
     private IssueEstimation estimation;
 
     private List<Comment> comments;
+    
+    private List<Patch> patches;
 
     public Issue(URL url, TrackerType type) {
         if (url == null)
