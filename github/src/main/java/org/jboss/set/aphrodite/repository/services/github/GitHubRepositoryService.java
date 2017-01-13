@@ -45,6 +45,7 @@ import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
@@ -535,9 +536,10 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         return true;
     }
 
-    public GHRateLimit getRateLimit() throws NotFoundException {
+    public RateLimit getRateLimit() throws NotFoundException {
         try {
-            return github.getRateLimit();
+            GHRateLimit ghRateLimit = github.getRateLimit();
+            return WRAPPER.ghRateLimittoRateLimit(ghRateLimit);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);

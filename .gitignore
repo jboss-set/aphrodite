@@ -16,6 +16,7 @@ target/*
 .settings
 .externalToolBuilders
 .factorypath
+.checkstyle
 
 # ignore IDEA files
 *.iml

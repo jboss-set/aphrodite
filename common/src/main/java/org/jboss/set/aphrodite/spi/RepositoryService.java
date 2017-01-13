@@ -32,9 +32,9 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
-//import org.kohsuke.github.GHRateLimit;
 
 public interface RepositoryService {
 
@@ -198,7 +198,7 @@ public interface RepositoryService {
     default void destroy() {
     }
 
-//    GHRateLimit getRateLimit() throws NotFoundException;
+    RateLimit getRateLimit() throws NotFoundException;
 
     /** Get Repository type
      * @return RepositoryType

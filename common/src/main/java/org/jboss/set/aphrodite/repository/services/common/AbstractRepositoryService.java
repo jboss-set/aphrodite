@@ -29,6 +29,7 @@ import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Patch;
 import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
@@ -102,6 +103,11 @@ public abstract class AbstractRepositoryService implements RepositoryService {
 
     @Override
     public List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException {
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    @Override
+    public RateLimit getRateLimit() throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
