@@ -1,14 +1,14 @@
 package org.jboss.set.aphrodite.spi;
 
+import java.net.URI;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
+
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
-
-import java.net.URL;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 public interface StreamService {
 
@@ -55,7 +55,7 @@ public interface StreamService {
      *
      * @return a list of unique Repositories.
      */
-    List<URL> getDistinctURLRepositories();
+    List<URI> getDistinctURLRepositories();
 
     /**
      * Retrieve the URLs of all Repositories associated with a given Stream. Note, that only Repository objects with
@@ -64,7 +64,7 @@ public interface StreamService {
      * @param streamName the name of the <code>Stream</code> containing the returned repositories.
      * @return a list of unique Repositories.
      */
-    List<URL> getDistinctURLRepositoriesByStream(String streamName);
+    List<URI> getDistinctURLRepositoriesByStream(String streamName);
 
     /**
      * Find all the streams associated to the given repository and codebase
@@ -73,7 +73,7 @@ public interface StreamService {
      * @param codebase the <code>Codebase</code> to search against.
      * @return a list of named <code>Stream</code> objects.
      */
-    List<Stream> getStreamsBy(URL repository, Codebase codebase);
+    List<Stream> getStreamsBy(URI repository, Codebase codebase);
 
     /**
      * Get the StreamComponent which specifies the given repository and codebase. Note, this returns the first matching
@@ -83,5 +83,5 @@ public interface StreamService {
      * @param codebase the codebase to be searched against.
      * @return the StreamComponent associated with the given repository and codebase, or null if a StreamComponent does not exist
      */
-    StreamComponent getComponentBy(URL repository, Codebase codebase);
+    StreamComponent getComponentBy(URI repository, Codebase codebase);
 }

@@ -22,6 +22,29 @@
 
 package org.jboss.set.aphrodite.stream.services.json;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.Aphrodite;
@@ -34,28 +57,6 @@ import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.StreamService;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonException;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * A stream service which reads stream data from the specified JSON file.  This implementation
@@ -157,37 +158,24 @@ public class JsonStreamService implements StreamService {
         Map<String, StreamComponent> codebaseMap = new HashMap<>();
         for (JsonValue value : codebases) {
             JsonObject json = (JsonObject) value;
-            String componentName = json.getString("component_name");
-            String codebaseName = json.getString("codebase");
-            String url = json.getString("repository_url");
-            if (!url.endsWith("/")) {
-                url = url + "/";
+
+            StreamComponent component = StreamComponentJsonParser.parse(json);
+            if (component != null) {
+                codebaseMap.put(component.getName(), component);
             }
-            URL repositoryUrl = parseUrl(url);
-            Codebase codebase = new Codebase(codebaseName);
-            StreamComponent component = new StreamComponent(componentName, repositoryUrl, codebase);
-            codebaseMap.put(component.getName(), component);
         }
         return codebaseMap;
     }
 
-    private URL parseUrl(String url) {
-        try {
-            return new URL(url);
-        } catch (MalformedURLException e) {
-            throw new JsonException("Unable to parse url: " + e.getMessage());
-        }
-    }
-
     @Override
-    public List<URL> getDistinctURLRepositories() {
+    public List<URI> getDistinctURLRepositories() {
         return getStreams().stream()
                 .flatMap(stream -> getDistinctURLRepositoriesByStream(stream.getName()).stream())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<URL> getDistinctURLRepositoriesByStream(String streamName) {
+    public List<URI> getDistinctURLRepositoriesByStream(String streamName) {
         Stream stream = getStream(streamName);
         if (stream == null)
             return new ArrayList<>();
@@ -199,7 +187,7 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public List<Stream> getStreamsBy(URL repositoryURL, Codebase codebase) {
+    public List<Stream> getStreamsBy(URI repositoryURL, Codebase codebase) {
         List<Stream> streams = new ArrayList<>();
         for (Stream stream : getStreams()) {
             for (StreamComponent component : stream.getAllComponents()) {
@@ -213,7 +201,7 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public StreamComponent getComponentBy(URL repositoryURL, Codebase codebase) {
+    public StreamComponent getComponentBy(URI repositoryURL, Codebase codebase) {
         for (Stream stream : getStreams()) {
             for (StreamComponent component : stream.getAllComponents()) {
                 if (component.getRepositoryURL().equals(repositoryURL) && component.getCodebase().equals(codebase)) {
@@ -223,5 +211,4 @@ public class JsonStreamService implements StreamService {
         }
         return null;
     }
-
 }

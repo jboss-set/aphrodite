@@ -24,6 +24,7 @@ package org.jboss.set.aphrodite;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -696,7 +697,7 @@ public class Aphrodite implements AutoCloseable {
      * @return a list of unique Repositories.
      */
     @Deprecated
-    public List<URL> getDistinctURLRepositoriesFromStreams() {
+    public List<URI> getDistinctURLRepositoriesFromStreams() {
         checkStreamServiceExists();
 
         return streamServices.stream()
@@ -714,7 +715,7 @@ public class Aphrodite implements AutoCloseable {
      * streamName.
      */
     @Deprecated
-    public List<URL> getDistinctURLRepositoriesByStream(String streamName) {
+    public List<URI> getDistinctURLRepositoriesByStream(String streamName) {
         checkStreamServiceExists();
         Objects.requireNonNull(streamName, "streamName can not be null");
 
@@ -731,7 +732,7 @@ public class Aphrodite implements AutoCloseable {
      * @return a list of Streams associated with the given repository and codebase.
      */
     @Deprecated
-    public List<Stream> getStreamsBy(URL repository, Codebase codebase) {
+    public List<Stream> getStreamsBy(URI repository, Codebase codebase) {
         checkStreamServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
         Objects.requireNonNull(codebase, "codebase cannot be null");
@@ -752,7 +753,7 @@ public class Aphrodite implements AutoCloseable {
      * stream service.
      */
     @Deprecated
-    public StreamComponent getComponentBy(URL repository, Codebase codebase) throws NotFoundException {
+    public StreamComponent getComponentBy(URI repository, Codebase codebase) throws NotFoundException {
         checkStreamServiceExists();
         Objects.requireNonNull(repository, "repository cannot be null");
         Objects.requireNonNull(codebase, "codebase cannot be null");
