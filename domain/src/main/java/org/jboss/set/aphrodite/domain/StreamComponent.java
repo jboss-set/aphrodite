@@ -22,28 +22,69 @@
 
 package org.jboss.set.aphrodite.domain;
 
-import java.net.URL;
+import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * @author Ryan Emerson
+ * @author baranowb
  */
 public class StreamComponent {
     private final String name;
-    private final URL repositoryURL;
+    private final List<String> contacts;
+    private final RepositoryType repositoryType;
+    private final URI repositoryURL;
+    // branch used to build
     private final Codebase codebase;
+    // latest tag being used as build point
+    private final String tag;
+    // version included in build
+    private final String version;
+    // maven GAV, in reality it is group id
+    private final String gav;
+    // Just a comment for us petty humans.
+    private final String comment;
 
-    public StreamComponent(String name, URL repositoryURL, Codebase codebase) {
-        this.name = name.toLowerCase();
+    public StreamComponent(final String name, final List<String> contacts, final RepositoryType repositoryType,
+            final URI repositoryURL, final Codebase codebase, final String tag, final String version, final String gav,
+            final String comment) {
+        super();
+        this.name = name;
+        this.contacts = contacts;
+        this.repositoryType = repositoryType;
         this.repositoryURL = repositoryURL;
         this.codebase = codebase;
+        this.tag = tag;
+        this.version = version;
+        this.gav = gav;
+        this.comment = comment;
+    }
+
+    public StreamComponent(final String name, final List<String> contacts, final URI repositoryURL, final Codebase codebase,
+            final String tag, final String version, final String gav, final String comment) {
+        this(name, contacts, RepositoryType.fromRepositoryURI(repositoryURL), repositoryURL, codebase, tag, version, gav,
+                comment);
+    }
+
+    public StreamComponent(final String name, final List<String> contacts, final URI repositoryURL, final Codebase codebase,
+            final String tag, final String version, final String gav) {
+        this(name, contacts, repositoryURL, codebase, tag, version, gav, null);
     }
 
     public String getName() {
         return name;
     }
 
-    public URL getRepositoryURL() {
+    public List<String> getContacts() {
+        return contacts;
+    }
+
+    public RepositoryType getRepositoryType() {
+        return repositoryType;
+    }
+
+    public URI getRepositoryURL() {
         return repositoryURL;
     }
 
@@ -51,11 +92,26 @@ public class StreamComponent {
         return codebase;
     }
 
+    public String getTag() {
+        return tag;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public String getGAV() {
+        return gav;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
     // Returns a String only if a rule has been established for the host.
     // This is necessary to cater for any components hosted outside of github.
     public Optional<String> getCodeBasePath() {
-        String url = repositoryURL.toExternalForm();
-        System.out.println(url);
+        String url = repositoryURL.toString();
         if (url.contains("github.com")) {
             if (!url.endsWith("/"))
                 url += "/";
@@ -82,10 +138,8 @@ public class StreamComponent {
 
     @Override
     public String toString() {
-        return "StreamComponent{" +
-                "name='" + name + '\'' +
-                ", repository=" + repositoryURL +
-                ", codebase=" + codebase +
-                '}';
+        return "StreamComponent [name=" + name + ", contacts=" + contacts + ", repositoryType=" + repositoryType
+                + ", repositoryURL=" + repositoryURL + ", codebase=" + codebase + ", tag=" + tag + ", version=" + version
+                + ", gav=" + gav + ", comment=" + comment + "]";
     }
 }
