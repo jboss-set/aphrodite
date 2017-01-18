@@ -50,7 +50,7 @@ public class StreamComponent {
             final URI repositoryURL, final Codebase codebase, final String tag, final String version, final String gav,
             final String comment) {
         super();
-        this.name = name;
+        this.name = name.toLowerCase();
         this.contacts = contacts;
         this.repositoryType = repositoryType;
         this.repositoryURL = repositoryURL;
