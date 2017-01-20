@@ -26,10 +26,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Represents an issue in a issue tracker (bugzilla, jira...)
@@ -83,6 +85,8 @@ public class Issue {
 
     private List<Comment> comments;
 
+    private Set<URL> pullRequests = new HashSet<URL>();
+
     public Issue(URL url, TrackerType type) {
         if (url == null)
             throw new IllegalArgumentException("Issue URL cannot be null");
@@ -98,6 +102,7 @@ public class Issue {
         this.blocks = new ArrayList<>();
         this.comments = new ArrayList<>();
         this.components = new ArrayList<>();
+        this.pullRequests = new HashSet<>();
     }
 
     public URL getURL() {
@@ -277,6 +282,15 @@ public class Issue {
     public void setComments(List<Comment> comments) {
         Objects.requireNonNull(comments, "An Issue's Comments cannot be set to null");
         this.comments = comments;
+    }
+
+    public Set<URL> getPullRequests() {
+        return pullRequests;
+    }
+
+    public void setPullRequests(Set<URL> pullRequests) {
+        Objects.requireNonNull(pullRequests, "An Issue's Pull Request cannot be set to null");
+        this.pullRequests = pullRequests;
     }
 
     @Override
