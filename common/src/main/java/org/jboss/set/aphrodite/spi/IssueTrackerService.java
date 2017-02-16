@@ -26,7 +26,7 @@ import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 
@@ -73,14 +73,14 @@ public interface IssueTrackerService {
     String getTrackerID();
 
     /**
-     * Retrieve all Issues associated with the provided patch object.
+     * Retrieve all Issues associated with the provided pullRequest object.
      * Implementations of this method assume that the urls of the related issues are present in the
-     * patch's description field.
+     * pullRequest's description field.
      *
-     * @param patch the <code>Patch</code> object whoms associated Issues should be returned.
+     * @param pullRequest the <code>PullRequest</code> object whoms associated Issues should be returned.
      * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
      */
-    List<Issue> getIssuesAssociatedWith(Patch patch);
+    List<Issue> getIssuesAssociatedWith(PullRequest pullRequest);
 
     /**
      * Retrieve an issue object associated with the given <code>URL</code>.

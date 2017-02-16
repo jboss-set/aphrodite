@@ -43,8 +43,8 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Label;
-import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.PullRequest;
+import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
@@ -141,7 +141,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public Patch getPatch(URL url) throws NotFoundException {
+    public PullRequest getPullRequest(URL url) throws NotFoundException {
         checkHost(url);
 
         String[] elements = url.getPath().split("/");
@@ -150,7 +150,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
-            return WRAPPER.pullRequestToPatch(pullRequest);
+            return WRAPPER.pullRequestToPullRequest(pullRequest);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -173,13 +173,13 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
 //    @Override
-//    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+//    public List<PullRequest> getPullRequestsAssociatedWith(Issue issue) throws NotFoundException {
 //        String trackerId = issue.getTrackerId().orElseThrow(() -> new IllegalArgumentException("Issue.trackerId must be set."));
 //        try {
 //            GitHubGlobalSearchService searchService = new GitHubGlobalSearchService(gitHubClient);
 //            List<SearchResult> searchResults = searchService.searchAllPullRequests(trackerId);
 //            return searchResults.stream()
-//                    .map(pr -> getPatch(pr.getUrl()))
+//                    .map(pr -> getPullRequest(pr.getUrl()))
 //                    .filter(patch -> patch != null)
 //                    .collect(Collectors.toList());
 //        } catch (IOException e) {
@@ -189,7 +189,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 //    }
 
     @Override
-    public List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException {
+    public List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException {
         URL url = repository.getURL();
         checkHost(url);
 
@@ -204,7 +204,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
                 issueState = GHIssueState.OPEN;
             }
             List<GHPullRequest> pullRequests = githubRepository.getPullRequests(issueState);
-            return WRAPPER.toAphroditePatches(pullRequests);
+            return WRAPPER.toAphroditePullRequests(pullRequests);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -212,11 +212,11 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
-        URL url = patch.getURL();
+    public void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException {
+        URL url = pullRequest.getURL();
         checkHost(url);
 
-        int id = Integer.parseInt(patch.getId());
+        int id = Integer.parseInt(pullRequest.getId());
         String repositoryId = createFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
@@ -250,16 +250,16 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public void addLabelToPatch(Patch patch, String labelName) throws NotFoundException {
-        URL url = patch.getURL();
+    public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
+        URL url = pullRequest.getURL();
         checkHost(url);
 
-        int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
         String repositoryId = createFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHLabel newLabel = getLabel(repository, labelName);
-            GHIssue issue = repository.getIssue(patchId);
+            GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
             if (labels.contains(newLabel)) {
                 return;
@@ -304,18 +304,18 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             throw new NotFoundException(e);
         }
 
-        return WRAPPER.pullRequestLabeltoPatchLabel(labels);
+        return WRAPPER.pullRequestLabeltoPullRequestLabel(labels);
     }
 
     @Override
-    public List<Label> getLabelsFromPatch(Patch patch) throws NotFoundException {
-        URL url = patch.getURL();
+    public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
+        URL url = pullRequest.getURL();
         checkHost(url);
         String repositoryId = createFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
-            GHIssue issue = repository.getIssue(Integer.parseInt(patch.getId()));
-            return WRAPPER.pullRequestLabeltoPatchLabel(issue.getLabels());
+            GHIssue issue = repository.getIssue(Integer.parseInt(pullRequest.getId()));
+            return WRAPPER.pullRequestLabeltoPullRequestLabel(issue.getLabels());
         } catch (IOException | NumberFormatException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -323,15 +323,15 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public void setLabelsToPatch(Patch patch, List<Label> labels) throws NotFoundException {
-        URL url = patch.getURL();
+    public void setLabelsToPullRequest(PullRequest pullRequest, List<Label> labels) throws NotFoundException {
+        URL url = pullRequest.getURL();
         checkHost(url);
 
-        int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
         String repositoryId = createFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
-            GHIssue issue = repository.getIssue(patchId);
+            GHIssue issue = repository.getIssue(pullRequestId);
             List<GHLabel> issueLabels = new ArrayList<>();
             List<GHLabel> existingLabels = repository.listLabels().asList();
 
@@ -349,15 +349,15 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public void removeLabelFromPatch(Patch patch, String name) throws NotFoundException {
-        URL url = patch.getURL();
+    public void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException {
+        URL url = pullRequest.getURL();
         checkHost(url);
 
-        int patchId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
         String repositoryId = createFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
-            GHIssue issue = repository.getIssue(patchId);
+            GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
 
             for (GHLabel label : labels)
@@ -385,25 +385,25 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             .compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
 
     @Override
-    public List<Patch> findPatchesRelatedTo(Patch patch) {
+    public List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest) {
         try {
-            List<URL> urls = getPRFromDescription(patch.getURL(), patch.getBody());
-            List<Patch> related = new ArrayList<>();
+            List<URL> urls = getPRFromDescription(pullRequest.getURL(), pullRequest.getBody());
+            List<PullRequest> related = new ArrayList<>();
             for (URL url : urls) {
                 try {
-                    // Only try and retrieve patch if it is located on the same host as this service
+                    // Only try and retrieve pull request if it is located on the same host as this service
                     if (urlExists(url)) {
-                        related.add(getPatch(url));
+                        related.add(getPullRequest(url));
                     } else {
                         Utils.logWarnMessage(LOG, "Unable to process url '" + url + "' as it is not located on this service");
                     }
                 } catch (NotFoundException e) {
-                    Utils.logException(LOG, "Unable to retrieve url '" + url + "' referenced in the patch at: " + patch.getURL(), e);
+                    Utils.logException(LOG, "Unable to retrieve url '" + url + "' referenced in the pull request at: " + pullRequest.getURL(), e);
                 }
             }
             return related;
         } catch (MalformedURLException | URISyntaxException e) {
-            Utils.logException(LOG, "something went wrong while trying to get related patches to " + patch.getURL(), e);
+            Utils.logException(LOG, "something went wrong while trying to get related pull requests to " + pullRequest.getURL(), e);
             return Collections.emptyList();
         }
     }
@@ -446,20 +446,20 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException {
-        URL url = patch.getURL();
+    public CommitStatus getCommitStatusFromPullRequest(PullRequest pullRequest) throws NotFoundException {
+        URL url = pullRequest.getURL();
         checkHost(url);
 
         CommitStatus status = null;
-        int patchId = Integer.parseInt(patch.getId());
+        int pullRequestId = Integer.parseInt(pullRequest.getId());
         String repositoryId = createFromUrl(url);
         try {
             String sha = null;
 
             GHRepository repository = github.getRepository(repositoryId);
-            GHPullRequest pullRequest = repository.getPullRequest(patchId);
+            GHPullRequest ghPullRequest = repository.getPullRequest(pullRequestId);
 
-            List<GHPullRequestCommitDetail> commits = pullRequest.listCommits().asList();
+            List<GHPullRequestCommitDetail> commits = ghPullRequest.listCommits().asList();
             if (commits.size() > 0) {
                 sha = commits.get(commits.size() - 1).getSha();
             }

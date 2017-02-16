@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
-package org.jboss.set.aphrodite.domain;
+package org.jboss.set.aphrodite.domain.spi;
+
+import java.util.stream.Stream;
+
+import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Patch;
 
 /**
  * @author wangc
  *
  */
-public enum PatchState {
-    UNDEFINED, OPEN, CLOSED
+public interface PatchHome {
+    /*
+     * Retrieve Patches with the given <code>Issue</code>.
+     *
+     * @param issue the input <code>Issue</code> object
+     *
+     * @return a stream of retrieved <code>Patch</code>
+     */
+    Stream<Patch> findPatchesByIssue(Issue issue);
+
 }

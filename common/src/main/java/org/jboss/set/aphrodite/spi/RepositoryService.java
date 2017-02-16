@@ -30,8 +30,8 @@ import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
-import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.PullRequest;
+import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
@@ -84,36 +84,36 @@ public interface RepositoryService {
     Repository getRepository(URL url) throws NotFoundException;
 
     /**
-     * Get the <code>Patch</code> located at the provided <code>URL</code>.
+     * Get the <code>PullRequest</code> located at the provided <code>URL</code>.
      *
-     * @param url the <code>URL</code> of the patch to be retrieved.
-     * @return the <code>Patch</code> object.
-     * @throws NotFoundException if a <code>Patch</code> cannot be found at the provided base url.
+     * @param url the <code>URL</code> of the pull request to be retrieved.
+     * @return the <code>PullRequest</code> object.
+     * @throws NotFoundException if a <code>PullRequest</code> cannot be found at the provided base url.
      */
-    Patch getPatch(URL url) throws NotFoundException;
+    PullRequest getPullRequest(URL url) throws NotFoundException;
 
     /**
-     * Retrieve all Patches associated with the provided <code>Issue</code> object
+     * Retrieve all pull requests associated with the provided <code>Issue</code> object
      *
-     * @param issue the <code>Issue</code> object whose associated Patches should be returned.
-     * @return a list of all <code>Patch</code> objects, or an empty list if no patches can be found.
+     * @param issue the <code>Issue</code> object whose associated pull requests should be returned.
+     * @return a list of all <code>PullRequest</code> objects, or an empty list if no pull request can be found.
      * @throws NotFoundException if an exception is thrown when searching the RepositoryService.
      */
-    List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException;
+    List<PullRequest> getPullRequestsAssociatedWith(Issue issue) throws NotFoundException;
 
     /**
-     * Retrieve all Patches associated with the provided <code>Repository</code> object, which have a
-     * state that matches the provided <code>PatchState</code> object.
+     * Retrieve all pull requests associated with the provided <code>Repository</code> object, which have a
+     * state that matches the provided <code>PullRequestState</code> object.
      *
-     * @param repository the <code>Repository</code> object whose associated Patches should be returned.
-     * @param state the <code>PatchState</code> which the returned <code>Patch</code> objects must have.
-     * @return a list of all matching <code>Patch</code> objects, or an empty list if no patches can be found.
+     * @param repository the <code>Repository</code> object whose associated pull requests should be returned.
+     * @param state the <code>PullRequestsState</code> which the returned <code>PullRequest</code> objects must have.
+     * @return a list of all matching <code>PullRequest</code> objects, or an empty list if no pull request can be found.
      * @throws NotFoundException if the provided <code>Repository</code> cannot be found at the RepositoryService.
      */
-    List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException;
+    List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException;
 
     /**
-     * Retrieve all labels associated with the provided <code>Patch</code> in <code>Repository</code> object.
+     * Retrieve all labels associated with the provided <code>PullRequest</code> in <code>Repository</code> object.
      * @param repository the <code>Repository<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no label can be found.
      * @throws NotFoundException if the provided <code>Repository</code> url not consistent with the baseURL.
@@ -121,16 +121,16 @@ public interface RepositoryService {
     List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException;
 
     /**
-     * Retrieve all labels associated with the provided <code>Patch</code> object.
-     * @param patch the <code>Patch<code> object whose associated labels should be returned.
-     * @return a list of all matching <code>Label<code> objects, or an empty list if no patches can be found.
-     * @throws NotFoundException if the provided <code>Patch</code> url not consistent with the baseURL.
+     * Retrieve all labels associated with the provided <code>PullRequest</code> object.
+     * @param pullRequest the <code>PullRequest<code> object whose associated labels should be returned.
+     * @return a list of all matching <code>Label<code> objects, or an empty list if no pull request can be found.
+     * @throws NotFoundException if the provided <code>PullRequest</code> url not consistent with the baseURL.
      */
-    List<Label> getLabelsFromPatch(Patch patch) throws NotFoundException;
+    List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException;
 
     /**
      * Discover if the user logged into this <code>RepositoryService</code> has the correct permissions to apply/remove
-     * labels to patches in the provided <code>Repository</code>
+     * labels to pull request in the provided <code>Repository</code>
      * @param repository the <code>Repository</code> whose permissions are to be checked
      * @return true if the user has permission, otherwise false.
      * @throws NotFoundException if the specified <code>Repository</code> cannot be found.
@@ -138,59 +138,59 @@ public interface RepositoryService {
     boolean hasModifiableLabels(Repository repository) throws NotFoundException;
 
     /**
-     * Set the labels for the provided <code>Patch</code> object.
-     * @param patch the <code>Patch</code> object whose will be set.
-     * @param labels the <code>Label</code> apply to the <code>Patch</code>
-     * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>Patch</code>
+     * Set the labels for the provided <code>PullRequest</code> object.
+     * @param pullRequset the <code>PullRequest</code> object whose will be set.
+     * @param labels the <code>Label</code> apply to the <code>PullRequest</code>
+     * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>PullRequest</code>
      * @throws AphroditeException if add the <code>Label<code> is not consistent with get labels
      */
-    void setLabelsToPatch(Patch patch, List<Label> labels) throws NotFoundException, AphroditeException ;
+    void setLabelsToPullRequest(PullRequest pullRequest, List<Label> labels) throws NotFoundException, AphroditeException ;
 
     /**
-     *Delete a label from the provided <code>Patch</code> object.
-     * @param patch the <code>Patch</code> whose label will be removed.
+     *Delete a label from the provided <code>PullRequest</code> object.
+     * @param pullRequest the <code>PullRequest</code> whose label will be removed.
      * @param name the <code>Label</code> name will be removed.
-     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>Patch</code>
+     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>PullRequest</code>
      */
-    void removeLabelFromPatch(Patch patch, String name) throws NotFoundException;
+    void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException;
 
     /**
-     * Add a <code>Comment</code> to the specified <code>Patch</code> object, and propagate the changes
+     * Add a <code>Comment</code> to the specified <code>PullRequest</code> object, and propagate the changes
      * to the remote repository.
      *
-     * @param patch the <code>Patch</code> on which the comment will be made.
+     * @param pullRequest the <code>PullRequest</code> on which the comment will be made.
      * @param comment the new <code>Comment</code>.
-     * @throws NotFoundException if the <code>Patch</code> cannot be found at the remote repository.
+     * @throws NotFoundException if the <code>PullRequest</code> cannot be found at the remote repository.
      */
-    void addCommentToPatch(Patch patch, String comment) throws NotFoundException;
+    void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException;
 
     /**
-     * Attach a label to the specified patch.  Note the label must already exist at remote repository,
+     * Attach a label to the specified pull request.  Note the label must already exist at remote repository,
      * otherwise a <code>NotFoundException</code> will be thrown. If the specified label is already
-     * associated with the provided patch then no further action is taken.
+     * associated with the provided pull request then no further action is taken.
      *
-     * @param patch the <code>Patch</code> to which the label will be applied.
+     * @param pullRequest the <code>PullRequest</code> to which the label will be applied.
      * @param labelName the name of the label to be applied.
      * @throws NotFoundException if the specified labelName has not been defined at the remote repository.
      */
-    void addLabelToPatch(Patch patch, String labelName) throws NotFoundException;
+    void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException;
 
     /**
-     * Find all the patches related to the given patch.
+     * Find all the pull requests related to the given pull request.
      *
-     * @param patch the <code>Patch</code> on which patches related are being searched
-     * @return list of patches related.
+     * @param pullRequest the <code>PullRequest</code> on which pull requests related are being searched
+     * @return list of pull requests related.
      */
-    List<Patch> findPatchesRelatedTo(Patch patch);
+    List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest);
 
     /**
-     * Retrieve the current CI status of the latest commit associated with a given patch.
+     * Retrieve the current CI status of the latest commit associated with a given pull request.
      *
-     * @param patch the <code>Patch</code> object whose status is to be queried
-     * @return the CI status of the latest commit associated with the given patch
-     * @throws NotFoundException if no commit status can be found for the provided patch
+     * @param pullRequest the <code>PullRequest</code> object whose status is to be queried
+     * @return the CI status of the latest commit associated with the given pull request
+     * @throws NotFoundException if no commit status can be found for the provided pull request
      */
-    CommitStatus getCommitStatusFromPatch(Patch patch) throws NotFoundException;
+    CommitStatus getCommitStatusFromPullRequest(PullRequest pullRequest) throws NotFoundException;
 
     /**
      * allows to destroy and deallocate resources

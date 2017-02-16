@@ -24,8 +24,8 @@ package org.jboss.set.aphrodite.repository.services.github;
 
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Label;
-import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.PullRequest;
+import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.kohsuke.github.GHBranch;
@@ -56,18 +56,18 @@ class GitHubWrapper {
         return repo;
     }
 
-    List<Patch> toAphroditePatches(List<GHPullRequest> pullRequests) {
+    List<PullRequest> toAphroditePullRequests(List<GHPullRequest> pullRequests) {
         return pullRequests.stream()
-                .map(this::pullRequestToPatch)
+                .map(this::pullRequestToPullRequest)
                 .collect(Collectors.toList());
     }
 
-    Patch pullRequestToPatch(GHPullRequest pullRequest) {
+    PullRequest pullRequestToPullRequest(GHPullRequest pullRequest) {
         try {
             String id = Integer.toString(pullRequest.getNumber());
             URL url = pullRequest.getHtmlUrl();
             Codebase codebase = new Codebase(pullRequest.getBase().getRef());
-            PatchState state = getPatchState(pullRequest.getState());
+            PullRequestState state = getPullRequestState(pullRequest.getState());
             String title = pullRequest.getTitle().replaceFirst("\\u2026", "");
             String body = pullRequest.getBody().replaceFirst("\\u2026", "");
 
@@ -78,13 +78,13 @@ class GitHubWrapper {
             }
             Repository repo = new Repository(URI.create(urlString).toURL());
 
-            return new Patch(id, url, repo, codebase, state, title, body);
+            return new PullRequest(id, url, repo, codebase, state, title, body);
         } catch (MalformedURLException e) {
             return null;
         }
     }
 
-    public List<Label> pullRequestLabeltoPatchLabel(Collection<GHLabel> labels) {
+    public List<Label> pullRequestLabeltoPullRequestLabel(Collection<GHLabel> labels) {
         List<Label> patchLabels = new ArrayList<>();
         for (GHLabel label : labels) {
             String name = label.getName();
@@ -96,11 +96,11 @@ class GitHubWrapper {
         return patchLabels;
     }
 
-    public static PatchState getPatchState(GHIssueState state) {
+    public static PullRequestState getPullRequestState(GHIssueState state) {
         try {
-            return PatchState.valueOf(state.toString().toUpperCase());
+            return PullRequestState.valueOf(state.toString().toUpperCase());
         } catch (IllegalArgumentException e) {
-            return PatchState.UNDEFINED;
+            return PullRequestState.UNDEFINED;
         }
     }
 

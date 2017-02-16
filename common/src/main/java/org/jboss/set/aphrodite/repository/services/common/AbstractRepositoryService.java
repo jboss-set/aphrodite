@@ -27,8 +27,8 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.PullRequest;
+import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -92,17 +92,17 @@ public abstract class AbstractRepositoryService implements RepositoryService {
     }
 
     @Override
-    public Patch getPatch(URL url) throws NotFoundException {
+    public PullRequest getPullRequest(URL url) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
     @Override
-    public List<Patch> getPatchesAssociatedWith(Issue issue) throws NotFoundException {
+    public List<PullRequest> getPullRequestsAssociatedWith(Issue issue) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
     @Override
-    public List<Patch> getPatchesByState(Repository repository, PatchState state) throws NotFoundException {
+    public List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 
@@ -112,7 +112,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
     }
 
     @Override
-    public void addCommentToPatch(Patch patch, String comment) throws NotFoundException {
+    public void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException {
         throw new UnsupportedOperationException("Not yet implemented.");
     }
 

@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2015, Red Hat, Inc., and individual contributors
+ * Copyright 2016, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -24,75 +24,39 @@ package org.jboss.set.aphrodite.domain;
 
 import java.net.URL;
 
+/*
+ * Modeling possible Patch in different PatchType:
+ * 1. Pull Request URL: Git Pull Request e.g. https://github.com/jbossas/jboss-eap7/pull/1101
+ *    In Jira, it looks for URL in field 'Git Pull Request'.
+ *    In Bugzilla, it looks for legitimate Git URL in comments.
+ * 2. Commit URL: Git or SVN commit e.g. https://github.com/hibernate/hibernate-orm/commit/b053116bb42330971ac1357009b2d8879e21b3f0
+ *    In Jira, it looks for URL in field 'Git Pull Request'.
+ *    In Bugzilla, it looks for legitimate Git/SVN commit URL in comments.
+ * 3. File URL: Attachment Patch file URL.
+ */
+
 public class Patch {
 
-    private final String id;
     private final URL url;
-    private final Codebase codebase;
-    private PatchState state;
-    private String title;
-    private String body;
-    private Repository repository;
+    private final PatchType patchType;
+    private final PatchState patchState;
 
-    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchState state, String title, String body) {
-        this.id = id;
+    public Patch(URL url, PatchType patchType, PatchState patchState) {
         this.url = url;
-        this.codebase = codebase;
-        this.state = state;
-        this.title = title;
-        this.body = body;
-        this.repository = repository;
+        this.patchType = patchType;
+        this.patchState = patchState;
     }
 
-    public Patch(String id, URL url, Repository repository, Codebase codebase, PatchState state) {
-        this(id, url, repository, codebase, state, null, null);
-
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public URL getURL() {
+    public URL getUrl() {
         return url;
-
     }
 
-    public Codebase getCodebase() {
-        return codebase;
+    public PatchType getPatchType() {
+        return patchType;
     }
 
-    public PatchState getState() {
-        return state;
-    }
-
-    public void setState(PatchState state) {
-        this.state = state;
-    }
-
-    public String getTitle() {
-        return title;
-
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getBody() {
-        return body;
-    }
-
-    public void setBody(String body) {
-        this.body = body;
-    }
-
-    public Repository getRepository() {
-        return repository;
-    }
-
-    public void setRepository(Repository repository) {
-        this.repository = repository;
+    public PatchState getPatchState() {
+        return patchState;
     }
 
     @Override
@@ -118,13 +82,6 @@ public class Patch {
 
     @Override
     public String toString() {
-        return "Patch{" +
-                "url=" + url +
-                ", state=" + state +
-                ", title='" + title + '\'' +
-                ", body='" + body + '\'' +
-                ", codebase=" + codebase +
-                '}';
+        return "Patch{" + "type=" + patchType + "url=" + url + "patchState=" + patchState + '}';
     }
-
 }

@@ -16,10 +16,8 @@
 
 package org.jboss.set.aphrodite.domain;
 
-/**
- * @author wangc
- *
- */
-public enum PatchState {
-    UNDEFINED, OPEN, CLOSED
+public enum PatchType {
+    PULLREQUEST, // Git Pull Request, legitimate patch state OPEN and CLOSED.
+    COMMIT, // Git or SVN commit, legitimate patch state CLOSED.
+    FILE // Attachment File, legitimate patch state UNDEFINED.
 }

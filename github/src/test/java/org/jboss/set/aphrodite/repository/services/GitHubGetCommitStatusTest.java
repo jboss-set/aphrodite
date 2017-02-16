@@ -26,7 +26,7 @@ import java.net.URL;
 import static org.mockito.Mockito.when;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.CommitStatus;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,9 +43,9 @@ public class GitHubGetCommitStatusTest {
 
     @Mock
     Aphrodite aphrodite;
-    private Patch singleComPatch;
-    private Patch multipComPatch;
-    private Patch otherStatPatch;
+    private PullRequest singleComPullRequest;
+    private PullRequest multipComPullRequest;
+    private PullRequest otherStatPullRequest;
     private CommitStatus singleStatus;
     private CommitStatus multipStatus;
     private CommitStatus otherStatus;
@@ -63,30 +63,30 @@ public class GitHubGetCommitStatusTest {
         multipURL = new URL("https://github.com/jboss-set/aphrodite/pull/40");
         otherURL = new URL("https://github.com/jboss-set/aphrodite/pull/15");
 
-        singleComPatch = new Patch(singleId, singleURL, null, null, null);
-        multipComPatch = new Patch(multipId, multipURL, null, null, null);
-        otherStatPatch = new Patch(otherId, otherURL, null, null, null);
+        singleComPullRequest = new PullRequest(singleId, singleURL, null, null, null);
+        multipComPullRequest = new PullRequest(multipId, multipURL, null, null, null);
+        otherStatPullRequest = new PullRequest(otherId, otherURL, null, null, null);
 
-        when(aphrodite.getCommitStatusFromPatch(singleComPatch)).thenReturn(CommitStatus.SUCCESS);
-        when(aphrodite.getCommitStatusFromPatch(multipComPatch)).thenReturn(CommitStatus.SUCCESS);
-        when(aphrodite.getCommitStatusFromPatch(otherStatPatch)).thenReturn(CommitStatus.FAILURE);
+        when(aphrodite.getCommitStatusFromPullRequest(singleComPullRequest)).thenReturn(CommitStatus.SUCCESS);
+        when(aphrodite.getCommitStatusFromPullRequest(multipComPullRequest)).thenReturn(CommitStatus.SUCCESS);
+        when(aphrodite.getCommitStatusFromPullRequest(otherStatPullRequest)).thenReturn(CommitStatus.FAILURE);
     }
 
     @Test
     public void singleCommitTest() throws NotFoundException {
-        singleStatus = aphrodite.getCommitStatusFromPatch(singleComPatch);
+        singleStatus = aphrodite.getCommitStatusFromPullRequest(singleComPullRequest);
         assertEquals("bug single commit status misMatch", CommitStatus.SUCCESS, singleStatus);
     }
 
     @Test
     public void multipCommitTest() throws NotFoundException {
-        multipStatus = aphrodite.getCommitStatusFromPatch(multipComPatch);
+        multipStatus = aphrodite.getCommitStatusFromPullRequest(multipComPullRequest);
         assertEquals("bug multip commit status misMatch", CommitStatus.SUCCESS, multipStatus);
     }
 
     @Test
     public void otherStatusTest() throws NotFoundException {
-        otherStatus = aphrodite.getCommitStatusFromPatch(otherStatPatch);
+        otherStatus = aphrodite.getCommitStatusFromPullRequest(otherStatPullRequest);
         assertEquals("bug other status miMatch", CommitStatus.FAILURE, otherStatus);
     }
 }

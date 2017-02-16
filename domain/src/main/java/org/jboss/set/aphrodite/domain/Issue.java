@@ -30,6 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
+
+import javax.naming.NameNotFoundException;
+
+import org.jboss.set.aphrodite.container.Container;
+import org.jboss.set.aphrodite.domain.spi.IssueHome;
+import org.jboss.set.aphrodite.domain.spi.PatchHome;
 
 /**
  * Represents an issue in a issue tracker (bugzilla, jira...)
@@ -83,6 +90,14 @@ public class Issue {
 
     private List<Comment> comments;
 
+    /*
+     * Modeling possible Patch URL in different PatchType:
+     * 1. Pull Request: Git Pull Request e.g. https://github.com/jbossas/jboss-eap7/pull/1101
+     * 2. Commit: Git or SVN commit e.g. https://github.com/hibernate/hibernate-orm/commit/b053116bb42330971ac1357009b2d8879e21b3f0
+     * 3. File: Attachment Patch file URL
+     */
+    private List<Patch> patches;
+
     public Issue(URL url, TrackerType type) {
         if (url == null)
             throw new IllegalArgumentException("Issue URL cannot be null");
@@ -98,6 +113,7 @@ public class Issue {
         this.blocks = new ArrayList<>();
         this.comments = new ArrayList<>();
         this.components = new ArrayList<>();
+        this.patches = new ArrayList<>();
     }
 
     public URL getURL() {
@@ -279,6 +295,14 @@ public class Issue {
         this.comments = comments;
     }
 
+    public Stream<Patch> getPatches() throws NameNotFoundException {
+        return Container.instance().lookup(PatchHome.class.getSimpleName(), (PatchHome.class)).findPatchesByIssue(this);
+    }
+
+    public Stream<Issue> getUpstreamReferences() throws NameNotFoundException {
+        return Container.instance().lookup(IssueHome.class.getSimpleName(), (IssueHome.class)).findUpstreamReferences(this);
+    }
+
     @Override
     public String toString() {
         return "Issue{" +
@@ -303,6 +327,7 @@ public class Issue {
                 ", lastUpdated=" + lastUpdated +
                 ", estimation=" + estimation +
                 ", #comments=" + comments.size() +
+                ", #patches=" + patches.size() +
                 "}\n";
     }
 
