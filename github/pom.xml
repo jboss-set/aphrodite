@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.jboss.set</groupId>
         <artifactId>jboss-aphrodite-parent</artifactId>
-        <version>0.6.0-SNAPSHOT</version>
+        <version>0.6.0.Final</version>
     </parent>
 
     <artifactId>jboss-aphrodite-github</artifactId>
