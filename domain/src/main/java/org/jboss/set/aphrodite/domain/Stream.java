@@ -22,6 +22,7 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,7 @@ import java.util.Map;
  * jboss‑eap‑6.4.z
  *
  * @author egonzalez
+ * @author baranowb
  */
 public class Stream {
 
@@ -40,6 +42,9 @@ public class Stream {
 
     private final Map<String, StreamComponent> components;
 
+    //this is non encodable value, it is just here to identify JSON resource
+    //that this stream belong to, so we know which one to serialize
+    private final URL url;
     public Stream() {
         this("N/A");
     }
@@ -49,13 +54,17 @@ public class Stream {
     }
 
     public Stream(String name, Stream upstream) {
-        this(name, upstream, new HashMap<>());
+        this(null,name, upstream, new HashMap<>());
     }
 
-    public Stream(String name, Stream upstream, Map<String, StreamComponent> components) {
+    public Stream(URL url,String name, Stream upstream, Map<String, StreamComponent> components) {
         this.name = name;
         this.upstream = upstream;
         this.components = components;
+        this.url = url;
+        for(StreamComponent streamComponent:components.values()){
+            streamComponent.setStream(this);
+        }
     }
 
     public String getName() {
@@ -70,12 +79,24 @@ public class Stream {
         return upstream;
     }
 
+    public URL getURL() {
+        return url;
+    }
+
     public Collection<StreamComponent> getAllComponents() {
         return components.values();
     }
 
     public void addComponent(StreamComponent component) {
         components.put(component.getName(), component);
+    }
+
+    public void updateComponent(StreamComponent component) throws StreamComponentUpdateException {
+        if(this.components.containsKey(component.getName())){
+            components.put(component.getName(), component);
+        } else {
+            throw new StreamComponentUpdateException(component);
+        }
     }
 
     public StreamComponent getComponent(String componentName) {
@@ -103,7 +124,8 @@ public class Stream {
     public String toString() {
         return "Stream{" +
                 "name='" + name + '\'' +
-                ", upstream=" + upstream +
+                ", upstream=" + (upstream!=null?upstream.getName():"") +
+                ",url="+url+
                 ", components=" + components +
                 '}';
     }

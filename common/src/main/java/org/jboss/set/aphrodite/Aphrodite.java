@@ -170,10 +170,12 @@ public class Aphrodite implements AutoCloseable {
                 repositories.add(rs);
         }
 
-        if (issueTrackers.isEmpty() && repositories.isEmpty())
-            throw new AphroditeException("Unable to initiatilise Aphrodite, as a valid " +
-                    IssueTrackerService.class.getName() + " or " + RepositoryService.class.getName()
-                    + " does not exist.");
+        if (issueTrackers.isEmpty())
+            throw new AphroditeException("Unable to initiatilise Aphrodite, as a valid " + IssueTrackerService.class.getName() + " does not exist.");
+
+        if (repositories.isEmpty())
+            throw new AphroditeException(
+                    "Unable to initiatilise Aphrodite, as a valid " + RepositoryService.class.getName() + " does not exist.");
 
         initialiseStreams(mutableConfig);
         //TODO: make this configurable.
@@ -425,13 +427,13 @@ public class Aphrodite implements AutoCloseable {
         throw new NotFoundException("No repositories found which correspond to url: " + url);
     }
 
-    /**
-     * Retrieve all pull requests associated with the provided <code>Issue</code> object
-     *
-     * @param issue the <code>Issue</code> object whose associated pull requests should be returned.
-     * @return a list of all <code>PullRequest</code> objects, or an empty list if no pull request can be found.
-     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve pull requests from a RepositoryService
-     */
+//    /**
+//     * Retrieve all pull requests associated with the provided <code>Issue</code> object
+//     *
+//     * @param issue the <code>Issue</code> object whose associated pull requests should be returned.
+//     * @return a list of all <code>PullRequest</code> objects, or an empty list if no pull request can be found.
+//     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve pull requests from a RepositoryService
+//     */
 //    public List<PullRequest> getPullRequestAssociatedWith(Issue issue) throws NotFoundException {
 //        checkRepositoryServiceExists();
 //        Objects.requireNonNull(issue, "issue cannot be null");
