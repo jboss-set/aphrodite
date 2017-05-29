@@ -23,8 +23,10 @@
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,7 +36,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -237,6 +241,39 @@ public class JiraIssueWrapperTest {
         result.setStage(issueStage);
 
         return result;
+    }
+
+    @Test
+    public void jiraLabelsFromURLJiraToIssueTest() {
+        Set<String> testLabels = null;
+        URLJiraToIssueWithLabelTest(testLabels);
+
+        testLabels = new HashSet<>();
+        URLJiraToIssueWithLabelTest(testLabels);
+
+        testLabels.add("Label#1");
+        URLJiraToIssueWithLabelTest(testLabels);
+
+        testLabels.add("Label#2");
+        URLJiraToIssueWithLabelTest(testLabels);
+
+    }
+
+    private void URLJiraToIssueWithLabelTest(Set<String> labelsFromJira) {
+        JiraIssue result;
+        int countOfLabels = (labelsFromJira != null) ? labelsFromJira.size() : 0;
+
+        mockLabelsToJiraIssue01(labelsFromJira);
+        result = (JiraIssue) issueWrapper.jiraIssueToIssue(jiraURL, jiraIssue01);
+        assertNotNull(result);
+        assertEquals(result.getLabels().size(), countOfLabels);
+        if (labelsFromJira != null && labelsFromJira.size() > 0 ) {
+            labelsFromJira.forEach(label -> assertTrue(result.getLabels().contains(new JiraLabel(label))));
+        }
+    }
+
+    private void mockLabelsToJiraIssue01(Set<String> labels) {
+        when(jiraIssue01.getLabels()).thenReturn(labels);
     }
 
 }
