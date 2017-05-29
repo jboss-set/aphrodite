@@ -140,7 +140,7 @@ class IssueWrapper {
         Set<String> jiraLabels = jiraIssue.getLabels();
         List<JiraLabel> labels = new ArrayList<>();
 
-        if(jiraLabels != null)
+        if (jiraLabels != null)
             jiraLabels.forEach(name -> labels.add(new JiraLabel(name)));
 
         issue.setLabels(labels);

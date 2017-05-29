@@ -28,7 +28,7 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 public class JiraLabel {
     private String name;
 
-    public JiraLabel(String name){
+    public JiraLabel(String name) {
         this.name = name;
     }
 
@@ -42,8 +42,10 @@ public class JiraLabel {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         JiraLabel jiraLabel = (JiraLabel) o;
 

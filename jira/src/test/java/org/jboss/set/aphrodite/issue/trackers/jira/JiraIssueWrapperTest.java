@@ -22,7 +22,6 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -88,7 +87,7 @@ public class JiraIssueWrapperTest {
 
     @Mock
     private com.atlassian.jira.rest.client.api.domain.Issue jiraIssue01;
-    
+
     @Mock
     private TimeTracking timeTracking;
 
@@ -154,7 +153,7 @@ public class JiraIssueWrapperTest {
 
         BasicPriority priority = mock(BasicPriority.class);
         when(priority.getName()).thenReturn("MAJOR");
-        
+
         when(jiraIssue01.getSummary()).thenReturn("Test Issue");
         when(jiraIssue01.getStatus()).thenReturn(statusMock);
         when(jiraIssue01.getPriority()).thenReturn(priority);
@@ -178,14 +177,12 @@ public class JiraIssueWrapperTest {
         when(jiraIssue01.getCreationDate()).thenReturn(genericDateTime);
         when(jiraIssue01.getUpdateDate()).thenReturn(genericDateTime);
 
-
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.PM_ACK)).thenReturn(pmAckField);
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.DEV_ACK)).thenReturn(devAckField);
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.QE_ACK)).thenReturn(qaAckField);
         when(pmAckField.getValue()).thenReturn("+");
         when(devAckField.getValue()).thenReturn("+");
         when(qaAckField.getValue()).thenReturn("+");
-
 
         when(jiraIssue01.getField(JiraFields.JSON_CUSTOM_FIELD + JiraFields.TARGET_RELEASE)).thenReturn(targetField);
         JSONObject targetObject = new JSONObject();
@@ -267,7 +264,7 @@ public class JiraIssueWrapperTest {
         result = (JiraIssue) issueWrapper.jiraIssueToIssue(jiraURL, jiraIssue01);
         assertNotNull(result);
         assertEquals(result.getLabels().size(), countOfLabels);
-        if (labelsFromJira != null && labelsFromJira.size() > 0 ) {
+        if (labelsFromJira != null && labelsFromJira.size() > 0) {
             labelsFromJira.forEach(label -> assertTrue(result.getLabels().contains(new JiraLabel(label))));
         }
     }
