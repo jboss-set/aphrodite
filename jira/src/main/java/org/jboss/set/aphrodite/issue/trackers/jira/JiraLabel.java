@@ -28,6 +28,8 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 public class JiraLabel {
     private String name;
 
+    public JiraLabel() { }
+
     public JiraLabel(String name) {
         this.name = name;
     }
@@ -55,5 +57,12 @@ public class JiraLabel {
     @Override
     public int hashCode() {
         return name != null ? name.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "JiraLabel{" +
+                "name='" + name + '\'' +
+                '}';
     }
 }
