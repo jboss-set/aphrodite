@@ -41,6 +41,8 @@ public class JiraIssue extends Issue {
 
     private JiraIssueResolution resolution;
 
+    private List<JiraLabel> labels = new ArrayList<>();
+
     public JiraIssueResolution getResolution() {
         return resolution;
     }
@@ -74,6 +76,14 @@ public class JiraIssue extends Issue {
 
     public void setSprintRelease(String sprintRelease) {
         this.sprintRelease = sprintRelease;
+    }
+
+    public List<JiraLabel> getLabels() {
+        return labels;
+    }
+
+    public void setLabels(List<JiraLabel> labels) {
+        this.labels = labels;
     }
 
 }

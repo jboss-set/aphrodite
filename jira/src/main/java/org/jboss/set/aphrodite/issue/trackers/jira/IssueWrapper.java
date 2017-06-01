@@ -37,6 +37,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -131,7 +132,18 @@ class IssueWrapper {
         // Set JIRA specific fields
         setPullRequests(issue, jiraIssue);
         setIssueSprintRelease(issue, jiraIssue);
+        setLabels(issue, jiraIssue);
         setResolution(issue, jiraIssue);
+    }
+
+    private void setLabels(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        Set<String> jiraLabels = jiraIssue.getLabels();
+        List<JiraLabel> labels = new ArrayList<>();
+
+        if (jiraLabels != null)
+            jiraLabels.forEach(name -> labels.add(new JiraLabel(name)));
+
+        issue.setLabels(labels);
     }
 
     private void setResolution(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
