@@ -31,6 +31,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -40,6 +42,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.atlassian.jira.rest.client.api.domain.BasicUser;
+import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
+import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
+import com.atlassian.jira.rest.client.api.domain.FieldType;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.jboss.set.aphrodite.config.TrackerType;
@@ -274,6 +280,72 @@ public class JiraIssueWrapperTest {
 
     private void mockLabelsToJiraIssue01(Set<String> labels) {
         when(jiraIssue01.getLabels()).thenReturn(labels);
+    }
+
+    @Test
+    public void setChangelogTest() {
+        List<ChangelogGroup> changelogGroups;
+        List<ChangelogItem> changelogItems;
+
+        changelogGroups = null;
+        testJiraIssueWithChangelog(changelogGroups);
+
+        changelogGroups = new ArrayList<>();
+        testJiraIssueWithChangelog(changelogGroups);
+
+        changelogItems = null;
+        changelogGroups.add(createChangelogGrupWithItems(changelogItems));
+        testJiraIssueWithChangelog(changelogGroups);
+
+        changelogItems = new ArrayList<>();
+        changelogItems.add(new ChangelogItem(FieldType.CUSTOM, "label", "null", "testFrom", "null", "testTo"));
+        changelogGroups.add(createChangelogGrupWithItems(changelogItems));
+        testJiraIssueWithChangelog(changelogGroups);
+    }
+
+    private void testJiraIssueWithChangelog(List<ChangelogGroup> changelogGroups) {
+        when(jiraIssue01.getChangelog()).thenReturn(changelogGroups);
+        JiraIssue result = (JiraIssue) issueWrapper.jiraIssueToIssue(jiraURL, jiraIssue01);
+        assertNotNull(result);
+        compareChangelogGroups(changelogGroups, result.getChangelog());
+    }
+
+    private ChangelogGroup createChangelogGrupWithItems(List<ChangelogItem> changelogItems) {
+        ChangelogGroup changelogGroup = null;
+        try {
+            changelogGroup = new ChangelogGroup( new BasicUser(new URI("http://testUser"), "testUser", "Test User"),
+                    new DateTime(1999, 1, 1, 0, 0, 0,0), changelogItems);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return changelogGroup;
+    }
+
+    private void compareChangelogGroups(List<ChangelogGroup> changelogGroups, List<JiraChangelogGroup> resultChangelog) {
+        int countOfGroups = (changelogGroups != null) ? changelogGroups.size() : 0;
+        assertEquals(resultChangelog.size(), countOfGroups);
+        for (int i = 0; i < countOfGroups; i++) {
+            compareChangleogItems(changelogGroups.get(i).getItems(), resultChangelog.get(i).getItems());
+        }
+    }
+
+    private void compareChangleogItems(Iterable<ChangelogItem> changelogItems, List<JiraChangelogItem> jiraChangelogItem) {
+        int i = 0;
+        if (changelogItems == null) {
+            assertEquals(jiraChangelogItem.size(), 0);
+        } else {
+            for (ChangelogItem changelogItem : changelogItems) {
+                compareChangelogItem(changelogItem, jiraChangelogItem.get(i++));
+            }
+        }
+    }
+
+    private void compareChangelogItem(ChangelogItem changelogItem, JiraChangelogItem jiraChangelogItem) {
+        assertEquals(changelogItem.getField(), jiraChangelogItem.getField());
+        assertEquals(changelogItem.getFrom(), jiraChangelogItem.getFrom());
+        assertEquals(changelogItem.getFromString(), jiraChangelogItem.getFromString());
+        assertEquals(changelogItem.getTo(), jiraChangelogItem.getTo());
+        assertEquals(changelogItem.getToString(), jiraChangelogItem.getToString());
     }
 
 }

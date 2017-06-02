@@ -61,6 +61,7 @@ import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.domain.User;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
+import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
@@ -133,6 +134,7 @@ class IssueWrapper {
         setPullRequests(issue, jiraIssue);
         setIssueSprintRelease(issue, jiraIssue);
         setLabels(issue, jiraIssue);
+        setChangelog(issue, jiraIssue);
         setResolution(issue, jiraIssue);
     }
 
@@ -144,6 +146,30 @@ class IssueWrapper {
             jiraLabels.forEach(name -> labels.add(new JiraLabel(name)));
 
         issue.setLabels(labels);
+    }
+
+    private void setChangelog(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        List<JiraChangelogGroup> changelog = createJiraChangelogGroups(jiraIssue);
+        issue.setChangelog(changelog);
+    }
+
+    private List<JiraChangelogGroup> createJiraChangelogGroups(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        List<JiraChangelogGroup> changelog = new ArrayList<>();
+        if (jiraIssue.getChangelog() != null) {
+            jiraIssue.getChangelog()
+                    .forEach(changelogGroup -> changelog.add(new JiraChangelogGroup(
+                            User.createWithUsername(changelogGroup.getAuthor().getName()), changelogGroup.getCreated().toDate(),
+                            createJiraChangelogItems(changelogGroup.getItems()))));
+        }
+        return changelog;
+    }
+
+    private List<JiraChangelogItem> createJiraChangelogItems(Iterable<ChangelogItem> changelogItems) {
+        List<JiraChangelogItem> jiraChangelogItems = new ArrayList<>();
+        if (changelogItems != null)
+            changelogItems.forEach(item -> jiraChangelogItems.add(new JiraChangelogItem(item.getField(), item.getFrom(),
+                    item.getFromString(), item.getTo(), item.getToString())));
+        return jiraChangelogItems;
     }
 
     private void setResolution(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {

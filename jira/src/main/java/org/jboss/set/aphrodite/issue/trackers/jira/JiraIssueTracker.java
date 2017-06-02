@@ -112,9 +112,11 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     @Override
     public Issue getIssue(URL url) throws NotFoundException {
         String issueKey = getIssueKey(url);
+        List<IssueRestClient.Expandos> expandos = createExpandos();
         try {
             checkHost(url);
-            com.atlassian.jira.rest.client.api.domain.Issue issue = restClient.getIssueClient().getIssue(issueKey).get();
+            com.atlassian.jira.rest.client.api.domain.Issue issue = restClient.getIssueClient().getIssue(issueKey, expandos)
+                    .get();
             return WRAPPER.jiraIssueToIssue(url, issue);
         } catch (InterruptedException e) {
             throw new NotFoundException("Something interrupted the execution when trying to retrieve issue " + issueKey, e);
@@ -122,6 +124,12 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             throw new NotFoundException("Unable to retrieve issue with id: " + issueKey , e);
         }
 
+    }
+
+    private List<IssueRestClient.Expandos> createExpandos() {
+        List<IssueRestClient.Expandos> expandos = new ArrayList<>();
+        expandos.add(IssueRestClient.Expandos.CHANGELOG);
+        return expandos;
     }
 
     private com.atlassian.jira.rest.client.api.domain.Issue getIssue(Issue issue) throws NotFoundException {
