@@ -348,4 +348,13 @@ public class JiraIssueWrapperTest {
         assertEquals(changelogItem.getToString(), jiraChangelogItem.getToString());
     }
 
+    @Test
+    public void setChangelogTestWithNullAuthorAndNullDate() {
+        List<ChangelogGroup> changelogGroups = new ArrayList<>();
+        List<ChangelogItem> changelogItems = new ArrayList<>();
+        changelogItems.add(new ChangelogItem(FieldType.CUSTOM, "label", "null", "testFrom", "null", "testTo"));
+        changelogGroups.add(new ChangelogGroup( null,null, changelogItems));
+        testJiraIssueWithChangelog(changelogGroups);
+    }
+
 }

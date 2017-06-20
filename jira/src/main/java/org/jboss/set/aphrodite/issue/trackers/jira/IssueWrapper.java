@@ -36,6 +36,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -44,6 +45,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jettison.json.JSONArray;
@@ -156,12 +158,17 @@ class IssueWrapper {
     private List<JiraChangelogGroup> createJiraChangelogGroups(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         List<JiraChangelogGroup> changelog = new ArrayList<>();
         if (jiraIssue.getChangelog() != null) {
-            jiraIssue.getChangelog()
-                    .forEach(changelogGroup -> changelog.add(new JiraChangelogGroup(
-                            User.createWithUsername(changelogGroup.getAuthor().getName()), changelogGroup.getCreated().toDate(),
-                            createJiraChangelogItems(changelogGroup.getItems()))));
+            jiraIssue.getChangelog().forEach(changelogGroup -> changelog.add(createJiraChangelogGroup(changelogGroup)));
         }
         return changelog;
+    }
+
+    private JiraChangelogGroup createJiraChangelogGroup(ChangelogGroup changelogGroup) {
+        final String noAuthor = "";
+        String author = (changelogGroup.getAuthor() != null) ? changelogGroup.getAuthor().getName() : noAuthor;
+        Date dateCreated = (changelogGroup.getCreated() != null) ? changelogGroup.getCreated().toDate() : new Date();
+        List<JiraChangelogItem> changelogItems = createJiraChangelogItems(changelogGroup.getItems());
+        return new JiraChangelogGroup(User.createWithUsername(author), dateCreated, changelogItems);
     }
 
     private List<JiraChangelogItem> createJiraChangelogItems(Iterable<ChangelogItem> changelogItems) {
