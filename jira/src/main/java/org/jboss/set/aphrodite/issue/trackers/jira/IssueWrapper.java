@@ -386,6 +386,10 @@ class IssueWrapper {
             return;
 
         for (com.atlassian.jira.rest.client.api.domain.IssueLink il : links) {
+            if (il.getIssueLinkType().getDescription().contains("cloned")) {
+                URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
+                ((JiraIssue)issue).getClones().add(url);
+            }
             if (il.getIssueLinkType().getDirection().equals(Direction.INBOUND)) {
                 URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 issue.getBlocks().add(url);
