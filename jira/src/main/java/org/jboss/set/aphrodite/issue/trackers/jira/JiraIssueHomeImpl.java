@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 /**
  * Created by Marek Marusic <mmarusic@redhat.com> on 6/23/17.
  */
-public class IssueHomeImpl implements IssueHome {
+public class JiraIssueHomeImpl implements IssueHome {
     public static final String JBEAPProject = "JBoss Enterprise Application Platform";
 
     @Override
@@ -72,10 +72,25 @@ public class IssueHomeImpl implements IssueHome {
         if (!isIssueJBEAP(upstreamIssue))
             return true;
 
-        String upstreamRelease = extractTargetRelease(upstreamIssue.getStreamStatus());
-        String downstreamRelease = extractTargetRelease(downstreamIssue.getStreamStatus());
+        String v1 = extractTargetRelease(upstreamIssue.getStreamStatus());
+        String v2 = extractTargetRelease(downstreamIssue.getStreamStatus());
 
-        return VersionComparator.isFirstVersionHigher(upstreamRelease, downstreamRelease);
+        if (! isMajroAndMinorVersionNumeric(v1) || ! isMajroAndMinorVersionNumeric(v2))
+            return false;
+
+        v1 = getMajorAndMinorOf(v1);
+        v2 = getMajorAndMinorOf(v2);
+
+        return VersionComparator.INSTANCE.compare(v1, v2) > 0;
+    }
+
+    private static boolean isMajroAndMinorVersionNumeric(String version) {
+        return version.matches("^[0-9]+\\.[0-9]+\\..*$");
+    }
+
+    private static String getMajorAndMinorOf(String version) {
+        int indexOfSecondDot = version.indexOf(".", version.indexOf(".")+1) ;
+       return version.substring(0, indexOfSecondDot + 1);
     }
 
     public static boolean isIssueJBEAP(JiraIssue issue) {

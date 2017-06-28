@@ -33,13 +33,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.jboss.set.aphrodite.issue.trackers.jira.IssueHomeImpl.isUpstreamIssue;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraIssueHomeImpl.isUpstreamIssue;
 import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Marek Marusic <mmarusic@redhat.com> on 6/23/17.
  */
-public class IssueHomeImplTest {
+public class JiraIssueHomeImplTest {
 
 
     @Test
@@ -52,18 +52,18 @@ public class IssueHomeImplTest {
     }
 
     private JiraIssue createDownstream() {
-        JiraIssue issue = mockIssue(IssueHomeImpl.JBEAPProject, "Summary.", "7.0.7.GA");
+        JiraIssue issue = mockIssue(JiraIssueHomeImpl.JBEAPProject, "Summary.", "7.0.7.GA");
         return issue;
     }
 
     private JiraIssue createUpstream() {
-        JiraIssue issue = mockIssue(IssueHomeImpl.JBEAPProject, "Summary.", "7.1.0.GA");
+        JiraIssue issue = mockIssue(JiraIssueHomeImpl.JBEAPProject, "Summary.", "7.1.0.GA");
 
         return issue;
     }
 
     private JiraIssue createIndividualPatches() {
-        JiraIssue issue = mockIssue(IssueHomeImpl.JBEAPProject, "Summary.", "IndividualPatches GA");
+        JiraIssue issue = mockIssue(JiraIssueHomeImpl.JBEAPProject, "Summary.", "IndividualPatches GA");
 
         return issue;
     }
@@ -99,7 +99,7 @@ public class IssueHomeImplTest {
     }
 
     private List<Issue> findUpstreamReference(JiraIssue upstream) {
-        IssueHomeImpl issueHome = new IssueHomeImpl();
+        JiraIssueHomeImpl issueHome = new JiraIssueHomeImpl();
         JiraIssue downstream = createDownstream();
         List<Issue> linkedCloneIssues = new ArrayList<>();
 

@@ -34,11 +34,9 @@ public class VersionComparatorTest {
     public void testVersionComparation() {
         String upstreamRelease = "7.1.0.GA";
         String downstreamRelease = "7.0.7.GA";
-        String individualPatches =  "Individual Patches.GA";
 
-        assertEquals(true, VersionComparator.isFirstVersionHigher(upstreamRelease, downstreamRelease));
-        assertEquals(false, VersionComparator.isFirstVersionHigher(individualPatches, downstreamRelease));
-        assertEquals(false, VersionComparator.isFirstVersionHigher(upstreamRelease, individualPatches));
-        assertEquals(false, VersionComparator.isFirstVersionHigher(null, individualPatches));
+        assertEquals(0, VersionComparator.INSTANCE.compare(upstreamRelease, upstreamRelease));
+        assertEquals(1, VersionComparator.INSTANCE.compare(upstreamRelease, downstreamRelease));
+        assertEquals(-1, VersionComparator.INSTANCE.compare(downstreamRelease, upstreamRelease));
     }
 }

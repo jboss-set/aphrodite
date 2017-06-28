@@ -24,35 +24,60 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 
 /**
  * Created by Marek Marusic <mmarusic@redhat.com> on 6/15/17.
+ * Main source of this code is:
+ * https://github.com/wolfc/updepres/blob/master/model/src/main/java/org/jboss/up/depres/version/VersionComparator.java
  */
-import java.util.Optional;
+import java.util.Comparator;
 
-public class VersionComparator{
-    public static boolean isFirstVersionHigher(String first, String second) {
-        if (first == null || second == null)
-            return false;
+public class VersionComparator implements Comparator<String>{
 
-        String[] firstParts = first.split("\\.");
-        String[] secondParts = second.split("\\.");
+    public static final VersionComparator INSTANCE = new VersionComparator();
 
-        if (firstParts.length < 2 || secondParts.length < 2)
-            return false;
-
-        return areStringsNumericAndIsFirstBigger(firstParts[0], secondParts[0]) || areStringsNumericAndIsFirstBigger(firstParts[1], secondParts[1]);
-    }
-
-    private static boolean areStringsNumericAndIsFirstBigger(String firstStr, String secondStr) {
-        int defaultValue = -1;
-        int first = tryParseInteger(firstStr).orElse(defaultValue);
-        int second = tryParseInteger(secondStr).orElse(defaultValue);
-        return first != defaultValue && second != defaultValue && first > second;
-    }
-
-    private static Optional<Integer> tryParseInteger(String string) {
-        try {
-            return Optional.of(Integer.valueOf(string));
-        } catch (NumberFormatException e) {
-            return Optional.empty();
+    @Override
+    public int compare(final String v1, final String v2) {
+        int i1 = 0, i2 = 0;
+        final int epoch1;
+        int i = v1.indexOf(".");
+        if (i != -1) {
+            epoch1 = Integer.valueOf(v1.substring(0, i));
+            i1 = i;
         }
+        else
+            epoch1 = 0;
+        final int epoch2;
+        i = v2.indexOf(".");
+        if (i != -1) {
+            epoch2 = Integer.valueOf(v2.substring(0, i));
+            i2 = i;
+        }
+        else
+            epoch2 = 0;
+        if (epoch1 != epoch2)
+            return epoch1 - epoch2;
+
+
+        final int lim1 = v1.length(), lim2 = v2.length();
+        while (i1 < lim1 && i2 < lim2) {
+            final char c1 = v1.charAt(i1);
+            final char c2 = v2.charAt(i2);
+            if (c1 == c2) {
+                i1++;
+                i2++;
+            } else if (Character.isDigit(c1) || Character.isDigit(c2)) {
+                int ei1 = i1, ei2 = i2;
+                while (ei1 < lim1 && Character.isDigit(v1.charAt(ei1))) ei1++;
+                while (ei2 < lim2 && Character.isDigit(v2.charAt(ei2))) ei2++;
+                final int n1 = ei1 == i1 ? 0 : Integer.valueOf(v1.substring(i1, ei1));
+                final int n2 = ei2 == i2 ? 0 : Integer.valueOf(v2.substring(i2, ei2));
+                if (n1 != n2)
+                    return n1 - n2;
+                i1 = ei1;
+                i2 = ei2;
+            } else {
+                return c1 - c2;
+            }
+        }
+        return lim1 - lim2;
     }
+
 }
