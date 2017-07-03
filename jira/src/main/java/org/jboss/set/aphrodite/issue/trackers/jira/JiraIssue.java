@@ -43,13 +43,7 @@ public class JiraIssue extends Issue {
 
     private List<JiraLabel> labels = new ArrayList<>();
 
-    public JiraIssueResolution getResolution() {
-        return resolution;
-    }
-
-    public void setResolution(JiraIssueResolution resolution) {
-        this.resolution = resolution;
-    }
+    private List<JiraChangelogGroup> changelog = new ArrayList<>();
 
     public JiraIssue(final URL url) {
         super(url, JIRA);
@@ -78,12 +72,28 @@ public class JiraIssue extends Issue {
         this.sprintRelease = sprintRelease;
     }
 
+    public JiraIssueResolution getResolution() {
+        return resolution;
+    }
+
+    public void setResolution(JiraIssueResolution resolution) {
+        this.resolution = resolution;
+    }
+
     public List<JiraLabel> getLabels() {
         return labels;
     }
 
     public void setLabels(List<JiraLabel> labels) {
         this.labels = labels;
+    }
+
+    public List<JiraChangelogGroup> getChangelog() {
+        return changelog;
+    }
+
+    public void setChangelog(List<JiraChangelogGroup> changelog) {
+        this.changelog = changelog;
     }
 
 }

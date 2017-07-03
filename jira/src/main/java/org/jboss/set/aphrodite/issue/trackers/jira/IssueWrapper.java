@@ -36,6 +36,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -44,6 +45,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jettison.json.JSONArray;
@@ -61,6 +63,7 @@ import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.domain.User;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
+import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
@@ -133,6 +136,7 @@ class IssueWrapper {
         setPullRequests(issue, jiraIssue);
         setIssueSprintRelease(issue, jiraIssue);
         setLabels(issue, jiraIssue);
+        setChangelog(issue, jiraIssue);
         setResolution(issue, jiraIssue);
     }
 
@@ -144,6 +148,35 @@ class IssueWrapper {
             jiraLabels.forEach(name -> labels.add(new JiraLabel(name)));
 
         issue.setLabels(labels);
+    }
+
+    private void setChangelog(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        List<JiraChangelogGroup> changelog = createJiraChangelogGroups(jiraIssue);
+        issue.setChangelog(changelog);
+    }
+
+    private List<JiraChangelogGroup> createJiraChangelogGroups(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        List<JiraChangelogGroup> changelog = new ArrayList<>();
+        if (jiraIssue.getChangelog() != null) {
+            jiraIssue.getChangelog().forEach(changelogGroup -> changelog.add(createJiraChangelogGroup(changelogGroup)));
+        }
+        return changelog;
+    }
+
+    private JiraChangelogGroup createJiraChangelogGroup(ChangelogGroup changelogGroup) {
+        final String noAuthor = "";
+        String author = (changelogGroup.getAuthor() != null) ? changelogGroup.getAuthor().getName() : noAuthor;
+        Date dateCreated = (changelogGroup.getCreated() != null) ? changelogGroup.getCreated().toDate() : new Date();
+        List<JiraChangelogItem> changelogItems = createJiraChangelogItems(changelogGroup.getItems());
+        return new JiraChangelogGroup(User.createWithUsername(author), dateCreated, changelogItems);
+    }
+
+    private List<JiraChangelogItem> createJiraChangelogItems(Iterable<ChangelogItem> changelogItems) {
+        List<JiraChangelogItem> jiraChangelogItems = new ArrayList<>();
+        if (changelogItems != null)
+            changelogItems.forEach(item -> jiraChangelogItems.add(new JiraChangelogItem(item.getField(), item.getFrom(),
+                    item.getFromString(), item.getTo(), item.getToString())));
+        return jiraChangelogItems;
     }
 
     private void setResolution(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
