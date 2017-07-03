@@ -24,9 +24,11 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Issue;
 
+import javax.naming.NameNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.jboss.set.aphrodite.config.TrackerType.JIRA;
 
@@ -44,6 +46,10 @@ public class JiraIssue extends Issue {
     private List<JiraLabel> labels = new ArrayList<>();
 
     private List<JiraChangelogGroup> changelog = new ArrayList<>();
+
+    private Stream<Issue> upstreamReferences = null;
+
+    private List<URL> clones = new ArrayList<>();
 
     public JiraIssue(final URL url) {
         super(url, JIRA);
@@ -96,4 +102,20 @@ public class JiraIssue extends Issue {
         this.changelog = changelog;
     }
 
+    public void setClones(List<URL> clones) {
+        this.clones = clones;
+    }
+
+    public List<URL> getClones() {
+        return clones;
+    }
+
+    @Override
+    public Stream<Issue> getUpstreamReferences() throws NameNotFoundException {
+        // Lazy loading - upstreamReferences are filled in on the 1st call of getUpstreamReferences()
+        if (upstreamReferences == null) {
+            upstreamReferences = super.getUpstreamReferences();
+        }
+        return upstreamReferences;
+    }
 }
