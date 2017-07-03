@@ -68,8 +68,8 @@ class GitHubWrapper {
             URL url = pullRequest.getHtmlUrl();
             Codebase codebase = new Codebase(pullRequest.getBase().getRef());
             PullRequestState state = getPullRequestState(pullRequest.getState());
-            String title = pullRequest.getTitle().replaceFirst("\\u2026", "");
-            String body = pullRequest.getBody().replaceFirst("\\u2026", "");
+            String title = pullRequest.getTitle() == null ? "" : pullRequest.getTitle().replaceFirst("\\u2026", "");
+            String body = pullRequest.getBody() == null ? "" : pullRequest.getBody().replaceFirst("\\u2026", "");
 
             String urlString = url.toString();
             int idx = urlString.indexOf("pull");
