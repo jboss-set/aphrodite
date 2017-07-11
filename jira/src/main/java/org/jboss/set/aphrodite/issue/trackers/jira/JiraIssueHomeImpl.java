@@ -40,6 +40,9 @@ import java.util.stream.Stream;
 /**
  * Created by Marek Marusic <mmarusic@redhat.com> on 6/23/17.
  */
+/*
+ * Implementation of the IssueHome and its findUpstreamReferences for jira issue
+ */
 public class JiraIssueHomeImpl implements IssueHome {
     public static final String JBEAPProject = "JBoss Enterprise Application Platform";
     private static final Log LOG = LogFactory.getLog(JiraIssueHomeImpl.class);
@@ -49,20 +52,22 @@ public class JiraIssueHomeImpl implements IssueHome {
         if (!(issue instanceof JiraIssue))
             return null;
 
-        return filterUpstreamReferences(loadCloneIssues((JiraIssue) issue), (JiraIssue) issue);
+        return filterUpstreamReferences(loadLinkedCloneIssues((JiraIssue) issue), (JiraIssue) issue);
     }
 
+    // get all issues which are upstream of the downstreamIssue
     public Stream<Issue> filterUpstreamReferences(List<Issue> cloneIssues, JiraIssue downstreamIssue) {
         List<Issue> upstreamReferences = new ArrayList<>();
         cloneIssues.stream().filter(i -> isUpstreamIssue((JiraIssue) i, downstreamIssue)).forEach(upstreamReferences::add);
         return upstreamReferences.stream();
     }
 
-    private List<Issue> loadCloneIssues(JiraIssue jiraIssue) {
+    private List<Issue> loadLinkedCloneIssues(JiraIssue jiraIssue) {
         List<Issue> issues = null;
 
         try {
-            issues = Aphrodite.instance().getIssues(jiraIssue.getClones());
+            // get cloned from/to issues of the jiraIssue
+            issues = Aphrodite.instance().getIssues(jiraIssue.getLinkedCloneIssues());
         } catch (AphroditeException e) {
             Utils.logException(LOG, e);
         }
@@ -74,6 +79,7 @@ public class JiraIssueHomeImpl implements IssueHome {
         if (upstreamIssue == null || downstreamIssue == null)
             return false;
 
+        // If the issue is WFLY then it is upstream issue
         if (!isIssueJBEAP(upstreamIssue))
             return true;
 
@@ -92,6 +98,11 @@ public class JiraIssueHomeImpl implements IssueHome {
         return VersionComparator.INSTANCE.compare(v1, v2) > 0;
     }
 
+    public static boolean isIssueJBEAP(JiraIssue issue) {
+        return issue != null && issue.getProduct().isPresent() && issue.getProduct().get().equals(JBEAPProject);
+    }
+
+    // Compare summary of the upstream and downstream. Omits the prefix like "GSS (7.0.7)"
     private static boolean matchesSuffix(Optional<String> summary, Optional<String> summary1) {
         if (!summary.isPresent() && !summary1.isPresent())
             return true;
@@ -106,22 +117,21 @@ public class JiraIssueHomeImpl implements IssueHome {
         return false;
     }
 
+    // Extract Target release in format like "7.0.z.GA"
+    private static String extractTargetRelease(Map<String, FlagStatus> streamStatus) {
+        // There should be max 1 key with value = FlagStatus.ACCEPTED or null in the stream status
+        return (streamStatus.size() > 0) ? streamStatus.keySet().iterator().next() : "";
+    }
+
+    // Check if the release starts with "Num.Num." e.g. "7.0."
     private static boolean isMajroAndMinorVersionNumeric(String version) {
         return version.matches("^[0-9]+\\.[0-9]+\\..*$");
     }
 
+    // Extract major and minor version in format "Num.Num." e.g. "7.0."
     private static String getMajorAndMinorOf(String version) {
         int indexOfSecondDot = version.indexOf(".", version.indexOf(".") + 1);
         return version.substring(0, indexOfSecondDot + 1);
-    }
-
-    public static boolean isIssueJBEAP(JiraIssue issue) {
-        return issue != null && issue.getProduct().isPresent() && issue.getProduct().get().equals(JBEAPProject);
-    }
-
-    private static String extractTargetRelease(Map<String, FlagStatus> streamStatus) {
-        // There should be max 1 key with value = FlagStatus.ACCEPTED or null in the stream status
-        return (streamStatus.size() > 0) ? streamStatus.keySet().iterator().next() : "";
     }
 
 }

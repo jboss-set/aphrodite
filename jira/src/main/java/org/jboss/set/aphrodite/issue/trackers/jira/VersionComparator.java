@@ -26,6 +26,8 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
  * Created by Marek Marusic <mmarusic@redhat.com> on 6/15/17.
  * Main source of this code is:
  * https://github.com/wolfc/updepres/blob/master/model/src/main/java/org/jboss/up/depres/version/VersionComparator.java
+ *
+ * Compare 2 release versions
  */
 import java.util.Comparator;
 
@@ -36,15 +38,17 @@ public class VersionComparator implements Comparator<String> {
     @Override
     public int compare(final String v1, final String v2) {
         int i1 = 0, i2 = 0;
-        final int epoch1;
 
-        //Compare major version
+        // Get major version of the v1
+        final int epoch1;
         int i = v1.indexOf(".");
         if (i != -1) {
             epoch1 = Integer.valueOf(v1.substring(0, i));
             i1 = i;
         } else
             epoch1 = 0;
+
+        // Get major version of the v2
         final int epoch2;
         i = v2.indexOf(".");
         if (i != -1) {
@@ -52,10 +56,12 @@ public class VersionComparator implements Comparator<String> {
             i2 = i;
         } else
             epoch2 = 0;
+
+        // Compare major versions
         if (epoch1 != epoch2)
             return epoch1 - epoch2;
 
-        //Compare rest of the string
+        // Compare rest of the versions
         final int lim1 = v1.length(), lim2 = v2.length();
         while (i1 < lim1 && i2 < lim2) {
             final char c1 = v1.charAt(i1);
@@ -76,9 +82,11 @@ public class VersionComparator implements Comparator<String> {
                 i1 = ei1;
                 i2 = ei2;
             } else {
+                // Return the difference between the characters
                 return c1 - c2;
             }
         }
+        // return the difference between the versions
         return lim1 - lim2;
     }
 
