@@ -49,7 +49,8 @@ public class JiraIssue extends Issue {
 
     private Stream<Issue> upstreamReferences = null;
 
-    private List<URL> clones = new ArrayList<>();
+    //Links to issues cloned from/to
+    private List<URL> linkedCloneIssues = new ArrayList<>();
 
     public JiraIssue(final URL url) {
         super(url, JIRA);
@@ -102,12 +103,12 @@ public class JiraIssue extends Issue {
         this.changelog = changelog;
     }
 
-    public void setClones(List<URL> clones) {
-        this.clones = clones;
+    public void setLinkedCloneIssues(List<URL> linkedCloneIssues) {
+        this.linkedCloneIssues = linkedCloneIssues;
     }
 
-    public List<URL> getClones() {
-        return clones;
+    public List<URL> getLinkedCloneIssues() {
+        return linkedCloneIssues;
     }
 
     @Override

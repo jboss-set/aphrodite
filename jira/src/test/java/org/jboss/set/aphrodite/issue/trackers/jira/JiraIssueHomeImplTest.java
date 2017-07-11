@@ -38,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Marek Marusic <mmarusic@redhat.com> on 6/23/17.
+ * Test whether JiraIssueHomeImpl finds the upstream references correctly
  */
 public class JiraIssueHomeImplTest {
 
@@ -47,7 +48,8 @@ public class JiraIssueHomeImplTest {
         assertEquals("Issue should be upstream.", true, isUpstreamIssue(createUpstreamCommunity(), createDownstream()));
         assertEquals("Issue should not be upstream.", false, isUpstreamIssue(createDownstream(), createDownstream()));
         assertEquals("Issue should not be upstream.", false, isUpstreamIssue(null, null));
-        assertEquals("Issue should not be upstream.", false, isUpstreamIssue(createDownstream(), createIndividualPatches()));
+        assertEquals("Issue should not be upstream.", false,
+                isUpstreamIssue(createDownstream(), createIssueWithVersionIndividualPatches()));
     }
 
     private JiraIssue createDownstream() {
@@ -61,7 +63,7 @@ public class JiraIssueHomeImplTest {
         return issue;
     }
 
-    private JiraIssue createIndividualPatches() {
+    private JiraIssue createIssueWithVersionIndividualPatches() {
         JiraIssue issue = mockIssue(JiraIssueHomeImpl.JBEAPProject, "Summary.", "IndividualPatches GA");
 
         return issue;
@@ -83,21 +85,23 @@ public class JiraIssueHomeImplTest {
     }
 
     @Test
-    public void testFindUpstreamReferences() {
-        testFindUpstreamReference(createUpstream());
-        testFindUpstreamReference(createUpstreamCommunity());
-        testNoUpstreamReference(createIndividualPatches());
+    public void testFilterUpstreamReferences() {
+        testFilterUpstreamReference(createUpstream());
+        testFilterUpstreamReference(createUpstreamCommunity());
+        testNoUpstreamReference(createIssueWithVersionIndividualPatches());
         testNoUpstreamReference(createDownstream());
         testNoUpstreamReference(null);
     }
 
-    private void testFindUpstreamReference(JiraIssue upstream) {
-        List<Issue> issues = findUpstreamReference(upstream);
+    private void testFilterUpstreamReference(JiraIssue upstream) {
+        // Check if the filterUpstreamReferences function finds the upstream
+        List<Issue> issues = filterUpstreamReference(upstream);
         assertEquals(1, issues.size());
         assertEquals(upstream, issues.get(0));
     }
 
-    private List<Issue> findUpstreamReference(JiraIssue upstream) {
+    private List<Issue> filterUpstreamReference(JiraIssue upstream) {
+        // Create downstream with upstream issue
         JiraIssueHomeImpl issueHome = new JiraIssueHomeImpl();
         JiraIssue downstream = createDownstream();
         List<Issue> linkedCloneIssues = new ArrayList<>();
@@ -108,7 +112,7 @@ public class JiraIssueHomeImplTest {
     }
 
     private void testNoUpstreamReference(JiraIssue upstream) {
-        List<Issue> issues = findUpstreamReference(upstream);
+        List<Issue> issues = filterUpstreamReference(upstream);
         assertEquals(0, issues.size());
     }
 

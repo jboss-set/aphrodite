@@ -35,8 +35,11 @@ public class VersionComparatorTest {
         String upstreamRelease = "7.1.0.GA";
         String downstreamRelease = "7.0.7.GA";
 
-        assertEquals(0, VersionComparator.INSTANCE.compare(upstreamRelease, upstreamRelease));
-        assertEquals(1, VersionComparator.INSTANCE.compare(upstreamRelease, downstreamRelease));
-        assertEquals(-1, VersionComparator.INSTANCE.compare(downstreamRelease, upstreamRelease));
+        assertEquals("Comparing the same versions.", 0,
+                VersionComparator.INSTANCE.compare(upstreamRelease, upstreamRelease));
+        assertEquals("Comparing higher version with lower version.", 1,
+                VersionComparator.INSTANCE.compare(upstreamRelease, downstreamRelease));
+        assertEquals("Comparing lower version with higher version.", -1,
+                VersionComparator.INSTANCE.compare(downstreamRelease, upstreamRelease));
     }
 }
