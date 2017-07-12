@@ -52,6 +52,8 @@ public class JiraIssue extends Issue {
     //Links to issues cloned from/to
     private List<URL> linkedCloneIssues = new ArrayList<>();
 
+    private List<URL> linkedIncorporatesIssues = new ArrayList<>();
+
     public JiraIssue(final URL url) {
         super(url, JIRA);
     }
@@ -118,5 +120,13 @@ public class JiraIssue extends Issue {
             upstreamReferences = super.getUpstreamReferences();
         }
         return upstreamReferences;
+    }
+
+    public List<URL> getLinkedIncorporatesIssues() {
+        return linkedIncorporatesIssues;
+    }
+
+    public void setLinkedIncorporatesIssues(List<URL> linkedIncorporatesIssues) {
+        this.linkedIncorporatesIssues = linkedIncorporatesIssues;
     }
 }
