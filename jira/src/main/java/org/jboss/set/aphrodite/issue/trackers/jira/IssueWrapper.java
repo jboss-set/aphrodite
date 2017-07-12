@@ -384,6 +384,7 @@ class IssueWrapper {
     private void setIssueDependencies(URL originalUrl, Issue issue, Iterable<com.atlassian.jira.rest.client.api.domain.IssueLink> links) {
         if (links == null)
             return;
+        final String INCORPORATES = "incorporates";
 
         for (com.atlassian.jira.rest.client.api.domain.IssueLink il : links) {
             // Add links of cloned to/from issues to the issue
@@ -391,6 +392,13 @@ class IssueWrapper {
                 URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 ((JiraIssue) issue).getLinkedCloneIssues().add(url);
             }
+
+            // Add links of incorporates issues
+            if(il.getIssueLinkType().getDescription().equals(INCORPORATES)) {
+                URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
+                ((JiraIssue) issue).getLinkedIncorporatesIssues().add(url);
+            }
+
             if (il.getIssueLinkType().getDirection().equals(Direction.INBOUND)) {
                 URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 issue.getBlocks().add(url);
