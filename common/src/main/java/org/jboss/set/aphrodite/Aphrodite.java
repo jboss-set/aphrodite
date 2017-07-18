@@ -694,6 +694,23 @@ public class Aphrodite implements AutoCloseable {
     }
 
     /**
+     * Check if a given CP version is released.
+     *
+     * @param cpVersion the CP version to be tested. Jira accepts GA version format x.y.z.GA, e.g. 7.1.2.GA. Bugzilla accepts version format x.y.z, e.g. 6.4.18.
+     * @return true if the given version is released, otherwise false.
+     *
+     */
+    public boolean isCPReleased(String cpVersion) {
+        Objects.requireNonNull(cpVersion, "CP version cannot be null");
+        boolean released = false;
+        checkIssueTrackerExists();
+        // No ideal means to find proper issue tracker by version except doing hard code EAP6/7 <-> BZ/JIRA.
+        // This is a blind match to both issue trackers.
+        released = issueTrackers.values().stream().anyMatch(e -> e.isCPReleased(cpVersion));
+        return released;
+    }
+
+    /**
      * Retrieve all unique Repositories that exists across all Streams.
      *
      * @return a list of unique Repositories.

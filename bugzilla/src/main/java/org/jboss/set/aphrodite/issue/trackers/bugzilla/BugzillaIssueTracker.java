@@ -29,6 +29,7 @@ import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -39,6 +40,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the Bugzilla issue tracker.
@@ -46,6 +49,8 @@ import java.util.Map;
  * @author Ryan Emerson
  */
 public class BugzillaIssueTracker extends AbstractIssueTracker {
+
+    static final Pattern BUGZILLAFIXVERSION = Pattern.compile("(\\d\\.)(\\d\\.)(\\d+)");
 
     private static final Log LOG = LogFactory.getLog(BugzillaIssueTracker.class);
 
@@ -127,5 +132,26 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     @Override
     protected Log getLog() {
         return LOG;
+    }
+
+    @Override
+    public boolean isCPReleased(String cpVersion) {
+        // For Bugzilla, only accept version format x.y.z, e.g. 6.4.18 to generate payload tracker id
+        // Example payload tracker format https://bugzilla.redhat.com/show_bug.cgi?id=eap6418-payload
+        Matcher matcher = BUGZILLAFIXVERSION.matcher(cpVersion);
+        if (!matcher.matches()) {
+            return false;
+        }
+
+        String payloadTrackerId = "eap" + cpVersion.replace(".", "") + "-payload";
+        try {
+            Issue issue = bzClient.getIssue(payloadTrackerId);
+            if ((issue.getStatus().equals(IssueStatus.CLOSED) || issue.getStatus().equals(IssueStatus.VERIFIED)))
+                return true;
+        } catch (NotFoundException e) {
+            Utils.logException(LOG, e);
+            return false;
+        }
+        return false;
     }
 }

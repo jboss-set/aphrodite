@@ -42,6 +42,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -68,11 +70,13 @@ import com.atlassian.jira.rest.client.api.domain.Filter;
 import com.atlassian.jira.rest.client.api.domain.IssueLink;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.LinkIssuesInput;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.atlassian.util.concurrent.Promise;
 
 
 /**
@@ -81,6 +85,8 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientF
  * @author Ryan Emerson
  */
 public class JiraIssueTracker extends AbstractIssueTracker {
+
+    static final Pattern JIRAFIXVERSION = Pattern.compile("(\\d\\.)(\\d\\.)(\\d+).GA");
 
     private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
 
@@ -380,5 +386,26 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         } catch (IOException e) {
             LOG.warn("destroyin jira issue tracker", e);
         }
+    }
+
+    @Override
+    public boolean isCPReleased(String cpVersion) {
+        // For Jira, only accept GA version format x.y.z.GA, e.g. 7.1.2.GA
+        // ignore CR version like 7.0.7.CR3
+        Matcher matcher = JIRAFIXVERSION.matcher(cpVersion);
+        if (!matcher.matches()) {
+            return false;
+        }
+        Promise<Project> promise = restClient.getProjectClient().getProject("JBEAP");
+        Project project = promise.claim();
+
+        Optional<Version> version = StreamSupport.stream(project.getVersions().spliterator(), false)
+                                                 .filter(v -> v.getName().equals(cpVersion))
+                                                 .findAny();
+        if (version.isPresent()) {
+            return version.get().isReleased();
+        }
+
+        return false;
     }
 }
