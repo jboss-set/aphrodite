@@ -32,19 +32,21 @@ import java.util.Optional;
  */
 public class StreamComponent {
     private final String name;
-    private final List<String> contacts;
-    private final RepositoryType repositoryType;
-    private final URI repositoryURL;
+    private List<String> contacts;
+    private RepositoryType repositoryType;
+    private URI repositoryURL;
     // branch used to build
-    private final Codebase codebase;
+    private Codebase codebase;
     // latest tag being used as build point
-    private final String tag;
+    private String tag;
     // version included in build
-    private final String version;
+    private String version;
     // maven GAV, in reality it is group id
     private final String gav;
     // Just a comment for us petty humans.
-    private final String comment;
+    private  String comment;
+
+    private Stream stream;
 
     public StreamComponent(final String name, final List<String> contacts, final RepositoryType repositoryType,
             final URI repositoryURL, final Codebase codebase, final String tag, final String version, final String gav,
@@ -69,7 +71,7 @@ public class StreamComponent {
 
     public StreamComponent(final String name, final List<String> contacts, final URI repositoryURL, final Codebase codebase,
             final String tag, final String version, final String gav) {
-        this(name, contacts, repositoryURL, codebase, tag, version, gav, null);
+        this(name, contacts, repositoryURL, codebase, tag, version, gav, "");
     }
 
     public String getName() {
@@ -92,12 +94,24 @@ public class StreamComponent {
         return codebase;
     }
 
+    public void setCodebase(final String codebase) {
+        this.codebase = new Codebase(codebase);
+    }
+
     public String getTag() {
         return tag;
     }
 
+    public void setTag(final String tag) {
+        this.tag = tag;
+    }
+
     public String getVersion() {
         return version;
+    }
+
+    public void setVersion(final String version) {
+        this.version = version;
     }
 
     public String getGAV() {
@@ -106,6 +120,34 @@ public class StreamComponent {
 
     public String getComment() {
         return comment;
+    }
+
+    public Stream getStream() {
+        return stream;
+    }
+
+    public void setContacts(List<String> contacts) {
+        this.contacts = contacts;
+    }
+
+    public void setRepositoryType(RepositoryType repositoryType) {
+        this.repositoryType = repositoryType;
+    }
+
+    public void setRepositoryURL(URI repositoryURL) {
+        this.repositoryURL = repositoryURL;
+    }
+
+    public void setCodebase(Codebase codebase) {
+        this.codebase = codebase;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    void setStream(final Stream stream) {
+        this.stream = stream;
     }
 
     // Returns a String only if a rule has been established for the host.
@@ -140,6 +182,6 @@ public class StreamComponent {
     public String toString() {
         return "StreamComponent [name=" + name + ", contacts=" + contacts + ", repositoryType=" + repositoryType
                 + ", repositoryURL=" + repositoryURL + ", codebase=" + codebase + ", tag=" + tag + ", version=" + version
-                + ", gav=" + gav + ", comment=" + comment + "]";
+                + ", gav=" + gav + ", comment=" + comment + ", stream=" + (stream != null ? stream.getName() : "")+" ]";
     }
 }

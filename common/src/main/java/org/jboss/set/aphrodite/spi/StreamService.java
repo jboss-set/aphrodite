@@ -1,6 +1,8 @@
 package org.jboss.set.aphrodite.spi;
 
+import java.io.OutputStream;
 import java.net.URI;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
@@ -9,6 +11,7 @@ import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.jboss.set.aphrodite.domain.StreamComponentUpdateException;
 
 public interface StreamService {
 
@@ -84,4 +87,20 @@ public interface StreamService {
      * @return the StreamComponent associated with the given repository and codebase, or null if a StreamComponent does not exist
      */
     StreamComponent getComponentBy(URI repository, Codebase codebase);
+
+    /**
+     * Updates stream component version in memory and in back end storage if possible.
+     * @param streamComponent - component which should be updated
+     * @return mutated object with new component version, after update.
+     * @throws StreamComponentUpdateException - in case there is some error on update.
+     */
+    StreamComponent updateStreamComponent(StreamComponent streamComponent) throws StreamComponentUpdateException;
+
+    /**
+     * Serialize streams for certain URL.
+     * @param url - url
+     * @param out - sink for bytes
+     * @throws NotFoundException - if url does not match any set of streams
+     */
+    void serializeStreams(URL url, OutputStream out) throws NotFoundException;
 }
