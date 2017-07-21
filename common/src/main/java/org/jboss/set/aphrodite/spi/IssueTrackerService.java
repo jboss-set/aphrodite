@@ -161,6 +161,15 @@ public interface IssueTrackerService {
     boolean addCommentToIssue(Collection<Issue> issues, Comment comment);
 
     /**
+     * Check if a given CP version is released.
+     *
+     * @param cpVersion the CP version to be tested. Jira accepts GA version format x.y.z.GA, e.g. 7.1.2.GA. Bugzilla accepts version format x.y.z, e.g. 6.4.18.
+     * @return true if the given version is released, otherwise false.
+     *
+     */
+    boolean isCPReleased(String cpVersion);
+
+    /**
      * allows to destroy and deallocate resources
      */
     default void destroy() { }
