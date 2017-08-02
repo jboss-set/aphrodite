@@ -24,21 +24,25 @@ package org.jboss.set.aphrodite;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -55,6 +59,7 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.PullRequestState;
+import org.jboss.set.aphrodite.domain.PullRequestUpgrade;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
@@ -122,7 +127,19 @@ public class Aphrodite implements AutoCloseable {
         repositories.forEach(RepositoryService::destroy);
         repositories.clear();
     }
-
+    //URL with digits at the end to match PR or JIRA/BZ
+    private static final String URL_REGEX_STRING= "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\\d+";
+    private static final Pattern URL_REGEX= Pattern.compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\\d+");
+    private static final Pattern UPSTREAM_ISSUE_NOT_REQUIRED = Pattern.compile("^\\s*Upstream not required.*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ISSUE = Pattern.compile("^\\s*Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPSTREAM_ISSUE = Pattern.compile("^\\s*Upstream Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
+    //private final static Pattern UPSTREAM_PR = Pattern.compile("^\\s*Upstream PR[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+", Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPSTREAM_PR = Pattern.compile("^\\s*Upstream PR[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
+    private static final Pattern RELATED_ISSUES = Pattern.compile("^\\s*Related Issue[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+", Pattern.CASE_INSENSITIVE);
+    //TODO: XXX do we need refinement here?
+    private static final String UPGRADE_META_BIT_REGEX = "\\w++=\\w++";
+    private static final String UPGRADE_META_REGEX = "\\s*+"+UPGRADE_META_BIT_REGEX+"(,\\s*+"+UPGRADE_META_BIT_REGEX+")*+";
+    private static final Pattern UPGRADE = Pattern.compile("\\s*Upgrade[:|]"+UPGRADE_META_REGEX, Pattern.CASE_INSENSITIVE);
     private final Map<String,IssueTrackerService> issueTrackers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final List<RepositoryService> repositories = new ArrayList<>();
     private final List<StreamService> streamServices = new ArrayList<>();
@@ -218,6 +235,179 @@ public class Aphrodite implements AutoCloseable {
            return its.getIssue(url);
         }
         throw new NotFoundException("No issues found which correspond to url: " + url);
+    }
+
+    /**
+     * Retrieve issue associated with PR. This method require PR to conform to metadata scheme and have issue linked to this PR
+     * with 'Issue: &lt;TICKET&gt;'
+     *
+     * @param pullRequest - PR which will be interrogated.
+     * @return
+     *         <ul>
+     *         <li>null</li> - if no issue is linked in PR
+     *         <li>Issue</li> - if there is linked issue that can be fetched
+     *         </ul>
+     * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
+     * @throws MalformedURLException
+     */
+    public Issue getIssue(final PullRequest pullRequest) throws NotFoundException, MalformedURLException {
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
+        checkIssueTrackerExists();
+        final String body = pullRequest.getBody();
+        final String[] url = extractURLs(body, ISSUE, false);
+        if (url == null || url.length == 0 || url[0] == null)
+            return null;
+        else
+            return getIssue(new URL(url[0]));
+    }
+
+    /**
+     * Retrieve list of related issues associated with PR. This method require PR to conform to metadata scheme and have issue
+     * linked to this PR with 'Related Issues: &lt;TICKET&gt;,&lt;TICKET&gt;,&lt;TICKET&gt;'
+     *
+     * @param pullRequest - PR which will be interrogated.
+     * @return
+     *         <ul>
+     *         <li>null</li> - if no issues are linked in PR
+     *         <li>Issue</li> - if there are linked issues that can be fetched
+     *         </ul>
+     * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
+     * @throws MalformedURLException
+     */
+    public List<Issue> getRelatedIssues(final PullRequest pullRequest) throws MalformedURLException, NotFoundException {
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
+        checkIssueTrackerExists();
+        final String body = pullRequest.getBody();
+        final String[] urls = extractURLs(body, RELATED_ISSUES, true);
+        if (urls == null || urls.length == 0 || urls[0] == null) {
+            return null;
+        } else {
+            List<Issue> issues = new ArrayList<>(urls.length);
+            for (String url : urls) {
+                issues.add(getIssue(new URL(url)));
+            }
+            return issues;
+        }
+    }
+
+    /**
+     * Retrieve upstream issue associated with this PR. This method require PR to conform to metadata scheme and have issue
+     * linked to this PR with 'Upstream Issue: &lt;TICKET&gt;'.
+     *
+     * @param pullRequest - PR which will be interrogated.
+     * @return
+     *         <ul>
+     *         <li>null</li> - if no issue is linked in PR or {@link #isUpstreamRequired(PullRequest)} return false;
+     *         <li>Issue</li> - if there is linked issue that can be fetched
+     *         </ul>
+     * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
+     * @throws MalformedURLException
+     */
+    public Issue getUpstreamIssue(final PullRequest pullRequest) throws NotFoundException, MalformedURLException {
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
+        checkIssueTrackerExists();
+        if (this.isUpstreamRequired(pullRequest)) {
+            final String body = pullRequest.getBody();
+            final String[] url = extractURLs(body, UPSTREAM_ISSUE, false);
+            if (url == null || url.length == 0 || url[0] == null)
+                return null;
+            else
+                return getIssue(new URL(url[0]));
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieve upstream PR associated with this PR. This method require PR to conform to metadata scheme and have issue linked
+     * to this PR with 'Upstream PR: &lt;TICKET&gt;'.
+     *
+     * @param pullRequest - PR which will be interrogated.
+     * @return
+     *         <ul>
+     *         <li>null</li> - if no upstream PR is linked in PR or {@link #isUpstreamRequired(PullRequest)} return false;
+     *         <li>Issue</li> - if there is linked PR that can be fetched
+     *         </ul>
+     * @throws NotFoundException - if there is linked PR but either no tracker or issue does not exist in tracker
+     * @throws MalformedURLException
+     */
+    public PullRequest getUpstreamPullRequest(final PullRequest pullRequest) throws MalformedURLException, NotFoundException {
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
+        checkIssueTrackerExists();
+        if (this.isUpstreamRequired(pullRequest)) {
+            final String body = pullRequest.getBody();
+            final String[] url = extractURLs(body, UPSTREAM_PR, false);
+            if (url == null || url.length == 0 || url[0] == null)
+                return null;
+            else
+                return getPullRequest(new URL(url[0]));
+        } else {
+            return null;
+        }
+    }
+
+    public PullRequestUpgrade getPullRequestUpgrade(final PullRequest pullRequest) {
+        if (!isUpgrade(pullRequest)) {
+            return null;
+        }
+        final String body = pullRequest.getBody();
+        Matcher m = UPGRADE.matcher(body);
+        m.find();
+        String upgradeBody = body.substring(m.start(), m.end());
+        m = Pattern.compile(UPGRADE_META_BIT_REGEX).matcher(upgradeBody);
+        Properties metas = new Properties();
+        while (m.find()) {
+            final String[] x = upgradeBody.substring(m.start(), m.end()).split("=");
+            metas.put(x[0], x[1]);
+        }
+        return new PullRequestUpgrade(pullRequest, metas.getProperty("id"), metas.getProperty("tag"),
+                metas.getProperty("version"), metas.getProperty("branch"));
+    }
+
+    /**
+     * Check if PR require upstream or not.
+     *
+     * @param pullRequest
+     * @return
+     */
+    public boolean isUpstreamRequired(final PullRequest pullRequest) {
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
+        checkIssueTrackerExists();
+        final String body = pullRequest.getBody();
+        final Matcher m = UPSTREAM_ISSUE_NOT_REQUIRED.matcher(body);
+        return !m.find();
+    }
+
+    public boolean isUpgrade(PullRequest pullRequest) {
+        Objects.requireNonNull(pullRequest, "pull request cannot be null");
+        checkIssueTrackerExists();
+        final String body = pullRequest.getBody();
+        final Matcher m = UPGRADE.matcher(body);
+        return m.find();
+    }
+
+    protected String[] extractURLs(final String source, final Pattern initialMatchPattern, final boolean multiple) {
+        Matcher m = initialMatchPattern.matcher(source);
+        if (m.find()) {
+            final String urlSource = source.substring(m.start(), m.end());
+            m = URL_REGEX.matcher(urlSource);
+            if (multiple) {
+                final List<String> urls = new ArrayList<>();
+                while (m.find()) {
+                    urls.add(urlSource.substring(m.start(), m.end()));
+                }
+                return urls.toArray(new String[urls.size()]);
+            } else {
+                // just to be thorough
+                if (m.find()) {
+                    return new String[] { urlSource.substring(m.start(), m.end()) };
+                } else {
+                    return null;
+                }
+            }
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -397,6 +587,7 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param pullRequest the <code>PullRequest</code> object whoms associated Issues should be returned.
      * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
+     * @deprecated
      */
     public List<Issue> getIssuesAssociatedWith(PullRequest pullRequest) {
         checkIssueTrackerExists();
