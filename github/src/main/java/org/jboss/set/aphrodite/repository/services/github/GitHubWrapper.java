@@ -22,8 +22,18 @@
 
 package org.jboss.set.aphrodite.repository.services.github;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Label;
+import org.jboss.set.aphrodite.domain.MergeableState;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
@@ -33,14 +43,6 @@ import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRateLimit;
-
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Ryan Emerson
@@ -64,22 +66,26 @@ class GitHubWrapper {
 
     PullRequest pullRequestToPullRequest(GHPullRequest pullRequest) {
         try {
-            String id = Integer.toString(pullRequest.getNumber());
-            URL url = pullRequest.getHtmlUrl();
-            Codebase codebase = new Codebase(pullRequest.getBase().getRef());
-            PullRequestState state = getPullRequestState(pullRequest.getState());
-            String title = pullRequest.getTitle() == null ? "" : pullRequest.getTitle().replaceFirst("\\u2026", "");
-            String body = pullRequest.getBody() == null ? "" : pullRequest.getBody().replaceFirst("\\u2026", "");
-
+            final String id = Integer.toString(pullRequest.getNumber());
+            final URL url = pullRequest.getHtmlUrl();
+            final Codebase codebase = new Codebase(pullRequest.getBase().getRef());
+            final PullRequestState state = getPullRequestState(pullRequest.getState());
+            final String title = pullRequest.getTitle() == null ? "" : pullRequest.getTitle().replaceFirst("\\u2026", "");
+            final String body = pullRequest.getBody() == null ? "" : pullRequest.getBody().replaceFirst("\\u2026", "");
+            final boolean mergeable = pullRequest.getMergeable();
+            final boolean merged = pullRequest.isMerged();
+            final Date mergedAt = pullRequest.getMergedAt();
+            final MergeableState mergeableState = pullRequest.getMergeableState() == null ? null : MergeableState.valueOf(pullRequest.getMergeableState().toUpperCase());
             String urlString = url.toString();
             int idx = urlString.indexOf("pull");
             if (idx >= 0) {
                 urlString = urlString.substring(0, idx);
             }
-            Repository repo = new Repository(URI.create(urlString).toURL());
+            final Repository repo = new Repository(URI.create(urlString).toURL());
 
-            return new PullRequest(id, url, repo, codebase, state, title, body);
-        } catch (MalformedURLException e) {
+            return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt);
+        } catch (IOException e) {
+            //TODO XXX: face this error.
             return null;
         }
     }

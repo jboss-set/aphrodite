@@ -347,7 +347,7 @@ public class Aphrodite implements AutoCloseable {
     }
 
     public PullRequestUpgrade getPullRequestUpgrade(final PullRequest pullRequest) {
-        if (!isUpgrade(pullRequest)) {
+        if (!hasUpgrade(pullRequest)) {
             return null;
         }
         final String body = pullRequest.getBody();
@@ -378,7 +378,12 @@ public class Aphrodite implements AutoCloseable {
         return !m.find();
     }
 
-    public boolean isUpgrade(PullRequest pullRequest) {
+    /**
+     * Check if said PR has upgrade meta present.
+     * @param pullRequest
+     * @return
+     */
+    public boolean hasUpgrade(PullRequest pullRequest) {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
         final String body = pullRequest.getBody();
