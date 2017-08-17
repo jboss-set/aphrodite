@@ -23,8 +23,11 @@
 package org.jboss.set.aphrodite.domain;
 
 import java.net.URL;
+import java.util.Date;
+import java.util.regex.Pattern;
 
 public class PullRequest {
+    private static final Pattern UPGRADE_TITLE = Pattern.compile("\\s*Upgrade \\s*", Pattern.CASE_INSENSITIVE);
 
     private final String id;
     private final URL url;
@@ -33,8 +36,11 @@ public class PullRequest {
     private String title;
     private String body;
     private Repository repository;
+    private boolean mergeable, merged, upgrade;
+    private MergeableState mergableState;
+    private Date mergedAt;
 
-    public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state, String title, String body) {
+    public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state, String title, String body, boolean mergeable, boolean merged, MergeableState mergeableState, Date mergedAt) {
         this.id = id;
         this.url = url;
         this.codebase = codebase;
@@ -42,11 +48,11 @@ public class PullRequest {
         this.title = title;
         this.body = body;
         this.repository = repository;
-    }
-
-    public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state) {
-        this(id, url, repository, codebase, state, null, null);
-
+        this.mergeable = mergeable;
+        this.merged = merged;
+        this.mergedAt = mergedAt;
+        if(this.title != null)
+            this.upgrade = UPGRADE_TITLE.matcher(this.title).find();
     }
 
     public String getId() {
@@ -108,6 +114,25 @@ public class PullRequest {
 
     }
 
+    public boolean isMergeable() {
+        return mergeable;
+    }
+
+    public boolean isMerged() {
+        return merged;
+    }
+
+    public MergeableState getMergableState() {
+        return mergableState;
+    }
+
+    public Date getMergedAt() {
+        return mergedAt;
+    }
+
+    public boolean isUpgrade() {
+        return upgrade;
+    }
     @Override
     public int hashCode() {
         final int prime = 31;
