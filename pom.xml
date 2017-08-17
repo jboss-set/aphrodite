@@ -234,7 +234,7 @@
         </repository>
          <repository>
            <id>atlassian-public</id>
-           <url>https://maven.atlassian.com/content/repositories/atlassian-public/</url>
+           <url>https://maven.atlassian.com/maven-external</url>
            <snapshots>
              <enabled>true</enabled>
              <updatePolicy>daily</updatePolicy>
