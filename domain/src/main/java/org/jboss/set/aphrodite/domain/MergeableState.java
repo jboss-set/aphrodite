@@ -27,7 +27,9 @@ public enum MergeableState {
     //conflicts ?
     DIRTY("dirty"),
     //CI failures
-    UNSTABLE("unstable");
+    UNSTABLE("unstable"),
+    //unknown result
+    UNKNOWN("unknown");
 
     private final String mergeableState;
 

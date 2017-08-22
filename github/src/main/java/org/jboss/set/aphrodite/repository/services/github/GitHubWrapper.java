@@ -31,6 +31,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.MergeableState;
@@ -48,6 +51,8 @@ import org.kohsuke.github.GHRateLimit;
  * @author Ryan Emerson
  */
 class GitHubWrapper {
+
+    private static final Log LOG = LogFactory.getLog(GitHubWrapper.class);
 
     Repository toAphroditeRepository(URL url, Collection<GHBranch> branches) {
         Repository repo = new Repository(url);
@@ -72,7 +77,13 @@ class GitHubWrapper {
             final PullRequestState state = getPullRequestState(pullRequest.getState());
             final String title = pullRequest.getTitle() == null ? "" : pullRequest.getTitle().replaceFirst("\\u2026", "");
             final String body = pullRequest.getBody() == null ? "" : pullRequest.getBody().replaceFirst("\\u2026", "");
-            final boolean mergeable = pullRequest.getMergeable();
+            boolean mergeable = false;
+            if (pullRequest.getMergeable() == null) {
+                // workaround https://github.com/jboss-set/aphrodite/issues/150
+                Utils.logWarnMessage(LOG, "Can not retreive " + pullRequest.getHtmlUrl() + " mergeable value");
+            } else {
+                mergeable = pullRequest.getMergeable();
+            }
             final boolean merged = pullRequest.isMerged();
             final Date mergedAt = pullRequest.getMergedAt();
             final MergeableState mergeableState = pullRequest.getMergeableState() == null ? null : MergeableState.valueOf(pullRequest.getMergeableState().toUpperCase());
@@ -85,7 +96,7 @@ class GitHubWrapper {
 
             return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt);
         } catch (IOException e) {
-            //TODO XXX: face this error.
+            Utils.logException(LOG, e);
             return null;
         }
     }
