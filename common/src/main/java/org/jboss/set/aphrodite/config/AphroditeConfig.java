@@ -44,12 +44,14 @@ import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 public class AphroditeConfig {
     private static final int DEFAULT_STREAM_SERVICE_UPDATE_RATE = 0; // default to 0 means no auto stream update
     private static final int DEFAULT_INITIAL_DELAY = 0; // default to 0 means no initial delay
+    private static final int DEFAULT_MAX_THREADS = 2;
     private final ScheduledExecutorService executorService;
     private final List<IssueTrackerConfig> issueTrackerConfigs;
     private final List<RepositoryConfig> repositoryConfigs;
     private final List<StreamConfig> streamConfigs;
     private final int streamServiceUpdateRate;
     private final int initialDelay;
+    private int threadCount;
 
     static class DefaultThreadFactory implements ThreadFactory {
         private static final AtomicInteger poolNumber = new AtomicInteger(1);
@@ -99,32 +101,38 @@ public class AphroditeConfig {
     }
 
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs) {
-        this(Executors.newScheduledThreadPool(3, new DefaultThreadFactory()), issueTrackerConfigs, repositoryConfigs, streamConfigs, DEFAULT_STREAM_SERVICE_UPDATE_RATE, DEFAULT_INITIAL_DELAY);
+       this(Executors.newScheduledThreadPool(DEFAULT_MAX_THREADS, new DefaultThreadFactory()), issueTrackerConfigs, repositoryConfigs, streamConfigs, DEFAULT_STREAM_SERVICE_UPDATE_RATE, DEFAULT_INITIAL_DELAY,DEFAULT_MAX_THREADS);
     }
 
     public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs, int streamServiceUpdateRate, int initialDelay) {
-        this(Executors.newScheduledThreadPool(3, new DefaultThreadFactory()), issueTrackerConfigs, repositoryConfigs, streamConfigs, streamServiceUpdateRate, initialDelay);
+       this(Executors.newScheduledThreadPool(DEFAULT_MAX_THREADS, new DefaultThreadFactory()), issueTrackerConfigs, repositoryConfigs, streamConfigs, streamServiceUpdateRate, initialDelay,DEFAULT_MAX_THREADS);
     }
 
-    public AphroditeConfig(ScheduledExecutorService executorService,
-            List<IssueTrackerConfig> issueTrackerConfigs,
-            List<RepositoryConfig> repositoryConfigs,
-            List<StreamConfig> streamConfigs, int streamServiceUpdateRate, int initialDelay) {
-        Objects.requireNonNull(executorService, "executorService cannot be null");
+    public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs, int streamServiceUpdateRate, int initialDelay, int maxThreads) {
+       this(Executors.newScheduledThreadPool(maxThreads, new DefaultThreadFactory()), issueTrackerConfigs, repositoryConfigs, streamConfigs, streamServiceUpdateRate, initialDelay,maxThreads);
+    }
 
+    public AphroditeConfig(ScheduledExecutorService executorService, List<IssueTrackerConfig> issueTrackerConfigs,
+            List<RepositoryConfig> repositoryConfigs, List<StreamConfig> streamConfigs, int streamServiceUpdateRate,
+            int initialDelay, int threadCount) {
+        super();
         this.executorService = executorService;
-        this.issueTrackerConfigs = issueTrackerConfigs == null ? new ArrayList<>() : issueTrackerConfigs;
-        this.repositoryConfigs = repositoryConfigs == null ? new ArrayList<>() : repositoryConfigs;
-        this.streamConfigs = streamConfigs == null ? new ArrayList<>() : streamConfigs;
+        this.issueTrackerConfigs = issueTrackerConfigs;
+        this.repositoryConfigs = repositoryConfigs;
+        this.streamConfigs = streamConfigs;
         this.streamServiceUpdateRate = streamServiceUpdateRate;
         this.initialDelay = initialDelay;
+        this.threadCount = threadCount;
     }
 
     public AphroditeConfig(AphroditeConfig config) {
-        this(config.getExecutorService(), new ArrayList<>(config.getIssueTrackerConfigs()),
-                new ArrayList<>(config.getRepositoryConfigs()), new ArrayList<>(config.getStreamConfigs()), config.getStreamServiceUpdateRate(),config.getInitialDelay());
+        this(config.getExecutorService(), new ArrayList<>(config.getIssueTrackerConfigs()), new ArrayList<>(config.getRepositoryConfigs()), new ArrayList<>(config.getStreamConfigs()), config.getStreamServiceUpdateRate(), config.getInitialDelay(), config.getThreadCount());
     }
 
+    public AphroditeConfig(List<IssueTrackerConfig> issueTrackerConfigs, List<RepositoryConfig> repositoryConfigs,
+            List<StreamConfig> streamConfigs, int maxThreadCount) {
+        this(Executors.newScheduledThreadPool(DEFAULT_MAX_THREADS, new DefaultThreadFactory()), issueTrackerConfigs, repositoryConfigs, streamConfigs, DEFAULT_STREAM_SERVICE_UPDATE_RATE, DEFAULT_INITIAL_DELAY, DEFAULT_MAX_THREADS);
+    }
 
     public ScheduledExecutorService getExecutorService() {
         return executorService;
@@ -150,8 +158,16 @@ public class AphroditeConfig {
         return initialDelay;
     }
 
+    public int getThreadCount() {
+        return threadCount;
+    }
+
+    public void setThreadCount(int threadCount) {
+        this.threadCount = threadCount;
+    }
+
     public static AphroditeConfig fromJson(JsonObject jsonObject) {
-        int maxThreadCount = jsonObject.getInt("maxThreadCount", 0);
+        int maxThreadCount = jsonObject.getInt("maxThreadCount", DEFAULT_MAX_THREADS);
         int streamServiceUpdateRate = jsonObject.getInt("streamServiceUpdateRate", DEFAULT_STREAM_SERVICE_UPDATE_RATE);
         int initialDelay = jsonObject.getInt("initialDelay", DEFAULT_INITIAL_DELAY);
 
@@ -159,12 +175,8 @@ public class AphroditeConfig {
         List<RepositoryConfig> repositoryConfigs = getRepositoryConfigs(jsonObject);
         List<StreamConfig> streamConfigs = getStreamConfigs(jsonObject);
 
-        if (maxThreadCount > 0)
-            return new AphroditeConfig(Executors.newScheduledThreadPool(maxThreadCount, new DefaultThreadFactory()), issueTrackerConfigs,
-                    repositoryConfigs, streamConfigs, streamServiceUpdateRate, initialDelay);
-
-        // IF maxThreadCount has not been specified, then we refer to the default executorService which is an unlimited cachedThreadPool
-        return new AphroditeConfig(issueTrackerConfigs, repositoryConfigs, streamConfigs, streamServiceUpdateRate, initialDelay);
+        return new AphroditeConfig(Executors.newScheduledThreadPool(maxThreadCount, new DefaultThreadFactory()), issueTrackerConfigs,
+                    repositoryConfigs, streamConfigs, streamServiceUpdateRate, initialDelay, maxThreadCount);
     }
 
     private static List<IssueTrackerConfig> getIssueTrackerConfigs(JsonObject jsonObject) {

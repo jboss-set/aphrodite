@@ -1,5 +1,7 @@
 {
-  "issueTrackerConfigs": [
+    "maxThreadCount": 10,
+
+    "issueTrackerConfigs": [
     {
       "url": "https://issues.jboss.org/",
       "username": "user",
