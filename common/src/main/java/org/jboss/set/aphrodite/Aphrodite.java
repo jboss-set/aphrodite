@@ -195,8 +195,12 @@ public class Aphrodite implements AutoCloseable {
                     "Unable to initiatilise Aphrodite, as a valid " + RepositoryService.class.getName() + " does not exist.");
 
         initialiseStreams(mutableConfig);
-        //TODO: make this configurable.
-        this.executorService.scheduleAtFixedRate(new UpdateStreamServices(), 10, 10, TimeUnit.MINUTES);
+
+        int period = config.getStreamServiceUpdateRate();
+        int initialDelay = config.getInitialDelay();
+        if (period > 0) {
+            this.executorService.scheduleAtFixedRate(new UpdateStreamServices(), initialDelay, config.getStreamServiceUpdateRate(), TimeUnit.MINUTES);
+        }
         if (LOG.isInfoEnabled())
             LOG.info("Aphrodite Initialisation Complete");
     }
