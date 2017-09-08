@@ -1003,6 +1003,8 @@ public class Aphrodite implements AutoCloseable {
 
         @Override
         public void run() {
+            if (LOG.isInfoEnabled())
+                LOG.info("Update Aphrodite streams");
             for(StreamService ss: streamServices){
                 try {
                     ss.updateStreams();
@@ -1012,6 +1014,8 @@ public class Aphrodite implements AutoCloseable {
                     }
                 }
             }
+            if (LOG.isInfoEnabled())
+                LOG.info("Aphrodite streams update complete");
         }
     }
 

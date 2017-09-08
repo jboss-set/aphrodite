@@ -113,7 +113,6 @@ public class JsonStreamService implements StreamService {
         while (i.hasNext()) {
             StreamConfig streamConfig = i.next();
             if (streamConfig.getStreamType() == StreamType.JSON) {
-                i.remove();
                 return init(streamConfig);
             }
         }
