@@ -28,6 +28,7 @@ import javax.naming.NameNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.jboss.set.aphrodite.config.TrackerType.JIRA;
@@ -47,7 +48,7 @@ public class JiraIssue extends Issue {
 
     private List<JiraChangelogGroup> changelog = new ArrayList<>();
 
-    private Stream<Issue> upstreamReferences = null;
+    private List<Issue> upstreamReferences = null;
 
     //Links to issues cloned from/to
     private List<URL> linkedCloneIssues = new ArrayList<>();
@@ -117,9 +118,9 @@ public class JiraIssue extends Issue {
     public Stream<Issue> getUpstreamReferences() throws NameNotFoundException {
         // Lazy loading - upstreamReferences are filled in on the 1st call of getUpstreamReferences()
         if (upstreamReferences == null) {
-            upstreamReferences = super.getUpstreamReferences();
+            upstreamReferences = super.getUpstreamReferences().collect(Collectors.toList());
         }
-        return upstreamReferences;
+        return upstreamReferences.stream();
     }
 
     public List<URL> getLinkedIncorporatesIssues() {
