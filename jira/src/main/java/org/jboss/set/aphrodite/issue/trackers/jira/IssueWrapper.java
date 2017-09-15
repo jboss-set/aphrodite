@@ -309,6 +309,9 @@ class IssueWrapper {
     private void setFlag(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, Stage stage, Flag flag, String fieldname) {
         if (jiraIssue.getField(fieldname) != null && jiraIssue.getField(fieldname).getValue() != null)
             stage.setStatus(flag, FlagStatus.getMatchingFlag((String) jiraIssue.getField(fieldname).getValue()));
+        else {
+            stage.setStatus(flag, FlagStatus.NO_SET);
+        }
     }
 
     private void setIssueType(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
