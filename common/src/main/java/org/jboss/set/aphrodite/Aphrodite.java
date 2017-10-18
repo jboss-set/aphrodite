@@ -190,9 +190,8 @@ public class Aphrodite implements AutoCloseable {
         if (issueTrackers.isEmpty())
             throw new AphroditeException("Unable to initiatilise Aphrodite, as a valid " + IssueTrackerService.class.getName() + " does not exist.");
 
-        if (repositories.isEmpty())
-            throw new AphroditeException(
-                    "Unable to initiatilise Aphrodite, as a valid " + RepositoryService.class.getName() + " does not exist.");
+        if (repositories.isEmpty() && LOG.isWarnEnabled() )
+            LOG.warn("Unable to initiatilise Aphrodite, as a valid " + RepositoryService.class.getName() + " does not exist.");
 
         initialiseStreams(mutableConfig);
         //TODO: make this configurable.
