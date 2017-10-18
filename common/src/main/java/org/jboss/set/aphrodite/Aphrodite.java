@@ -69,6 +69,7 @@ import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
+import org.jboss.set.aphrodite.spi.JanitorService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
 import org.jboss.set.aphrodite.spi.StreamService;
@@ -144,6 +145,8 @@ public class Aphrodite implements AutoCloseable {
     private final List<RepositoryService> repositories = new ArrayList<>();
     private final List<StreamService> streamServices = new ArrayList<>();
 
+    private JanitorService janitor;
+
     private ScheduledExecutorService executorService;
 
     private AphroditeConfig config;
@@ -185,6 +188,11 @@ public class Aphrodite implements AutoCloseable {
             boolean initialised = rs.init(mutableConfig);
             if (initialised)
                 repositories.add(rs);
+        }
+
+        for ( JanitorService janitorService : ServiceLoader.load(JanitorService.class) ) {
+            if ( janitorService.init(this) )
+                this.janitor = janitorService;
         }
 
         if (issueTrackers.isEmpty())
