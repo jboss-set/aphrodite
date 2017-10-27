@@ -139,7 +139,7 @@ public interface RepositoryService {
 
     /**
      * Set the labels for the provided <code>PullRequest</code> object.
-     * @param pullRequset the <code>PullRequest</code> object whose will be set.
+     * @param pullRequest the <code>PullRequest</code> object whose will be set.
      * @param labels the <code>Label</code> apply to the <code>PullRequest</code>
      * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>PullRequest</code>
      * @throws AphroditeException if add the <code>Label<code> is not consistent with get labels

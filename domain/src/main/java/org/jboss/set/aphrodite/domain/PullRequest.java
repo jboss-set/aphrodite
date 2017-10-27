@@ -22,12 +22,31 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import static org.jboss.set.aphrodite.domain.internal.URLUtils.URL_REGEX_STRING;
+
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jboss.set.aphrodite.domain.internal.URLUtils;
+
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class PullRequest {
     private static final Pattern UPGRADE_TITLE = Pattern.compile("\\s*Upgrade \\s*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPSTREAM_ISSUE_NOT_REQUIRED = Pattern.compile("^\\s*Upstream not required.*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPSTREAM_PR = Pattern.compile("^\\s*Upstream PR[:|]\\s*+" + URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPSTREAM_ISSUE = Pattern.compile("^\\s*Upstream Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
+    private static final Pattern ISSUE = Pattern.compile("^\\s*Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
+    private static final Pattern RELATED_ISSUES = Pattern.compile("^\\s*Related Issue[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+", Pattern.CASE_INSENSITIVE);
+    private static final String UPGRADE_META_BIT_REGEX = "\\w++=\\w++";
+    private static final String UPGRADE_META_REGEX = "\\s*+"+UPGRADE_META_BIT_REGEX+"(,\\s*+"+UPGRADE_META_BIT_REGEX+")*+";
+    private static final Pattern UPGRADE = Pattern.compile("\\s*Upgrade[:|]"+UPGRADE_META_REGEX, Pattern.CASE_INSENSITIVE);
 
     private final String id;
     private final URL url;
@@ -101,17 +120,115 @@ public class PullRequest {
         this.repository = repository;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+    /**
+     * Checks if PR body contains indication that upstream work is not required.
+     *
+     * @return is upstream required?
+     */
+    public boolean isUpstreamRequired() {
+        final Matcher m = UPSTREAM_ISSUE_NOT_REQUIRED.matcher(body);
+        return !m.find();
+    }
 
-        PullRequest pullRequset = (PullRequest) o;
+    /**
+     * Searches PR body for link to upstream PR.
+     *
+     * @return upstream PR URL or null
+     * @throws MalformedURLException if found URL is invalid
+     */
+    public URL findUpstreamPullRequestURL() throws MalformedURLException {
+        if (this.isUpstreamRequired()) {
+            final String[] url = URLUtils.extractURLs(body, UPSTREAM_PR, false);
+            if (url == null || url.length == 0 || url[0] == null)
+                return null;
+            else
+                return new URL(url[0]);
+        } else {
+            return null;
+        }
+    }
 
-        return url.equals(pullRequset.url);
+    /**
+     * Searches PR body for link to upstream issue.
+     *
+     * @return upstream issue URL or null
+     * @throws MalformedURLException if found URL is invalid
+     */
+    public URL findUpstreamIssueURL() throws MalformedURLException {
+        if (isUpstreamRequired()) {
+            final String[] url = URLUtils.extractURLs(body, UPSTREAM_ISSUE, false);
+            if (url == null || url.length == 0 || url[0] == null)
+                return null;
+            else
+                return new URL(url[0]);
+        } else {
+            return null;
+        }
+    }
 
+    /**
+     * Searches PR body for link to related issue.
+     *
+     * @return related issue URL
+     * @throws MalformedURLException if found URL is invalid
+     */
+    public URL findIssueURL() throws MalformedURLException {
+        final String[] url = URLUtils.extractURLs(body, ISSUE, false);
+        if (url == null || url.length == 0 || url[0] == null)
+            return null;
+        else
+            return new URL(url[0]);
+    }
+
+    /**
+     * Searches PR body for links of related issues.
+     *
+     * TODO: Make this return at least all valid URLs, do not fail if one is invalid.
+     *
+     * @return related issues URLs or empty list
+     * @throws MalformedURLException if one of found URLs is invalid
+     */
+    public List<URL> findRelatedIssuesURL() throws MalformedURLException {
+        final String[] urls = URLUtils.extractURLs(body, RELATED_ISSUES, true);
+        if (urls == null || urls.length == 0 || urls[0] == null) {
+            return Collections.emptyList();
+        } else {
+            List<URL> issues = new ArrayList<>(urls.length);
+            for (String url : urls) {
+                issues.add(new URL(url));
+            }
+            return issues;
+        }
+    }
+
+
+    /**
+     * Check if this PR has upgrade meta present.
+     *
+     * @return Contains upgrade meta?
+     */
+    public boolean hasUpgradeMeta() {
+        final Matcher m = UPGRADE.matcher(body);
+        return m.find();
+    }
+
+    /**
+     * TODO: Description - I don't know what this is.
+     */
+    public PullRequestUpgrade findPullRequestUpgrade() {
+        Matcher m = UPGRADE.matcher(body);
+        if (!m.find()) {
+            return null;
+        }
+        String upgradeBody = body.substring(m.start(), m.end());
+        m = Pattern.compile(UPGRADE_META_BIT_REGEX).matcher(upgradeBody);
+        Properties metas = new Properties();
+        while (m.find()) {
+            final String[] x = upgradeBody.substring(m.start(), m.end()).split("=");
+            metas.put(x[0], x[1]);
+        }
+        return new PullRequestUpgrade(this, metas.getProperty("id"), metas.getProperty("tag"),
+                metas.getProperty("version"), metas.getProperty("branch"));
     }
 
     public boolean isMergeable() {
@@ -133,6 +250,21 @@ public class PullRequest {
     public boolean isUpgrade() {
         return upgrade;
     }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        PullRequest pullRequset = (PullRequest) o;
+
+        return url.equals(pullRequset.url);
+
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
