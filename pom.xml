@@ -33,7 +33,7 @@
             <dependency>
                 <groupId>javax.enterprise</groupId>
                 <artifactId>cdi-api</artifactId>
-                <version>1.2.0.redhat-2</version>
+                <version>${version.javax.enterprise.cdi-api}</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
@@ -43,7 +43,7 @@
             <dependency>
                 <groupId>org.jboss.weld.se</groupId>
                 <artifactId>weld-se</artifactId>
-                <version>2.3.3.Final-redhat-1</version>
+                <version>${version.org.jboss.weld.se}</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.set</groupId>
@@ -229,20 +229,6 @@
 
     <repositories>
         <repository>
-            <id>jboss-eap-7.0-product-repository</id>
-            <name>JBoss EAP Product Repository</name>
-            <url>http://download.eng.bos.redhat.com/brewroot/repos/jb-eap-7.0-rhel-7-maven-build/latest/maven/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
             <id>repository.engineering.redhat.com</id>
             <name>Repository Engineering Redhat</name>
             <url>https://repository.engineering.redhat.com/nexus/content/groups/eng-ops-public/
@@ -272,4 +258,46 @@
          </repository>
     </repositories>
 
+    <profiles>
+        <profile>
+            <id>community</id>
+            <activation>
+                <property>
+                    <name>community</name>
+                </property>
+            </activation>
+            <properties>
+                <version.javax.enterprise.cdi-api>1.2</version.javax.enterprise.cdi-api>
+                <version.org.jboss.weld.se>2.3.3.Final</version.org.jboss.weld.se>
+            </properties>
+        </profile>
+        <profile>
+            <id>redhat</id>
+            <activation>
+                <property>
+                    <name>!community</name>
+                </property>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>jboss-eap-7.0-product-repository</id>
+                    <name>JBoss EAP Product Repository</name>
+                    <url>http://download.eng.bos.redhat.com/brewroot/repos/jb-eap-7.0-rhel-7-maven-build/latest/maven/</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>never</updatePolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                        <updatePolicy>never</updatePolicy>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <properties>
+                <version.javax.enterprise.cdi-api>1.2.0.redhat-2</version.javax.enterprise.cdi-api>
+                <version.org.jboss.weld.se>2.3.3.Final-redhat-1</version.org.jboss.weld.se>
+            </properties>
+        </profile>
+    </profiles>
 </project>
