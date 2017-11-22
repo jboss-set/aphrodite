@@ -338,7 +338,6 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             for (Label label : labels) {
                 issueLabels.add(getLabel(repository, label.getName(), existingLabels));
             }
-            issueLabels.add(existingLabels.get(0));
             List<String> list = issueLabels.stream().map(e -> e.getName()).collect(Collectors.toList());
             String[] labelArray = list.toArray(new String[list.size()]);
             issue.setLabels(labelArray);
