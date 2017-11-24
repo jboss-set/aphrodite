@@ -1,5 +1,7 @@
 {
-    "maxThreadCount": "10",
+    "maxThreadCount": 10,
+    "streamServiceUpdateRate": 15,
+    "initialDelay": 10,
     "issueTrackerConfigs": [
         {
             "url": "https://issues.jboss.org/",

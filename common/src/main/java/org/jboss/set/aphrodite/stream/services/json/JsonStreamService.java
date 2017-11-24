@@ -27,15 +27,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -96,12 +93,6 @@ public class JsonStreamService implements StreamService {
             throw new NotFoundException("StreamConfig requires either a URL or File to be specified");
         }
         Map<String, Stream> streamsMap = StreamsJsonParser.parse(url);
-        Set<String> toRetainMap = new HashSet<String>(streamsMap.keySet());
-        toRetainMap.retainAll(parsedStreamsMap.keySet());
-        if (toRetainMap.size() > 0) {
-            throw new IllegalArgumentException(
-                    "URL '" + url + "' contain entires that overlap: " + Arrays.toString(toRetainMap.toArray()));
-        }
         this.parsedStreamsMap.putAll(streamsMap);
         this.urlToParsedStreams.put(url, streamsMap.values());
         return true;
@@ -113,7 +104,6 @@ public class JsonStreamService implements StreamService {
         while (i.hasNext()) {
             StreamConfig streamConfig = i.next();
             if (streamConfig.getStreamType() == StreamType.JSON) {
-                i.remove();
                 return init(streamConfig);
             }
         }
