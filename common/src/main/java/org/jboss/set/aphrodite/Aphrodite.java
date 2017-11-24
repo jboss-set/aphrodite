@@ -75,6 +75,7 @@ import org.jboss.set.aphrodite.spi.StreamService;
 
 public class Aphrodite implements AutoCloseable {
 
+    @SuppressWarnings("WeakerAccess")
     public static final String FILE_PROPERTY = "aphrodite.config";
 
     private static final Log LOG = LogFactory.getLog(Aphrodite.class);
@@ -104,7 +105,7 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param config an <code>AphroditeConfig</code> object containing all configuration data.
      * @return instance the singleton instance of the Aphrodite service.
-     * @throws AphroditeException
+     * @throws AphroditeException if initialization fails
      * @throws IllegalStateException if an <code>Aphrodite</code> service has already been initialised.
      */
     public static synchronized Aphrodite instance(AphroditeConfig config) throws AphroditeException {
@@ -249,6 +250,7 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
      * @throws MalformedURLException
      */
+    @Deprecated
     public Issue getIssue(final PullRequest pullRequest) throws NotFoundException, MalformedURLException {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
@@ -273,6 +275,7 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
      * @throws MalformedURLException
      */
+    @Deprecated
     public List<Issue> getRelatedIssues(final PullRequest pullRequest) throws MalformedURLException, NotFoundException {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
@@ -302,6 +305,7 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
      * @throws MalformedURLException
      */
+    @Deprecated
     public Issue getUpstreamIssue(final PullRequest pullRequest) throws NotFoundException, MalformedURLException {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
@@ -330,6 +334,7 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException - if there is linked PR but either no tracker or issue does not exist in tracker
      * @throws MalformedURLException
      */
+    @Deprecated
     public PullRequest getUpstreamPullRequest(final PullRequest pullRequest) throws MalformedURLException, NotFoundException {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
@@ -345,6 +350,7 @@ public class Aphrodite implements AutoCloseable {
         }
     }
 
+    @Deprecated
     public PullRequestUpgrade getPullRequestUpgrade(final PullRequest pullRequest) {
         if (!hasUpgrade(pullRequest)) {
             return null;
@@ -369,6 +375,7 @@ public class Aphrodite implements AutoCloseable {
      * @param pullRequest
      * @return
      */
+    @Deprecated
     public boolean isUpstreamRequired(final PullRequest pullRequest) {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
@@ -382,6 +389,7 @@ public class Aphrodite implements AutoCloseable {
      * @param pullRequest
      * @return
      */
+    @Deprecated
     public boolean hasUpgrade(PullRequest pullRequest) {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
@@ -593,6 +601,7 @@ public class Aphrodite implements AutoCloseable {
      * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
      * @deprecated
      */
+    @Deprecated
     public List<Issue> getIssuesAssociatedWith(PullRequest pullRequest) {
         checkIssueTrackerExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
@@ -647,7 +656,7 @@ public class Aphrodite implements AutoCloseable {
      * @param repository the <code>Repository</code> object whose associated PullRequests should be returned.
      * @param state the <code>PullRequestState</code> which the returned <code>PullRequest</code> objects must have.
      * @return a list of all matching <code>PullRequest</code> objects, or an empty list if no pullRequests can be found.
-     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve pullRequests from a RepositoryService
+     * @throws NotFoundException if an exception is encountered when trying to retrieve pullRequests from a RepositoryService
      */
     public List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException {
         checkRepositoryServiceExists();
@@ -658,7 +667,7 @@ public class Aphrodite implements AutoCloseable {
             if (repositoryService.urlExists(repository.getURL()))
                 return repositoryService.getPullRequestsByState(repository, state);
         }
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 
     /**
@@ -693,7 +702,7 @@ public class Aphrodite implements AutoCloseable {
      * Retrieve all labels associated with the provided <code>PullRequest</code> in <code>Repository</code> object.
      * @param repository the <code>Repository<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no labels can be found.
-     * @throws a <code>NotFoundException</code> if an error is encountered when trying to retrieve labels from a RepositoryService
+     * @throws NotFoundException if an error is encountered when trying to retrieve labels from a RepositoryService
      */
     public List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException {
         checkRepositoryServiceExists();
@@ -703,14 +712,14 @@ public class Aphrodite implements AutoCloseable {
             if (repositoryService.urlExists(repository.getURL()))
                 return repositoryService.getLabelsFromRepository(repository);
         }
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 
     /**
      * Retrieve all labels associated with the provided <code>PullRequest</code> object.
-     * @param pull request the <code>PullRequest<code> object whose associated labels should be returned.
+     * @param pullRequest request the <code>PullRequest<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no pull request can be found.
-     * @throws a <code>NotFoundException</code> if an error is encountered when trying to retrieve labels from a RepositoryService
+     * @throws NotFoundException if an error is encountered when trying to retrieve labels from a RepositoryService
      */
     public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         checkRepositoryServiceExists();
@@ -720,7 +729,7 @@ public class Aphrodite implements AutoCloseable {
             if (repositoryService.urlExists(pullRequest.getURL()))
                 return repositoryService.getLabelsFromPullRequest(pullRequest);
         }
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 
     /**
@@ -807,7 +816,7 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param pullRequest the <code>PullRequest</code> to which the label will be applied.
      * @param labelName the name of the label to be applied.
-     * @throws a <code>NotFoundException</code> if the <code>PullRequest</code> cannot be found, or the labelName does not exist.
+     * @throws NotFoundException if the <code>PullRequest</code> cannot be found, or the labelName does not exist.
      */
     public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
         checkRepositoryServiceExists();
@@ -825,7 +834,7 @@ public class Aphrodite implements AutoCloseable {
      * provided pull request object. Note, this method fails silently if a pull request cannot be retrieved from a URL, with the error message
      * simply logged.
      *
-     * @param pull request the <code>PullRequest</code> object to be queried against
+     * @param pullRequest request the <code>PullRequest</code> object to be queried against
      * @return a list of PullRequest objects that are related to the supplied pull request object
      */
     public List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest) {
@@ -897,7 +906,7 @@ public class Aphrodite implements AutoCloseable {
      */
     public boolean isCPReleased(String cpVersion) {
         Objects.requireNonNull(cpVersion, "CP version cannot be null");
-        boolean released = false;
+        boolean released;
         checkIssueTrackerExists();
         // No ideal means to find proper issue tracker by version except doing hard code EAP6/7 <-> BZ/JIRA.
         // This is a blind match to both issue trackers.
