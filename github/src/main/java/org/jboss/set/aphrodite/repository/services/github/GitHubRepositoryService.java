@@ -250,7 +250,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
+    public void addLabelToPullRequest(PullRequest pullRequest, Label label) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
 
@@ -258,7 +258,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         String repositoryId = createFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
-            GHLabel newLabel = getLabel(repository, labelName);
+            GHLabel newLabel = getLabel(repository, label.getName());
             GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
             if (labels.contains(newLabel)) {
@@ -348,7 +348,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
-    public void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException {
+    public void removeLabelFromPullRequest(PullRequest pullRequest, Label label) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
 
@@ -359,8 +359,8 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
 
-            for (GHLabel label : labels)
-                if (label.getName().equalsIgnoreCase(name)) {
+            for (GHLabel l : labels)
+                if (l.getName().equalsIgnoreCase(label.getName())) {
                     // remove the label and reset
                     List<String> list = labels.stream().map(e -> e.getName()).collect(Collectors.toList());
                     list.remove(label.getName());
@@ -372,8 +372,8 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
-        throw new NotFoundException("No label exists with the name '" + name +
-                "' at repository '" + repositoryId + "'");
+        throw new NotFoundException("No label exists with the name '" + label.getName() + "' at repository '" + repositoryId + "'");
+
     }
 
     private static final Pattern RELATED_PR_PATTERN = Pattern

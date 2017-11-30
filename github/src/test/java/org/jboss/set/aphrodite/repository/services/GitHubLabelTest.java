@@ -56,7 +56,7 @@ public class GitHubLabelTest {
 
     private List<Label> labels, labelsTest;
     private List<Label> prlabels, prlabelsTest, addlabel;
-    private String labelname = "bug";
+    private Label label = new Label("1", "fc2929", "bug", "https://api.github.com/repos/abc/xyz/labels/bug");
 
     @Mock
     private Aphrodite aphrodite;
@@ -179,9 +179,9 @@ public class GitHubLabelTest {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                labelname = (String) args[1];
+                label = (Label) args[1];
                 for (Label label : prlabels) {
-                    if (label.getName().equals(labelname)) {
+                    if (label.getName().equals(label.getName())) {
                         prlabels.remove(label);
                     }
                 }
@@ -190,9 +190,9 @@ public class GitHubLabelTest {
                 else
                     throw new RuntimeException();
             }
-        }).when(aphrodite).removeLabelFromPullRequest(pullRequest, labelname);
+        }).when(aphrodite).removeLabelFromPullRequest(pullRequest, label);
 
-        aphrodite.removeLabelFromPullRequest(pullRequest, labelname);
+        aphrodite.removeLabelFromPullRequest(pullRequest, label);
         ;
     }
 
