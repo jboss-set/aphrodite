@@ -776,18 +776,18 @@ public class Aphrodite implements AutoCloseable {
     /**
      * Delete a label from the provided <code>PullRequest</code> object.
      * @param pullRequest the <code>PullRequest</code> whose label will be removed.
-     * @param name the <code>Label</code> name will be removed.
+     * @param label the <code>Label</code> will be removed.
      * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>PullRequest</code>, or an
      * exception occurs when contacting the RepositoryService
      */
-    public void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException {
+    public void removeLabelFromPullRequest(PullRequest pullRequest, Label label) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        Objects.requireNonNull(name, "labelname cannot be null");
+        Objects.requireNonNull(label.getName(), "labelname cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             if (repositoryService.urlExists(pullRequest.getURL()))
-                repositoryService.removeLabelFromPullRequest(pullRequest, name);
+                repositoryService.removeLabelFromPullRequest(pullRequest, label);
         }
     }
 
@@ -819,17 +819,17 @@ public class Aphrodite implements AutoCloseable {
      * associated with the provided pull request then no further action is taken.
      *
      * @param pullRequest the <code>PullRequest</code> to which the label will be applied.
-     * @param labelName the name of the label to be applied.
+     * @param label the label to be applied.
      * @throws NotFoundException if the <code>PullRequest</code> cannot be found, or the labelName does not exist.
      */
-    public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
+    public void addLabelToPullRequest(PullRequest pullRequest, Label label) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        Objects.requireNonNull(labelName, "labelName cannot be null");
+        Objects.requireNonNull(label.getName(), "labelName cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
             if (repositoryService.urlExists(pullRequest.getURL()))
-                repositoryService.addLabelToPullRequest(pullRequest, labelName);
+                repositoryService.addLabelToPullRequest(pullRequest, label);
         }
     }
 

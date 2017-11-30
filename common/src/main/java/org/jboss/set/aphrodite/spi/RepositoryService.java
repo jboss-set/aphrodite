@@ -149,10 +149,10 @@ public interface RepositoryService {
     /**
      *Delete a label from the provided <code>PullRequest</code> object.
      * @param pullRequest the <code>PullRequest</code> whose label will be removed.
-     * @param name the <code>Label</code> name will be removed.
+     * @param label the <code>Label</code> will be removed.
      * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>PullRequest</code>
      */
-    void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException;
+    void removeLabelFromPullRequest(PullRequest pullRequest, Label label) throws NotFoundException;
 
     /**
      * Add a <code>Comment</code> to the specified <code>PullRequest</code> object, and propagate the changes
@@ -170,10 +170,10 @@ public interface RepositoryService {
      * associated with the provided pull request then no further action is taken.
      *
      * @param pullRequest the <code>PullRequest</code> to which the label will be applied.
-     * @param labelName the name of the label to be applied.
+     * @param label the label to be applied.
      * @throws NotFoundException if the specified labelName has not been defined at the remote repository.
      */
-    void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException;
+    void addLabelToPullRequest(PullRequest pullRequest, Label label) throws NotFoundException;
 
     /**
      * Find all the pull requests related to the given pull request.
