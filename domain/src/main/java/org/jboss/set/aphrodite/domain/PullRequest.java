@@ -34,7 +34,11 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.naming.NameNotFoundException;
+
+import org.jboss.set.aphrodite.container.Container;
 import org.jboss.set.aphrodite.domain.internal.URLUtils;
+import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class PullRequest {
@@ -229,6 +233,34 @@ public class PullRequest {
         }
         return new PullRequestUpgrade(this, metas.getProperty("id"), metas.getProperty("tag"),
                 metas.getProperty("version"), metas.getProperty("branch"));
+    }
+
+    public List<PullRequest> findReferencedPullRequests() throws NameNotFoundException {
+        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).findReferencedPullRequests(this);
+    }
+
+    public boolean addComment(String comment) throws NameNotFoundException {
+        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).addComment(this, comment);
+    }
+
+    public List<Label> getLabels() throws NameNotFoundException {
+        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).getLabels(this);
+    }
+
+    public boolean setLabels(List<Label> labels) throws NameNotFoundException {
+        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).setLabels(this, labels);
+    }
+
+    public boolean addLabel(Label label) throws NameNotFoundException {
+        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).addLabel(this, label);
+    }
+
+    public boolean removeLabel(Label label) throws NameNotFoundException {
+        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).removeLabel(this, label);
+    }
+
+    public CommitStatus getCommitStatus() throws NameNotFoundException {
+        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).getCommitStatus(this);
     }
 
     public boolean isMergeable() {

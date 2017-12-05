@@ -724,7 +724,9 @@ public class Aphrodite implements AutoCloseable {
      * @param pullRequest request the <code>PullRequest<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no pull request can be found.
      * @throws NotFoundException if an error is encountered when trying to retrieve labels from a RepositoryService
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#getLabels()} instead.
      */
+    @Deprecated
     public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
@@ -761,7 +763,9 @@ public class Aphrodite implements AutoCloseable {
      * @param labels the <code>Label</code> apply to the <code>PullRequest</code>
      * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>PullRequest</code>
      * @throws AphroditeException if add the <code>Label<code> is not consistent with get labels
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#setLabels()} instead.
      */
+    @Deprecated
     public void setLabelsToPullRequest(PullRequest pullRequest, List<Label> labels) throws NotFoundException, AphroditeException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
@@ -779,7 +783,9 @@ public class Aphrodite implements AutoCloseable {
      * @param name the <code>Label</code> name will be removed.
      * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>PullRequest</code>, or an
      * exception occurs when contacting the RepositoryService
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#removeLabel()} instead.
      */
+    @Deprecated
     public void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
@@ -798,7 +804,9 @@ public class Aphrodite implements AutoCloseable {
      * @param pullRequest the <code>PullRequest</code> on which the comment will be made.
      * @param comment the new <code>Comment</code>.
      * @throws NotFoundException if the <code>PullRequest</code> cannot be found at the remote repository.
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#addComment()} instead.
      */
+    @Deprecated
     public void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
@@ -821,7 +829,9 @@ public class Aphrodite implements AutoCloseable {
      * @param pullRequest the <code>PullRequest</code> to which the label will be applied.
      * @param labelName the name of the label to be applied.
      * @throws NotFoundException if the <code>PullRequest</code> cannot be found, or the labelName does not exist.
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#addLabel()} instead.
      */
+    @Deprecated
     public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
@@ -840,7 +850,9 @@ public class Aphrodite implements AutoCloseable {
      *
      * @param pullRequest request the <code>PullRequest</code> object to be queried against
      * @return a list of PullRequest objects that are related to the supplied pull request object
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#findReferencedPullRequests()} instead.
      */
+    @Deprecated
     public List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest) {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
@@ -857,7 +869,9 @@ public class Aphrodite implements AutoCloseable {
      * @param pullRequest the <code>PullRequest</code> object whose status is to be queried
      * @return the CI status of the latest commit associated with the given pull request
      * @throws NotFoundException if no commit status can be found for the provided pull request
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#getCommitStatus()} instead.
      */
+    @Deprecated
     public CommitStatus getCommitStatusFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         checkRepositoryServiceExists();
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
@@ -1037,5 +1051,10 @@ public class Aphrodite implements AutoCloseable {
            return this.issueTrackers.get(id);
         }
         return null;
+    }
+
+    public AphroditeConfig getConfig() {
+        // allow to get configuration to initialize service outside Aphrodite
+        return config;
     }
 }

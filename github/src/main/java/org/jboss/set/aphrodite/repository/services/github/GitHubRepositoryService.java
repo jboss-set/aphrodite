@@ -25,7 +25,6 @@ package org.jboss.set.aphrodite.repository.services.github;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -33,8 +32,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -42,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.CommitStatus;
+import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.PullRequestState;
@@ -50,6 +48,7 @@ import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.jboss.set.aphrodite.spi.RepositoryService;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
@@ -70,14 +69,18 @@ import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.OkUrlFactory;
 
+import static org.jboss.set.aphrodite.repository.services.common.Utils.createFromUrl;
+import static org.jboss.set.aphrodite.repository.services.common.Utils.getPRFromDescription;
+
+import static org.jboss.set.aphrodite.repository.services.github.Utils.getCombineStatus;
 
 /**
  * @author Ryan Emerson
  */
-public class GitHubRepositoryService extends AbstractRepositoryService {
+public class GitHubRepositoryService extends AbstractRepositoryService implements RepositoryService {
 
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
-    private final GitHubWrapper WRAPPER = new GitHubWrapper();
+    private static final GitHubWrapper WRAPPER = new GitHubWrapper();
     private static final int DEFAULT_CACHE_SIZE = 20;
 
     private String cacheDir;
@@ -189,6 +192,13 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
 //    }
 
     @Override
+    @Deprecated
+    public List<PullRequest> getPullRequestsAssociatedWith(Issue issue) throws NotFoundException {
+        Utils.logException(LOG, new UnsupportedOperationException("Not yet implemented."));
+        return Collections.emptyList();
+    }
+
+    @Override
     public List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException {
         URL url = repository.getURL();
         checkHost(url);
@@ -212,6 +222,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
+    @Deprecated
     public void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
@@ -250,6 +261,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
+    @Deprecated
     public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
@@ -308,6 +320,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
+    @Deprecated
     public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
@@ -323,6 +336,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
+    @Deprecated
     public void setLabelsToPullRequest(PullRequest pullRequest, List<Label> labels) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
@@ -348,6 +362,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
     }
 
     @Override
+    @Deprecated
     public void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
@@ -376,14 +391,8 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
                 "' at repository '" + repositoryId + "'");
     }
 
-    private static final Pattern RELATED_PR_PATTERN = Pattern
-            .compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern ABBREVIATED_RELATED_PR_PATTERN = Pattern.compile("([a-zA-Z_0-9-//]*)#(\\d+)",
-            Pattern.CASE_INSENSITIVE);
-    private static final Pattern ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO = Pattern
-            .compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
-
     @Override
+    @Deprecated
     public List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest) {
         try {
             List<URL> urls = getPRFromDescription(pullRequest.getURL(), pullRequest.getBody());
@@ -407,44 +416,8 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         }
     }
 
-    private List<URL> getPRFromDescription(URL url, String content) throws MalformedURLException, URISyntaxException {
-        String[] paths = url.getPath().split("/");
-        Matcher matcher = RELATED_PR_PATTERN.matcher(content);
-        List<URL> relatedPullRequests = new ArrayList<>();
-        while (matcher.find()) {
-            if (matcher.groupCount() == 3) {
-                URL relatedPullRequest = new URI(
-                        "https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pulls/" + matcher.group(3))
-                                .toURL();
-                relatedPullRequests.add(relatedPullRequest);
-            }
-        }
-        Matcher abbreviatedMatcher = ABBREVIATED_RELATED_PR_PATTERN.matcher(content);
-        while (abbreviatedMatcher.find()) {
-            String match = abbreviatedMatcher.group();
-            Matcher abbreviatedExternalMatcher = ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO.matcher(match);
-            if (abbreviatedExternalMatcher.find()) {
-                if (abbreviatedExternalMatcher.groupCount() == 3) {
-                    URL relatedPullRequest = new URI("https://github.com/"
-                            + abbreviatedExternalMatcher.group(1) + "/"
-                            + abbreviatedExternalMatcher.group(2) + "/pulls/"
-                            + abbreviatedExternalMatcher.group(3)).toURL();
-                    relatedPullRequests.add(relatedPullRequest);
-                    continue;
-                }
-            }
-
-            if (abbreviatedMatcher.groupCount() == 2) {
-                URL relatedPullRequest = new URI(
-                        "https://github.com/" + paths[1] + "/" + paths[2] + "/" + "/pulls/" + abbreviatedMatcher.group(2))
-                                .toURL();
-                relatedPullRequests.add(relatedPullRequest);
-            }
-        }
-        return relatedPullRequests;
-    }
-
     @Override
+    @Deprecated
     public CommitStatus getCommitStatusFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
@@ -480,39 +453,6 @@ public class GitHubRepositoryService extends AbstractRepositoryService {
         } else {
             return CommitStatus.UNKNOWN;
         }
-    }
-
-    private GHCommitState getCombineStatus(List<GHCommitStatus> comStatuses) {
-        int count = 0, flag = 0;
-        List<GHCommitState> stas = new ArrayList<>();
-        for (GHCommitStatus status : comStatuses) {
-            GHCommitState sta = status.getState();
-            stas.add(sta);
-            // until sta="pending"
-            if (!sta.equals(GHCommitState.PENDING)) {
-                if (sta.equals(GHCommitState.FAILURE)) {
-                    return GHCommitState.FAILURE;
-                } else if (sta.equals(GHCommitState.ERROR)) {
-                    return GHCommitState.ERROR;
-                }
-            } else {
-                flag = 1;
-                // The Travis CI and TeamCity Build has different rules
-                String description = status.getDescription();
-                if (description != null && description.contains("Travis")) {
-                    return stas.contains(GHCommitState.SUCCESS) ? GHCommitState.SUCCESS : GHCommitState.PENDING;
-                }
-                if (comStatuses.size() > 2 * count) {
-                    GHCommitState temp = comStatuses.get(2 * count).getState();
-                    return temp.equals(GHCommitState.PENDING) ? GHCommitState.PENDING : GHCommitState.SUCCESS;
-                } else if (comStatuses.size() == 2 * count) {
-                    return GHCommitState.SUCCESS;
-                }
-            }
-            count++;
-        }
-
-        return (flag == 0) ? GHCommitState.SUCCESS : null;
     }
 
     @Override
