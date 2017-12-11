@@ -69,10 +69,10 @@ import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.OkUrlFactory;
 
-import static org.jboss.set.aphrodite.repository.services.common.Utils.createFromUrl;
-import static org.jboss.set.aphrodite.repository.services.common.Utils.getPRFromDescription;
+import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
+import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.getPRFromDescription;
 
-import static org.jboss.set.aphrodite.repository.services.github.Utils.getCombineStatus;
+import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.getCombineStatus;
 
 /**
  * @author Ryan Emerson
@@ -149,7 +149,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
 
         String[] elements = url.getPath().split("/");
         int pullId = Integer.parseInt(elements[elements.length - 1]);
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
@@ -164,7 +164,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
     public Repository getRepository(URL url) throws NotFoundException {
         checkHost(url);
 
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             Collection<GHBranch> branches = repository.getBranches().values();
@@ -203,7 +203,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
         URL url = repository.getURL();
         checkHost(url);
 
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             // String githubState = state.toString().toLowerCase();
             GHRepository githubRepository = github.getRepository(repositoryId);
@@ -228,7 +228,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
         checkHost(url);
 
         int id = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(id);
@@ -244,7 +244,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
         URL url = repository.getURL();
         checkHost(url);
 
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHMyself myself = github.getMyself();
             GHRepository githubRepository = github.getRepository(repositoryId);
@@ -267,7 +267,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
         checkHost(url);
 
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHLabel newLabel = getLabel(repository, labelName);
@@ -306,7 +306,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
         URL url = repository.getURL();
         checkHost(url);
 
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         List<GHLabel> labels;
         try {
             GHRepository githubRepository = github.getRepository(repositoryId);
@@ -324,7 +324,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
     public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(Integer.parseInt(pullRequest.getId()));
@@ -342,7 +342,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
         checkHost(url);
 
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(pullRequestId);
@@ -368,7 +368,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
         checkHost(url);
 
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(pullRequestId);
@@ -424,7 +424,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
 
         CommitStatus status = null;
         int pullRequestId = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             String sha = null;
 
@@ -463,7 +463,7 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
             return false;
         }
 
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             repository.getBranches(); // action to test account repository accessibility

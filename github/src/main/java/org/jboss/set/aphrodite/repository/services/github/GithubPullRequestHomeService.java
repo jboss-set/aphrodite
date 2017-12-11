@@ -54,10 +54,10 @@ import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.OkUrlFactory;
 
-import static org.jboss.set.aphrodite.repository.services.common.Utils.createFromUrl;
-import static org.jboss.set.aphrodite.repository.services.common.Utils.getPRFromDescription;
+import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
+import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.getPRFromDescription;
 
-import static org.jboss.set.aphrodite.repository.services.github.Utils.getCombineStatus;
+import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.getCombineStatus;
 
 /**
  * Service implementation of {@link PullRequestHome}. This helps to detach pull request specific methods in
@@ -150,7 +150,7 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
     private PullRequest getPullRequest(URL url) {
         String[] elements = url.getPath().split("/");
         int pullId = Integer.parseInt(elements[elements.length - 1]);
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
@@ -166,7 +166,7 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
         URL url = pullRequest.getURL();
 
         int id = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(id);
@@ -181,7 +181,7 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
     @Override
     public List<Label> getLabels(PullRequest pullRequest) {
         URL url = pullRequest.getURL();
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(Integer.parseInt(pullRequest.getId()));
@@ -196,7 +196,7 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
     public boolean setLabels(PullRequest pullRequest, List<Label> labels) {
         URL url = pullRequest.getURL();
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(pullRequestId);
@@ -223,7 +223,7 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
     public boolean addLabel(PullRequest pullRequest, Label label) {
         URL url = pullRequest.getURL();
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
 
         try {
             GHRepository repository = github.getRepository(repositoryId);
@@ -263,7 +263,7 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
         URL url = pullRequest.getURL();
         String labelName = label.getName();
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
 
         try {
             GHRepository repository = github.getRepository(repositoryId);
@@ -291,7 +291,7 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
         URL url = pullRequest.getURL();
         CommitStatus status = null;
         int pullRequestId = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             String sha = null;
 
@@ -329,7 +329,7 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
             return false;
         }
 
-        String repositoryId = createFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             repository.getBranches(); // action to test account repository accessibility

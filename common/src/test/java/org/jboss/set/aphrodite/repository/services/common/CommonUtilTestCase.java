@@ -52,14 +52,14 @@ public class CommonUtilTestCase {
     @Test
     public void testCreateFromUrl() {
         try {
-            String result = Utils.createFromUrl(new URL(TEST_URL));
+            String result = RepositoryUtils.createRepositoryIdFromUrl(new URL(TEST_URL));
             Assert.assertEquals("repository id don't match", TEST_REPOSITORYID, result);
         } catch (MalformedURLException e) {
             fail("MalformedURLException should not happen in test");
         }
         
         try {
-            String result = Utils.createFromUrl(new URL(TEST_URL_WITH_SLASH));
+            String result = RepositoryUtils.createRepositoryIdFromUrl(new URL(TEST_URL_WITH_SLASH));
             Assert.assertEquals("repository id don't match", TEST_REPOSITORYID, result);
         } catch (MalformedURLException e) {
             fail("MalformedURLException should not happen in test");
@@ -70,7 +70,7 @@ public class CommonUtilTestCase {
     public void testGetPRFromDescription() {
         try {
             URL url = new URL(PR_URL);
-            List<URL> pullRequests = Utils.getPRFromDescription(url, DESC);
+            List<URL> pullRequests = RepositoryUtils.getPRFromDescription(url, DESC);
             Assert.assertEquals("Incorrect number of PR from description ", 1, pullRequests.size());
             Assert.assertEquals("Incorrect PR from description ", REFERENCED_PR_URL_EXTERNAL, pullRequests.get(0).toString());
         } catch (MalformedURLException | URISyntaxException e) {
@@ -79,7 +79,7 @@ public class CommonUtilTestCase {
         
         try {
             URL url = new URL(PR_URL);
-            List<URL> pullRequests = Utils.getPRFromDescription(url, DESC_WITH_EXTERNAL_PR);
+            List<URL> pullRequests = RepositoryUtils.getPRFromDescription(url, DESC_WITH_EXTERNAL_PR);
             Assert.assertEquals("Incorrect number of PR from description ", 1, pullRequests.size());
             Assert.assertEquals("Incorrect PR from description ", REFERENCED_PR_URL, pullRequests.get(0).toString());
         } catch (MalformedURLException | URISyntaxException e) {

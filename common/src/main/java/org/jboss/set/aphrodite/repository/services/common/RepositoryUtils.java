@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  * @author wangc
  *
  */
-public class Utils {
+public class RepositoryUtils {
 
     private static final Pattern RELATED_PR_PATTERN = Pattern
             .compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
@@ -38,11 +38,11 @@ public class Utils {
     private static final Pattern ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO = Pattern
             .compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
 
-    public static String createFromUrl(URL url) {
-        return url != null ? createFromId(url.getPath()) : null;
+    public static String createRepositoryIdFromUrl(URL url) {
+        return url != null ? createRepositoryIdFromId(url.getPath()) : null;
     }
 
-    private static String createFromId(String id) {
+    private static String createRepositoryIdFromId(String id) {
         if (id == null || id.length() == 0)
             return null;
         String owner = null;

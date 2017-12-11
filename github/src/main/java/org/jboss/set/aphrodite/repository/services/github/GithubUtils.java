@@ -28,7 +28,7 @@ import org.kohsuke.github.GHCommitStatus;
  * @author wangc
  *
  */
-public class Utils {
+public class GithubUtils {
 
     public static GHCommitState getCombineStatus(List<GHCommitStatus> comStatuses) {
         int count = 0, flag = 0;
