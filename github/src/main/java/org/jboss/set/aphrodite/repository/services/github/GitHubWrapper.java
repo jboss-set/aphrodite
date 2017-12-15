@@ -80,7 +80,7 @@ class GitHubWrapper {
             boolean mergeable = false;
             if (pullRequest.getMergeable() == null) {
                 // workaround https://github.com/jboss-set/aphrodite/issues/150
-                Utils.logWarnMessage(LOG, "Can not retreive " + pullRequest.getHtmlUrl() + " mergeable value");
+                Utils.logWarnMessage(LOG, "Can not retrieve " + pullRequest.getHtmlUrl() + " mergeable value");
             } else {
                 mergeable = pullRequest.getMergeable();
             }
