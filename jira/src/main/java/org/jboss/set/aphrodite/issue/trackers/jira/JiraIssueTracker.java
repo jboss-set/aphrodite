@@ -76,7 +76,6 @@ import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.LinkIssuesInput;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.atlassian.util.concurrent.Promise;
 
 
 /**
@@ -168,6 +167,34 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
         String jql = queryBuilder.getMultipleIssueJQL(ids);
         return searchIssues(jql, ids.size());
+    }
+
+    /**
+     * Retrieve all defined versions in project.
+     *
+     * @param projectName project name.
+     * @return a string list of versions
+     */
+    public List<Version> getVersionsByProject(String projectName) {
+        List<Version> versions = new ArrayList<>();
+        Project project = restClient.getProjectClient().getProject(projectName).claim();
+        project.getVersions().forEach(version -> versions.add(version));
+        return versions;
+    }
+
+    /**
+     * Retrieve one version by a given project name and fixed version value.
+     * @param projectName project name.
+     * @param fixedVersion a string value for fixed version
+     * @return fixed version if version is found, otherwise return null.
+     */
+    public Version getVersionByName(String projectName, String fixedVersion) {
+        Project project = restClient.getProjectClient().getProject(projectName).claim();
+        final Version version = StreamSupport.stream(project.getVersions().spliterator(), false)
+                .filter(v -> v.getName().equals(fixedVersion))
+                .findFirst()
+                .orElse(null);
+        return version;
     }
 
     @Override
@@ -396,8 +423,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         if (!matcher.matches()) {
             return false;
         }
-        Promise<Project> promise = restClient.getProjectClient().getProject("JBEAP");
-        Project project = promise.claim();
+        Project project = restClient.getProjectClient().getProject("JBEAP").claim();
 
         Optional<Version> version = StreamSupport.stream(project.getVersions().spliterator(), false)
                                                  .filter(v -> v.getName().equals(cpVersion))
@@ -407,5 +433,10 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
 
         return false;
+    }
+
+    @Override
+    public TrackerType getTrackerType() {
+        return this.TRACKER_TYPE;
     }
 }

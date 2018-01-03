@@ -37,16 +37,21 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.MET
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_FILTER_SEARCH;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_GET_BUG;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_GET_COMMENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_GET_PRODUCT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_SEARCH;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_UPDATE_BUG;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_USER_LOGIN;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.NAME;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PASSWORD;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIVATE_COMMENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT_FIELDS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT_NAMES;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RELEASES;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_BUGS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_FIELDS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_INCLUDE_FIELDS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_PERMISSIVE_SEARCH;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_PRODUCTS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.STATUS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.UPDATE_FIELDS;
@@ -169,6 +174,32 @@ public class BugzillaClient {
         Issue issue = getIssue(trackerId);
         setCommentsForIssue(issue);
         return issue;
+    }
+
+    public List<String> getTargetReleasesByProject(String name) {
+        List<String> targetRelease = new ArrayList<>();
+
+        Map<String, Object> params = new HashMap<>(loginDetails);
+        // must at least specify one of ids or names for method Product.get
+        params.put(PRODUCT_NAMES, name);
+        params.put(RESULT_INCLUDE_FIELDS, PRODUCT_FIELDS);
+
+        // https://bugzilla.redhat.com/docs/en/html/api/Bugzilla/WebService/Product.html#get
+        Map<String, ?> resultMap = executeRequest(XMLRPC.RPC_STRUCT, METHOD_GET_PRODUCT, params);
+
+        Object[] products = (Object[]) resultMap.get(RESULT_PRODUCTS);
+        if (products.length == 1) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> product = (Map<String, Object>) products[0];
+            Object[] releases = (Object[]) product.get(RELEASES);
+            for (Object release : releases) {
+                Map<String, Object> result = (Map<String, Object>) release;
+                targetRelease.add((String) result.get(NAME));
+            }
+        } else {
+            Utils.logWarnMessage(LOG, "Zero or more than one product found with name: " + name);
+        }
+        return targetRelease;
     }
 
     private void setCommentsForIssue(Issue issue) {

@@ -154,4 +154,9 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
         }
         return false;
     }
+
+    @Override
+    public TrackerType getTrackerType() {
+        return this.TRACKER_TYPE;
+    }
 }

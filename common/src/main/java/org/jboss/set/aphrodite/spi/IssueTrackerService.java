@@ -24,6 +24,7 @@ package org.jboss.set.aphrodite.spi;
 
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.PullRequest;
@@ -71,6 +72,12 @@ public interface IssueTrackerService {
      * @return
      */
     String getTrackerID();
+
+    /**
+     * Return the tracker type defined in {@link TrackerType}.
+     * @return tracker type
+     */
+    TrackerType getTrackerType();
 
     /**
      * Retrieve all Issues associated with the provided pullRequest object.
