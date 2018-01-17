@@ -21,27 +21,8 @@
  */
 package org.jboss.set.aphrodite.cdicontainer;
 
-import org.jboss.set.aphrodite.container.Container;
-
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.CDI;
-import javax.naming.NameNotFoundException;
-import java.util.Set;
-
-public class CDIContainer extends Container {
-    @Override
-    public <T> T lookup(String name, Class<T> expected) throws NameNotFoundException {
-        final BeanManager manager = CDI.current().getBeanManager();
-        Set<Bean<?>> beans = manager.getBeans(name);
-        Bean<?> bean = manager.resolve(beans);
-        if (bean == null) {
-            beans = manager.getBeans(expected);
-            bean = manager.resolve(beans);
-        }
-        if (bean == null) throw new NameNotFoundException("Can't find bean " + name + " of type " + expected.getName());
-        final CreationalContext<?> ctx = manager.createCreationalContext(bean);
-        return expected.cast(manager.getReference(bean, expected, ctx));
-    }
+/**
+ * Instead of a named bean, we should also be able to lookup a bean by type.
+ */
+public class TypedBean {
 }

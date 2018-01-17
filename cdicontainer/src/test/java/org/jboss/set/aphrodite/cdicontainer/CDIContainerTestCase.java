@@ -31,8 +31,12 @@ import javax.naming.NameNotFoundException;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class CDIContainerTestCase {
+    static interface NonExistent {
+    }
+
     private static Weld weld;
 
     @AfterClass
@@ -47,6 +51,19 @@ public class CDIContainerTestCase {
     }
 
     @Test
+    public void testNameNotFoundException() {
+        // some sanity checks
+        try {
+            Container.instance().lookup("NonExistentName", NonExistent.class);
+            fail("Expected NameNotFoundException");
+        } catch (NameNotFoundException e) {
+            final String msg = e.getMessage();
+            assertTrue("Message must contain name", msg.contains("NonExistentName"));
+            assertTrue("Message must contain type", msg.contains(NonExistent.class.getName()));
+        }
+    }
+
+    @Test
     public void testSimpleBean() throws NameNotFoundException {
         final SimpleBean bean = Container.instance().lookup("SimpleBean", SimpleBean.class);
         assertNotNull(bean);
@@ -58,5 +75,11 @@ public class CDIContainerTestCase {
         assertNotNull(bean1);
         final SimpleBean bean2 = Container.instance().lookup("SimpleBean", SimpleBean.class);
         assertTrue(bean1 == bean2);
+    }
+
+    @Test
+    public void testTypedBean() throws NameNotFoundException {
+        final TypedBean bean = Container.instance().lookup("Ignored", TypedBean.class);
+        assertNotNull(bean);
     }
 }
