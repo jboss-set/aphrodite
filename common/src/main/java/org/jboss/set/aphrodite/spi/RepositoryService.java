@@ -99,6 +99,7 @@ public interface RepositoryService {
      * @return a list of all <code>PullRequest</code> objects, or an empty list if no pull request can be found.
      * @throws NotFoundException if an exception is thrown when searching the RepositoryService.
      */
+    @Deprecated
     List<PullRequest> getPullRequestsAssociatedWith(Issue issue) throws NotFoundException;
 
     /**
@@ -125,7 +126,9 @@ public interface RepositoryService {
      * @param pullRequest the <code>PullRequest<code> object whose associated labels should be returned.
      * @return a list of all matching <code>Label<code> objects, or an empty list if no pull request can be found.
      * @throws NotFoundException if the provided <code>PullRequest</code> url not consistent with the baseURL.
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#getLabels()} instead.
      */
+    @Deprecated
     List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException;
 
     /**
@@ -143,7 +146,9 @@ public interface RepositoryService {
      * @param labels the <code>Label</code> apply to the <code>PullRequest</code>
      * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>PullRequest</code>
      * @throws AphroditeException if add the <code>Label<code> is not consistent with get labels
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#setLabels()} instead.
      */
+    @Deprecated
     void setLabelsToPullRequest(PullRequest pullRequest, List<Label> labels) throws NotFoundException, AphroditeException ;
 
     /**
@@ -151,7 +156,9 @@ public interface RepositoryService {
      * @param pullRequest the <code>PullRequest</code> whose label will be removed.
      * @param name the <code>Label</code> name will be removed.
      * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>PullRequest</code>
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#removeLabel()} instead.
      */
+    @Deprecated
     void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException;
 
     /**
@@ -161,7 +168,9 @@ public interface RepositoryService {
      * @param pullRequest the <code>PullRequest</code> on which the comment will be made.
      * @param comment the new <code>Comment</code>.
      * @throws NotFoundException if the <code>PullRequest</code> cannot be found at the remote repository.
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#addComment()} instead.
      */
+    @Deprecated
     void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException;
 
     /**
@@ -172,7 +181,9 @@ public interface RepositoryService {
      * @param pullRequest the <code>PullRequest</code> to which the label will be applied.
      * @param labelName the name of the label to be applied.
      * @throws NotFoundException if the specified labelName has not been defined at the remote repository.
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#addLabel()} instead.
      */
+    @Deprecated
     void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException;
 
     /**
@@ -180,7 +191,9 @@ public interface RepositoryService {
      *
      * @param pullRequest the <code>PullRequest</code> on which pull requests related are being searched
      * @return list of pull requests related.
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#findReferencedPullRequests()} instead.
      */
+    @Deprecated
     List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest);
 
     /**
@@ -189,7 +202,9 @@ public interface RepositoryService {
      * @param pullRequest the <code>PullRequest</code> object whose status is to be queried
      * @return the CI status of the latest commit associated with the given pull request
      * @throws NotFoundException if no commit status can be found for the provided pull request
+     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#getCommitStatus()} instead.
      */
+    @Deprecated
     CommitStatus getCommitStatusFromPullRequest(PullRequest pullRequest) throws NotFoundException;
 
     /**

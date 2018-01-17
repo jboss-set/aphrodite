@@ -26,24 +26,17 @@ import org.apache.commons.logging.Log;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
-import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.PullRequest;
-import org.jboss.set.aphrodite.domain.PullRequestState;
-import org.jboss.set.aphrodite.domain.RateLimit;
-import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.spi.NotFoundException;
-import org.jboss.set.aphrodite.spi.RepositoryService;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 
 /**
  * @author Ryan Emerson
  */
-public abstract class AbstractRepositoryService implements RepositoryService {
+public abstract class AbstractRepositoryService {
 
     protected final RepositoryType REPOSITORY_TYPE;
     protected RepositoryConfig config;
@@ -55,20 +48,20 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         this.REPOSITORY_TYPE = REPOSITORY_TYPE;
     }
 
-    @Override
     public boolean init(AphroditeConfig aphroditeConfig) {
         Iterator<RepositoryConfig> i = aphroditeConfig.getRepositoryConfigs().iterator();
         while (i.hasNext()) {
             RepositoryConfig config = i.next();
             if (config.getType() == REPOSITORY_TYPE) {
-                i.remove(); // Remove so that this service cannot be instantiated twice
+                // i.remove(); // Remove so that this service cannot be instantiated twice
+                // Don't remove anymore, GitHubRepositoryService is initialized from Aphrodite instance,
+                // GithubPullRequestHomeService is initialize from container.
                 return init(config);
             }
         }
         return false;
     }
 
-    @Override
     public boolean init(RepositoryConfig config) {
         this.config = config;
         String url = config.getUrl();
@@ -86,37 +79,6 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         return true;
     }
 
-    @Override
-    public Repository getRepository(URL url) throws NotFoundException {
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
-    public PullRequest getPullRequest(URL url) throws NotFoundException {
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
-    public List<PullRequest> getPullRequestsAssociatedWith(Issue issue) throws NotFoundException {
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
-    public List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException {
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
-    public RateLimit getRateLimit() throws NotFoundException {
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
-    public void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException {
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
     public boolean urlExists(URL url) {
         Objects.requireNonNull(url);
         return url.getHost().equals(baseUrl.getHost());
@@ -126,25 +88,5 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         if (!urlExists(url))
             throw new NotFoundException("The requested Repository cannot be found as it is not " +
                     "hosted on this server.");
-    }
-
-    public String createFromUrl(URL url) {
-        return url != null ? createFromId(url.getPath()) : null;
-    }
-
-    public String createFromId(String id) {
-        if (id == null || id.length() == 0)
-            return null;
-        String owner = null;
-        String name = null;
-        for (String segment : id.split("/")) //$NON-NLS-1$
-            if (segment.length() > 0)
-                if (owner == null)
-                    owner = segment;
-                else if (name == null)
-                    name = segment;
-                else
-                    break;
-        return owner != null && owner.length() > 0 && name != null && name.length() > 0 ? owner + "/" + name : null;
     }
 }
