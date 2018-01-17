@@ -22,6 +22,8 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
+import java.util.regex.Pattern;
+
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssuePriority;
@@ -39,6 +41,7 @@ class JiraFields {
     static final String API_BASE_PATH = "/rest/api/2/";
     static final String API_ISSUE_PATH = API_BASE_PATH + "issue/";
     static final String BROWSE_ISSUE_PATH = "/browse/";
+    static final Pattern PROJECTS_ISSUE_PATTERN = Pattern.compile("\\/projects\\/[^\\/]+\\/issues\\/");
 
     static final String DATE_STRING_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ";
     static final String JSON_CUSTOM_FIELD = "customfield_";

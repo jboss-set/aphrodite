@@ -25,6 +25,7 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PROJECTS_ISSUE_PATTERN;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
 
@@ -345,7 +346,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     private String getIssueKey(URL url) throws NotFoundException {
-        String path = url.getPath();
+        String path = correctPath(url.getPath());
         boolean api = path.contains(API_ISSUE_PATH);
         boolean browse = path.contains(BROWSE_ISSUE_PATH);
 
@@ -353,6 +354,14 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             throw new NotFoundException("The URL path must be of the form '" + API_ISSUE_PATH + "' OR '" + BROWSE_ISSUE_PATH + "'");
 
         return api ? path.substring(API_ISSUE_PATH.length()) : path.substring(BROWSE_ISSUE_PATH.length());
+    }
+
+    private String correctPath(String path) {
+        Matcher m = PROJECTS_ISSUE_PATTERN.matcher(path);
+        if (m.find()) {
+            return m.replaceFirst(BROWSE_ISSUE_PATH);
+        }
+        return path;
     }
 
     private String getUpdateErrorMessage(Issue issue, Exception e) {
