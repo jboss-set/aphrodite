@@ -79,6 +79,18 @@ public class JsonStreamService implements StreamService {
         return updateStreams();
     }
 
+    @Override
+    public synchronized boolean updateStreams() throws NotFoundException {
+        Iterator<StreamConfig> i = this.config.getStreamConfigs().iterator();
+        while (i.hasNext()) {
+            StreamConfig streamConfig = i.next();
+            if (streamConfig.getStreamType() == StreamType.JSON) {
+                return init(streamConfig);
+            }
+        }
+        return false;
+    }
+
     private boolean init(StreamConfig config) throws NotFoundException {
         URL url = null;
         if (config.getURL().isPresent()) {
@@ -90,24 +102,13 @@ public class JsonStreamService implements StreamService {
                 throw new NotFoundException(e);
             }
         } else {
-            throw new NotFoundException("StreamConfig requires either a URL or File to be specified");
+            LOG.error("StreamConfig requires either a URL or File to be specified");
+            return false;
         }
         Map<String, Stream> streamsMap = StreamsJsonParser.parse(url);
         this.parsedStreamsMap.putAll(streamsMap);
         this.urlToParsedStreams.put(url, streamsMap.values());
         return true;
-    }
-
-    @Override
-    public synchronized boolean updateStreams() throws NotFoundException {
-        Iterator<StreamConfig> i = this.config.getStreamConfigs().iterator();
-        while (i.hasNext()) {
-            StreamConfig streamConfig = i.next();
-            if (streamConfig.getStreamType() == StreamType.JSON) {
-                return init(streamConfig);
-            }
-        }
-        return false;
     }
 
     @Override
