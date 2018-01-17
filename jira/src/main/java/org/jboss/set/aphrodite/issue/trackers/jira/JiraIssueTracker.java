@@ -179,16 +179,33 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     private List<Issue> searchIssues(String jql, int maxResults) {
         try {
-            List<Issue> issues = new ArrayList<>();
-            SearchRestClient searchClient = restClient.getSearchClient();
             Set<String> fields = new HashSet<>();
             fields.add("*all");
-            SearchResult result = searchClient.searchJql(jql, maxResults, null, fields).get();
-            result.getIssues().forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
-            return issues;
+            return paginateResults(restClient.getSearchClient(), jql, fields, maxResults);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static int NB_TOTAL_ISSUE_NOT_INITIATED = -1;
+    private List<Issue> paginateResults(SearchRestClient searchClient, String jql, Set<String> fields, int maxResults) throws InterruptedException, ExecutionException {
+        List<Issue> issues = new ArrayList<>();
+        int startPosition = 0;
+        int nbTotalIssue = NB_TOTAL_ISSUE_NOT_INITIATED;
+        if ( LOG.isDebugEnabled() ) LOG.debug("Max Results:" + maxResults);
+
+        do {
+            if ( LOG.isDebugEnabled() ) LOG.debug("Start Position:" + startPosition);
+            SearchResult result = searchClient.searchJql(jql, maxResults, startPosition, fields).get();
+            if ( nbTotalIssue == NB_TOTAL_ISSUE_NOT_INITIATED ) {
+                nbTotalIssue = result.getTotal();
+                if ( LOG.isDebugEnabled() ) LOG.debug("Total Issues in result:" + nbTotalIssue);
+            }
+            result.getIssues().forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
+            startPosition += maxResults;
+        } while ( startPosition < nbTotalIssue );
+        if ( LOG.isDebugEnabled() ) LOG.debug("Total issues:" + issues.size());
+        return issues;
     }
 
     @Override
