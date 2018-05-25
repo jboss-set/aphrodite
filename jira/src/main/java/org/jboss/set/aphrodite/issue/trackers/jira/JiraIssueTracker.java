@@ -109,6 +109,10 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
             URI jiraServerUri = baseUrl.toURI();
             restClient = factory.createWithBasicHttpAuthentication(jiraServerUri, config.getUsername(), config.getPassword());
+            //work around to auth. No need to check number, its just garbage or general login failure number, not related to our
+            //activity.
+            restClient.getSessionClient().getCurrentSession().get().getLoginInfo().getFailedLoginCount();
+
         } catch (Exception e) {
             Utils.logException(LOG, e);
             return false;

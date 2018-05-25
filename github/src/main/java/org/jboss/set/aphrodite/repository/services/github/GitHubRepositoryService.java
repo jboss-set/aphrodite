@@ -136,11 +136,11 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
                         .build();
 
             }
+            return github.isCredentialValid();
         } catch (IOException e) {
             Utils.logException(LOG, "Authentication failed for RepositoryService: " + this.getClass().getName(), e);
-            return false;
         }
-        return true;
+        return false;
     }
 
     @Override

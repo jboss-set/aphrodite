@@ -170,6 +170,8 @@ public class Aphrodite implements AutoCloseable {
         if (LOG.isInfoEnabled())
             LOG.info("Initiating Aphrodite ...");
 
+        boolean failed = false;
+        StringBuilder error = new StringBuilder();
         this.config = config;
 
         executorService = config.getExecutorService();
@@ -178,21 +180,26 @@ public class Aphrodite implements AutoCloseable {
 
         for (IssueTrackerService is : ServiceLoader.load(IssueTrackerService.class)) {
             boolean initialised = is.init(mutableConfig);
-            if (initialised)
+            if (initialised) {
                 issueTrackers.put(is.getTrackerID(),is);
+            } else {
+                failed = true;
+                error.append("Failed to initialize issue tracker: ").append(is.getTrackerID()).append("\n");
+            }
         }
 
         for (RepositoryService rs : ServiceLoader.load(RepositoryService.class)) {
             boolean initialised = rs.init(mutableConfig);
-            if (initialised)
+            if (initialised) {
                 repositories.add(rs);
+            } else {
+                failed = true;
+                error.append("Failed to initialize repository: ").append(rs.getRepositoryType()).append("\n");
+            }
         }
 
-        if (issueTrackers.isEmpty())
-            throw new AphroditeException("Unable to initiatilise Aphrodite, as a valid " + IssueTrackerService.class.getName() + " does not exist.");
-
-        if (repositories.isEmpty() && LOG.isWarnEnabled() )
-            LOG.warn("Unable to initiatilise Aphrodite, as a valid " + RepositoryService.class.getName() + " does not exist.");
+        if (failed)
+            throw new AphroditeException("Unable to initiatilise Aphrodite.\n" + error.toString());
 
         initialiseStreams(mutableConfig);
 

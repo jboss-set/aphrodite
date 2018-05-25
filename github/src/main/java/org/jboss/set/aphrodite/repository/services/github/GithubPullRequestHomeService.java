@@ -117,11 +117,11 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
                         .withConnector(new OkHttpConnector(new OkUrlFactory(new OkHttpClient().setCache(cache)))).build();
 
             }
+            return github.isCredentialValid();
         } catch (IOException e) {
             Utils.logException(LOG, "Authentication failed for RepositoryService: " + this.getClass().getName(), e);
-            return false;
         }
-        return true;
+        return false;
     }
 
     @Override
