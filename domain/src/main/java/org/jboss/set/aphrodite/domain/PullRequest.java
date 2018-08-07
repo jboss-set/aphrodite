@@ -43,14 +43,14 @@ import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class PullRequest {
     private static final Pattern UPGRADE_TITLE = Pattern.compile("\\s*Upgrade \\s*", Pattern.CASE_INSENSITIVE);
-    private static final Pattern UPSTREAM_ISSUE_NOT_REQUIRED = Pattern.compile("^\\s*Upstream not required.*$", Pattern.CASE_INSENSITIVE);
-    private static final Pattern UPSTREAM_PR = Pattern.compile("^\\s*Upstream PR[:|]\\s*+" + URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
-    private static final Pattern UPSTREAM_ISSUE = Pattern.compile("^\\s*Upstream Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
-    private static final Pattern ISSUE = Pattern.compile("^\\s*Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
-    private static final Pattern RELATED_ISSUES = Pattern.compile("^\\s*Related Issue[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+", Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPSTREAM_ISSUE_NOT_REQUIRED = Pattern.compile("^\\s*Upstream not required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern UPSTREAM_PR = Pattern.compile("^\\s*Upstream PR[:|]\\s*+" + URL_REGEX_STRING, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern UPSTREAM_ISSUE = Pattern.compile("^\\s*Upstream Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern ISSUE = Pattern.compile("^\\s*Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern RELATED_ISSUES = Pattern.compile("^\\s*Related Issue[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private static final String UPGRADE_META_BIT_REGEX = "\\w++=\\w++";
     private static final String UPGRADE_META_REGEX = "\\s*+"+UPGRADE_META_BIT_REGEX+"(,\\s*+"+UPGRADE_META_BIT_REGEX+")*+";
-    private static final Pattern UPGRADE = Pattern.compile("\\s*Upgrade[:|]"+UPGRADE_META_REGEX, Pattern.CASE_INSENSITIVE);
+    private static final Pattern UPGRADE = Pattern.compile("\\s*Upgrade[:|]"+UPGRADE_META_REGEX, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
 
     private final String id;
     private final URL url;
@@ -210,8 +210,14 @@ public class PullRequest {
      * Check if this PR has upgrade meta present.
      *
      * @return Contains upgrade meta?
+     * @deprecated
      */
     public boolean hasUpgradeMeta() {
+        final Matcher m = UPGRADE.matcher(body);
+        return m.find();
+    }
+
+    public boolean hasUpgrade() {
         final Matcher m = UPGRADE.matcher(body);
         return m.find();
     }
