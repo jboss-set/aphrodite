@@ -35,14 +35,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -128,19 +125,7 @@ public class Aphrodite implements AutoCloseable {
         repositories.forEach(RepositoryService::destroy);
         repositories.clear();
     }
-    //URL with digits at the end to match PR or JIRA/BZ
-    private static final String URL_REGEX_STRING= "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\\d+";
-    private static final Pattern URL_REGEX= Pattern.compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\\d+");
-    private static final Pattern UPSTREAM_ISSUE_NOT_REQUIRED = Pattern.compile("^\\s*Upstream not required.*$", Pattern.CASE_INSENSITIVE);
-    private static final Pattern ISSUE = Pattern.compile("^\\s*Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
-    private static final Pattern UPSTREAM_ISSUE = Pattern.compile("^\\s*Upstream Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
-    //private final static Pattern UPSTREAM_PR = Pattern.compile("^\\s*Upstream PR[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+", Pattern.CASE_INSENSITIVE);
-    private static final Pattern UPSTREAM_PR = Pattern.compile("^\\s*Upstream PR[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE);
-    private static final Pattern RELATED_ISSUES = Pattern.compile("^\\s*Related Issue[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+", Pattern.CASE_INSENSITIVE);
-    //TODO: XXX do we need refinement here?
-    private static final String UPGRADE_META_BIT_REGEX = "\\w++=\\w++";
-    private static final String UPGRADE_META_REGEX = "\\s*+"+UPGRADE_META_BIT_REGEX+"(,\\s*+"+UPGRADE_META_BIT_REGEX+")*+";
-    private static final Pattern UPGRADE = Pattern.compile("\\s*Upgrade[:|]"+UPGRADE_META_REGEX, Pattern.CASE_INSENSITIVE);
+
     private final Map<String,IssueTrackerService> issueTrackers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final List<RepositoryService> repositories = new ArrayList<>();
     private final List<StreamService> streamServices = new ArrayList<>();
@@ -265,12 +250,12 @@ public class Aphrodite implements AutoCloseable {
     public Issue getIssue(final PullRequest pullRequest) throws NotFoundException, MalformedURLException {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
-        final String body = pullRequest.getBody();
-        final String[] url = extractURLs(body, ISSUE, false);
-        if (url == null || url.length == 0 || url[0] == null)
+
+        URL url = pullRequest.findIssueURL();
+        if (url == null)
             return null;
         else
-            return getIssue(new URL(url[0]));
+            return getIssue(url);
     }
 
     /**
@@ -290,14 +275,13 @@ public class Aphrodite implements AutoCloseable {
     public List<Issue> getRelatedIssues(final PullRequest pullRequest) throws MalformedURLException, NotFoundException {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
-        final String body = pullRequest.getBody();
-        final String[] urls = extractURLs(body, RELATED_ISSUES, true);
-        if (urls == null || urls.length == 0 || urls[0] == null) {
+        List<URL> urls = pullRequest.findRelatedIssuesURL();
+        if (urls == null || urls.size() == 0) {
             return null;
         } else {
-            List<Issue> issues = new ArrayList<>(urls.length);
-            for (String url : urls) {
-                issues.add(getIssue(new URL(url)));
+            List<Issue> issues = new ArrayList<>(urls.size());
+            for (URL url : urls) {
+                issues.add(getIssue(url));
             }
             return issues;
         }
@@ -321,12 +305,11 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
         if (this.isUpstreamRequired(pullRequest)) {
-            final String body = pullRequest.getBody();
-            final String[] url = extractURLs(body, UPSTREAM_ISSUE, false);
-            if (url == null || url.length == 0 || url[0] == null)
+            final URL url = pullRequest.findUpstreamIssueURL();
+            if (url == null)
                 return null;
             else
-                return getIssue(new URL(url[0]));
+                return getIssue(url);
         } else {
             return null;
         }
@@ -350,12 +333,11 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
         if (this.isUpstreamRequired(pullRequest)) {
-            final String body = pullRequest.getBody();
-            final String[] url = extractURLs(body, UPSTREAM_PR, false);
-            if (url == null || url.length == 0 || url[0] == null)
+            final URL url = pullRequest.findUpstreamPullRequestURL();
+            if (url == null)
                 return null;
             else
-                return getPullRequest(new URL(url[0]));
+                return getPullRequest(url);
         } else {
             return null;
         }
@@ -366,18 +348,7 @@ public class Aphrodite implements AutoCloseable {
         if (!hasUpgrade(pullRequest)) {
             return null;
         }
-        final String body = pullRequest.getBody();
-        Matcher m = UPGRADE.matcher(body);
-        m.find();
-        String upgradeBody = body.substring(m.start(), m.end());
-        m = Pattern.compile(UPGRADE_META_BIT_REGEX).matcher(upgradeBody);
-        Properties metas = new Properties();
-        while (m.find()) {
-            final String[] x = upgradeBody.substring(m.start(), m.end()).split("=");
-            metas.put(x[0], x[1]);
-        }
-        return new PullRequestUpgrade(pullRequest, metas.getProperty("id"), metas.getProperty("tag"),
-                metas.getProperty("version"), metas.getProperty("branch"));
+        return pullRequest.findPullRequestUpgrade();
     }
 
     /**
@@ -390,9 +361,7 @@ public class Aphrodite implements AutoCloseable {
     public boolean isUpstreamRequired(final PullRequest pullRequest) {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
-        final String body = pullRequest.getBody();
-        final Matcher m = UPSTREAM_ISSUE_NOT_REQUIRED.matcher(body);
-        return !m.find();
+        return pullRequest.isUpstreamRequired();
     }
 
     /**
@@ -404,33 +373,7 @@ public class Aphrodite implements AutoCloseable {
     public boolean hasUpgrade(PullRequest pullRequest) {
         Objects.requireNonNull(pullRequest, "pull request cannot be null");
         checkIssueTrackerExists();
-        final String body = pullRequest.getBody();
-        final Matcher m = UPGRADE.matcher(body);
-        return m.find();
-    }
-
-    protected String[] extractURLs(final String source, final Pattern initialMatchPattern, final boolean multiple) {
-        Matcher m = initialMatchPattern.matcher(source);
-        if (m.find()) {
-            final String urlSource = source.substring(m.start(), m.end());
-            m = URL_REGEX.matcher(urlSource);
-            if (multiple) {
-                final List<String> urls = new ArrayList<>();
-                while (m.find()) {
-                    urls.add(urlSource.substring(m.start(), m.end()));
-                }
-                return urls.toArray(new String[urls.size()]);
-            } else {
-                // just to be thorough
-                if (m.find()) {
-                    return new String[] { urlSource.substring(m.start(), m.end()) };
-                } else {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
+        return pullRequest.hasUpgrade();
     }
 
     /**
