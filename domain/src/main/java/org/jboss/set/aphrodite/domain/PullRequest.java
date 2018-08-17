@@ -269,6 +269,14 @@ public class PullRequest {
         return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).getCommitStatus(this);
     }
 
+    public void approveOnPullRequest() throws NameNotFoundException {
+        Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).approveOnPullRequest(this);
+    }
+
+    public void requestChangesOnPullRequest(String comment) throws NameNotFoundException {
+        Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).requestChangesOnPullRequest(this, comment);
+    }
+
     public boolean isMergeable() {
         return mergeable;
     }
