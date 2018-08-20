@@ -91,4 +91,19 @@ public interface PullRequestHome {
      * @return the CI status of the latest commit associated with the given pull request
      */
     CommitStatus getCommitStatus(PullRequest pullRequest);
+
+    /**
+     * Approve pull request.
+     *
+     * @param pullRequest
+     */
+    void approveOnPullRequest(PullRequest pullRequest);
+
+    /**
+     * Request changes on pull request with comment.
+     *
+     * @param pullRequest
+     * @param body
+     */
+    void requestChangesOnPullRequest(PullRequest pullRequest, String body);
 }

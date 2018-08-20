@@ -22,7 +22,6 @@
 
 package org.jboss.set.aphrodite.repository.services.github;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -37,7 +36,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
@@ -45,7 +43,6 @@ import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
-import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
@@ -61,13 +58,6 @@ import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRateLimit;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
-import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
-import org.kohsuke.github.extras.OkHttpConnector;
-
-import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.OkUrlFactory;
 
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.getPRFromDescription;
@@ -77,18 +67,10 @@ import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.get
 /**
  * @author Ryan Emerson
  */
-public class GitHubRepositoryService extends AbstractRepositoryService implements RepositoryService {
+public class GitHubRepositoryService extends AbstractGithubService implements RepositoryService {
 
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
     private static final GitHubWrapper WRAPPER = new GitHubWrapper();
-    private static final int DEFAULT_CACHE_SIZE = 20;
-
-    private String cacheDir;
-    private String cacheName;
-    private String cacheSize;
-    private File cacheFile;
-    private Cache cache;
-    private GitHub github;
 
     public GitHubRepositoryService() {
         super(RepositoryType.GITHUB);
@@ -97,50 +79,6 @@ public class GitHubRepositoryService extends AbstractRepositoryService implement
     @Override
     protected Log getLog() {
         return LOG;
-    }
-
-    @Override
-    public boolean init(RepositoryConfig config) {
-        boolean parentInitiated = super.init(config);
-        if (!parentInitiated)
-            return false;
-
-        // Cache
-        cacheDir = System.getProperty("cacheDir");
-        cacheName = System.getProperty("cacheName");
-
-        try {
-            if (cacheDir == null || cacheName == null) {
-                // no cache specified
-                github = GitHub.connect(config.getUsername(), config.getPassword());
-            } else {
-                // use cache
-                cacheFile = new File(cacheDir, cacheName);
-                cacheSize = System.getProperty("cacheSize");
-                if (cacheSize == null) {
-                    cache = new Cache(cacheFile, DEFAULT_CACHE_SIZE * 1024 * 1024); // default 20MB cache
-                } else {
-                    int size = DEFAULT_CACHE_SIZE;
-                    try {
-                        size = Integer.valueOf(cacheSize);
-                    } catch (NumberFormatException e) {
-                        Utils.logWarnMessage(LOG, cacheSize + " is not a valid cache size. Use default size 20MB.");
-                    }
-                    cache = new Cache(cacheFile, size * 1024 * 1024); // default 20MB cache
-                }
-
-                // oauthAccessToken here, if you use text password, call .withPassword()
-                github = new GitHubBuilder()
-                        .withOAuthToken(config.getPassword(), config.getUsername())
-                        .withConnector(new OkHttpConnector(new OkUrlFactory(new OkHttpClient().setCache(cache))))
-                        .build();
-
-            }
-            return github.isCredentialValid();
-        } catch (IOException e) {
-            Utils.logException(LOG, "Authentication failed for RepositoryService: " + this.getClass().getName(), e);
-        }
-        return false;
     }
 
     @Override

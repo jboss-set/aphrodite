@@ -16,7 +16,6 @@
 
 package org.jboss.set.aphrodite.repository.services.github;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -25,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -32,12 +32,10 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
-import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
-import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
@@ -45,14 +43,12 @@ import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
+import org.kohsuke.github.GHPullRequestReview;
+import org.kohsuke.github.GHPullRequestReviewBuilder;
+import org.kohsuke.github.GHPullRequestReviewEvent;
+import org.kohsuke.github.GHPullRequestReviewState;
 import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
-import org.kohsuke.github.extras.OkHttpConnector;
-
-import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.OkUrlFactory;
+import org.kohsuke.github.GHUser;
 
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.getPRFromDescription;
@@ -64,64 +60,14 @@ import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.get
  * {@link GitHubRepositoryService} and allow to call them from pull request itself once this service implementation registered
  * in container.
  */
-public class GithubPullRequestHomeService extends AbstractRepositoryService implements PullRequestHome {
+public class GithubPullRequestHomeService extends AbstractGithubService implements PullRequestHome {
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.repository.services.github.GithubPullRequestHomeService.class);
     private static final GitHubWrapper WRAPPER = new GitHubWrapper();
-    private static final int DEFAULT_CACHE_SIZE = 20;
-
-    private String cacheDir;
-    private String cacheName;
-    private String cacheSize;
-    private File cacheFile;
-    private Cache cache;
-    private GitHub github;
 
     public GithubPullRequestHomeService(Aphrodite aphrodite) {
         super(RepositoryType.GITHUB);
         AphroditeConfig configuration = aphrodite.getConfig();
         this.init(configuration);
-    }
-
-    public boolean init(RepositoryConfig config) {
-        boolean parentInitiated = super.init(config);
-        if (!parentInitiated) {
-            return false;
-        }
-
-        // Cache
-        cacheDir = System.getProperty("cacheDir");
-        cacheName = System.getProperty("cacheName");
-
-        try {
-            if (cacheDir == null || cacheName == null) {
-                // no cache specified
-                github = GitHub.connect(config.getUsername(), config.getPassword());
-            } else {
-                // use cache
-                cacheFile = new File(cacheDir, cacheName);
-                cacheSize = System.getProperty("cacheSize");
-                if (cacheSize == null) {
-                    cache = new Cache(cacheFile, DEFAULT_CACHE_SIZE * 1024 * 1024); // default 20MB cache
-                } else {
-                    int size = DEFAULT_CACHE_SIZE;
-                    try {
-                        size = Integer.valueOf(cacheSize);
-                    } catch (NumberFormatException e) {
-                        Utils.logWarnMessage(LOG, cacheSize + " is not a valid cache size. Use default size 20MB.");
-                    }
-                    cache = new Cache(cacheFile, size * 1024 * 1024); // default 20MB cache
-                }
-
-                // oauthAccessToken here, if you use text password, call .withPassword()
-                github = new GitHubBuilder().withOAuthToken(config.getPassword(), config.getUsername())
-                        .withConnector(new OkHttpConnector(new OkUrlFactory(new OkHttpClient().setCache(cache)))).build();
-
-            }
-            return github.isCredentialValid();
-        } catch (IOException e) {
-            Utils.logException(LOG, "Authentication failed for RepositoryService: " + this.getClass().getName(), e);
-        }
-        return false;
     }
 
     @Override
@@ -320,6 +266,70 @@ public class GithubPullRequestHomeService extends AbstractRepositoryService impl
         } else {
             return CommitStatus.UNKNOWN;
         }
+    }
+
+    @Override
+    public void approveOnPullRequest(PullRequest pullRequest) {
+        // if we set to null, it will actually set "" to comment
+        createSimplePullRequestReview(pullRequest, GHPullRequestReviewEvent.APPROVE, "");
+    }
+
+    @Override
+    public void requestChangesOnPullRequest(PullRequest pullRequest, String body) {
+        createSimplePullRequestReview(pullRequest, GHPullRequestReviewEvent.REQUEST_CHANGES, body);
+    }
+
+    private GHPullRequestReview findReviewStateByUser(PullRequest pullRequest, GHUser user) {
+        URL url = pullRequest.getURL();
+        int pullRequestId = Integer.parseInt(pullRequest.getId());
+        String repositoryId = createRepositoryIdFromUrl(url);
+        try {
+            GHRepository repository = github.getRepository(repositoryId);
+            GHPullRequest ghPullRequest = repository.getPullRequest(pullRequestId);
+            List<GHPullRequestReview> reviews = ghPullRequest.listReviews().asList();
+            ListIterator<GHPullRequestReview> li = reviews.listIterator(reviews.size());
+            // Iterate in reverse. created date and updated date are always Null, Is this really safe?
+            while (li.hasPrevious()) {
+                GHPullRequestReview review = li.previous();
+                if (review.getUser().equals(user)) return review;
+            }
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+        }
+        return null;
+    }
+
+    private void createSimplePullRequestReview(PullRequest pullRequest, GHPullRequestReviewEvent event, String body) {
+        GHPullRequestReview review = findReviewStateByUser(pullRequest, user);
+        if (review != null && skipReviewEvent(event, review.getState()) && review.getBody().equals(body)) {
+            return; // skip if review state and comment is unchanged.
+        }
+        URL url = pullRequest.getURL();
+        int pullRequestId = Integer.parseInt(pullRequest.getId());
+        String repositoryId = createRepositoryIdFromUrl(url);
+
+        try {
+            GHRepository repository = github.getRepository(repositoryId);
+            GHPullRequest ghPullRequest = repository.getPullRequest(pullRequestId);
+            GHPullRequestReviewBuilder builder = ghPullRequest.createReview();
+            builder.event(event).body(body).create();
+        } catch (IOException e) {
+            Utils.logException(LOG, e);
+        }
+    }
+
+    // hack for review state and event, conversion method is not exposed from github-api
+    private boolean skipReviewEvent(GHPullRequestReviewEvent event, GHPullRequestReviewState state) {
+        if (event.equals(GHPullRequestReviewEvent.APPROVE) && state.equals(GHPullRequestReviewState.APPROVED)) {
+            return true;
+        } else if (event.equals(GHPullRequestReviewEvent.REQUEST_CHANGES) && state.equals(GHPullRequestReviewState.CHANGES_REQUESTED)) {
+            return true;
+        } else if (event.equals(GHPullRequestReviewEvent.PENDING) && state.equals(GHPullRequestReviewState.PENDING)) {
+            return true;
+        } else if (event.equals(GHPullRequestReviewEvent.COMMENT) && state.equals(GHPullRequestReviewState.COMMENTED)) {
+            return true;
+        }
+        return false;
     }
 
     public boolean repositoryAccessable(URL url) {
