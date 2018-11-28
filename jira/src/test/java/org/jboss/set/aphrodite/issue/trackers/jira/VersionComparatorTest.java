@@ -32,9 +32,23 @@ import static org.junit.Assert.*;
 public class VersionComparatorTest {
     @Test
     public void testVersionComparation() {
-        String upstreamRelease = "7.1.0.GA";
-        String downstreamRelease = "7.0.7.GA";
+        String upstreamRelease = "7.1.0.GA"; // the implicit epoch is 0
+        String downstreamRelease = "7.0.7.GA"; // the implicit epoch is 0
 
+        checkVersions(upstreamRelease, downstreamRelease);
+
+        upstreamRelease = "1:7.1.0.GA"; // has the epoch set to 1
+        downstreamRelease = "7.0.7.GA";
+
+        checkVersions(upstreamRelease, downstreamRelease);
+
+        upstreamRelease = "2:7.1.0.GA"; // has the epoch set to 2
+        downstreamRelease = "1:7.1.0.GA"; // has the epoch set to 1
+
+        checkVersions(upstreamRelease, downstreamRelease);
+    }
+
+    private void checkVersions(String upstreamRelease, String downstreamRelease) {
         assertEquals("Comparing the same versions.", 0,
                 VersionComparator.INSTANCE.compare(upstreamRelease, upstreamRelease));
         assertEquals("Comparing higher version with lower version.", 1,

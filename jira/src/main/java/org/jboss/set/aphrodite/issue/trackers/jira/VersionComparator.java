@@ -28,6 +28,8 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
  * https://github.com/wolfc/updepres/blob/master/model/src/main/java/org/jboss/up/depres/version/VersionComparator.java
  *
  * Compare 2 release versions
+ * The version should have following format:
+ * [<epoch>:]<upstream-version>-<product-version>
  */
 import java.util.Comparator;
 
@@ -39,29 +41,35 @@ public class VersionComparator implements Comparator<String> {
     public int compare(final String v1, final String v2) {
         int i1 = 0, i2 = 0;
 
-        // Get major version of the v1
+        // Check epoch format [<epoch>:]
+        // Get epoch version of the v1
         final int epoch1;
-        int i = v1.indexOf(".");
+        int i = v1.indexOf(":");
         if (i != -1) {
             epoch1 = Integer.valueOf(v1.substring(0, i));
             i1 = i;
-        } else
+        }
+        else
             epoch1 = 0;
 
-        // Get major version of the v2
+        // Get epoch version of the v2
         final int epoch2;
-        i = v2.indexOf(".");
+        i = v2.indexOf(":");
         if (i != -1) {
             epoch2 = Integer.valueOf(v2.substring(0, i));
             i2 = i;
-        } else
+        }
+        else
             epoch2 = 0;
 
-        // Compare major versions
+        // Compare epochs versions
         if (epoch1 != epoch2)
             return epoch1 - epoch2;
 
-        // Compare rest of the versions
+
+        // Compare rest of the versions. They should have following format:
+        // <upstream-version>-<product-version>
+
         final int lim1 = v1.length(), lim2 = v2.length();
         while (i1 < lim1 && i2 < lim2) {
             final char c1 = v1.charAt(i1);
