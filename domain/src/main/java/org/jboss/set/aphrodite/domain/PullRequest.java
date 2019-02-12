@@ -43,7 +43,8 @@ import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class PullRequest {
     private static final Pattern UPGRADE_TITLE = Pattern.compile("\\s*Upgrade \\s*", Pattern.CASE_INSENSITIVE);
-    private static final Pattern UPSTREAM_ISSUE_NOT_REQUIRED = Pattern.compile("^\\s*Upstream not required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern UPSTREAM_ISSUE_NOT_REQUIRED = Pattern.compile("\\s*Upstream not required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern NO_UPSTREAM_REQUIRED = Pattern.compile("\\s*No upstream required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private static final Pattern UPSTREAM_PR = Pattern.compile("^\\s*\\[?Upstream PR[:|]\\s*+" + URL_REGEX_STRING + "\\]?", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private static final Pattern UPSTREAM_ISSUE = Pattern.compile("^\\s*Upstream Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private static final Pattern ISSUE = Pattern.compile("^\\s*Issue[:|]\\s*+"+URL_REGEX_STRING, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
@@ -130,8 +131,9 @@ public class PullRequest {
      * @return is upstream required?
      */
     public boolean isUpstreamRequired() {
-        final Matcher m = UPSTREAM_ISSUE_NOT_REQUIRED.matcher(body);
-        return !m.find();
+        final Matcher m1 = UPSTREAM_ISSUE_NOT_REQUIRED.matcher(body);
+        final Matcher m2 = NO_UPSTREAM_REQUIRED.matcher(body);
+        return !(m1.find() || m2.find());
     }
 
     /**
