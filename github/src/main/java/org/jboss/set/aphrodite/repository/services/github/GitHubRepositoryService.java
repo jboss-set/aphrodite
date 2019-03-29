@@ -84,17 +84,19 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     public PullRequest getPullRequest(URL url) throws NotFoundException {
         checkHost(url);
-
         String[] elements = url.getPath().split("/");
-        int pullId = Integer.parseInt(elements[elements.length - 1]);
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
+            int pullId = Integer.parseInt(elements[elements.length - 1]);
+            String repositoryId = createRepositoryIdFromUrl(url);
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
             return WRAPPER.pullRequestToPullRequest(pullRequest);
         } catch (IOException e) {
-            Utils.logException(LOG, e);
+            Utils.logException(LOG, url.toString(), e);
             throw new NotFoundException(e);
+        } catch (NumberFormatException ex) {
+            Utils.logWarnMessage(LOG, "Unable to get pull request from " + url);
+            throw new NotFoundException(ex);
         }
     }
 
