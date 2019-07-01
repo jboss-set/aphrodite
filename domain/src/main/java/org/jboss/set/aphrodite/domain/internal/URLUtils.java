@@ -18,6 +18,9 @@ public final class URLUtils {
     public static final String URL_REGEX_STRING= "(http|ftp|https)://(\\w+(:\\w+)@)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+[a-zA-Z0-9]+(/[\\w.@?^=%&:/~+#-]*)?";
     private static final Pattern URL_REGEX= Pattern.compile(URL_REGEX_STRING);
 
+    // GitHub partial URL: <org>/<repo>#<pr-number>
+    private static final Pattern GITHUB_PR_REGEX = Pattern.compile("(\\S+)/(\\S+)#(\\d+)");
+
     private URLUtils() {
     }
 
@@ -51,6 +54,34 @@ public final class URLUtils {
         } else {
             return null;
         }
+    }
+
+    public static String[] extractGHUrls(final String source, final Pattern initialMatchPattern, final boolean multiple) {
+        Matcher m = initialMatchPattern.matcher(source);
+        if (m.find()) {
+            final String urlSource = source.substring(m.start(), m.end());
+            m = GITHUB_PR_REGEX.matcher(urlSource);
+            if (multiple) {
+                final List<String> urls = new ArrayList<>();
+                while (m.find()) {
+                    urls.add(makeFullUrl(m));
+                }
+                return urls.toArray(new String[urls.size()]);
+            } else {
+                // just to be thorough
+                if (m.find()) {
+                    return new String[] { makeFullUrl(m) };
+                } else {
+                    return null;
+                }
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private static String makeFullUrl(Matcher m) {
+        return "https://github.com/" + m.group(1) + "/" + m.group(2) + "/pull/" + m.group(3);
     }
 
 }
