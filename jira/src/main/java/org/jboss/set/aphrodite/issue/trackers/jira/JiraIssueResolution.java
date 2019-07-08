@@ -16,7 +16,8 @@ public enum JiraIssueResolution {
     UNRESOLVED(0,"UNRESOLVED"),
     WONTDO(10000, "WON'T DO"),
     CANNOT_REPRODUCE(10002, "CANNOT REPRODUCE"),
-    DUPLICATE(10200,"DUPLICATE");
+    DUPLICATE(10200, "DUPLICATE"),
+    EXPLAINED(10300, "EXPLAINED");
 
     private long id;
     private String label;
