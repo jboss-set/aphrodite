@@ -22,11 +22,17 @@
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
 import org.jboss.set.aphrodite.config.TrackerType;
+import org.jboss.set.aphrodite.container.Container;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.spi.PatchHome;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
+
+import javax.naming.NameNotFoundException;
 
 import static org.jboss.set.aphrodite.config.TrackerType.JIRA;
 
@@ -115,5 +121,10 @@ public class JiraIssue extends Issue {
 
     public void setLinkedIncorporatesIssues(List<URL> linkedIncorporatesIssues) {
         this.linkedIncorporatesIssues = linkedIncorporatesIssues;
+    }
+
+    @Override
+    public Stream<Patch> getPatches() throws NameNotFoundException {
+        return Container.instance().lookup(JiraPatchHomeImpl.class.getSimpleName(), (PatchHome.class)).findPatchesByIssue(this);
     }
 }

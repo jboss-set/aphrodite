@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  */
 public class RepositoryUtils {
 
-    private static final Pattern RELATED_PR_PATTERN = Pattern
+    public static final Pattern RELATED_PR_PATTERN = Pattern
             .compile(".*github\\.com.*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/pull.?/(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern ABBREVIATED_RELATED_PR_PATTERN = Pattern.compile("([a-zA-Z_0-9-//]*)#(\\d+)",
             Pattern.CASE_INSENSITIVE);
