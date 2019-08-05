@@ -36,5 +36,11 @@
             <groupId>org.jboss.set</groupId>
             <artifactId>jboss-aphrodite-domain</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.set</groupId>
+            <artifactId>jboss-aphrodite-simplecontainer</artifactId>
+            <version>aphrodite-0.7.0.Final</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>
