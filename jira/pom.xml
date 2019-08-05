@@ -28,6 +28,10 @@
         </dependency>
         <dependency>
             <groupId>org.jboss.set</groupId>
+            <artifactId>jboss-aphrodite-simplecontainer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.set</groupId>
             <artifactId>jboss-aphrodite-test</artifactId>
             <scope>test</scope>
         </dependency>
@@ -42,12 +46,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${org.slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.set</groupId>
-            <artifactId>jboss-aphrodite-simplecontainer</artifactId>
-            <version>aphrodite-0.7.0.Final</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

@@ -57,7 +57,7 @@ public class CandidateRelease {
         releaseCandidateVersion = version;
     }
 
-    public static String extractGAName(String name) throws NotFoundException {
+    public static String extractVersion(String name) throws NotFoundException {
         Matcher matcher = VERSION_PART.matcher(name);
 
         if(!matcher.find()) {
