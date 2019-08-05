@@ -64,6 +64,7 @@ import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
+import org.jboss.set.aphrodite.simplecontainer.SimpleContainer;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -158,6 +159,7 @@ public class Aphrodite implements AutoCloseable {
         boolean failed = false;
         StringBuilder error = new StringBuilder();
         this.config = config;
+        SimpleContainer container = (SimpleContainer) SimpleContainer.instance();
 
         executorService = config.getExecutorService();
         // Create new config object, as the object passed to init() will have its state changed.
@@ -167,6 +169,7 @@ public class Aphrodite implements AutoCloseable {
             boolean initialised = is.init(mutableConfig);
             if (initialised) {
                 issueTrackers.put(is.getTrackerID(),is);
+                container.register(is.getClass().getSimpleName(), is);
             } else {
                 failed = true;
                 error.append("Failed to initialize issue tracker: ").append(is.getTrackerID()).append("\n");
