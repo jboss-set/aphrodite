@@ -41,17 +41,17 @@ public class CandidateJiraReleaseTest {
 
     @Test
     public void testIsGAorRC() {
-        Assert.assertTrue(CandidateRelease.isCR("7.4.22.GA"));
-        Assert.assertTrue(CandidateRelease.isCR("7.4.22.GA.CR1"));
-        Assert.assertTrue(CandidateRelease.isCR("7.4.22.GA.CR10"));
+        Assert.assertTrue(CandidateRelease.isCR("7.4.22.CR1"));
+        Assert.assertTrue(CandidateRelease.isCR("7.4.22.CR10"));
 
+        Assert.assertFalse(CandidateRelease.isCR("7.4.22.GA"));
         Assert.assertFalse(CandidateRelease.isCR("7.4.22.GA.doc"));
         Assert.assertFalse(CandidateRelease.isCR("7.4.22.GA.ER1"));
     }
 
     @Test
-    public void extractGA() throws NotFoundException {
-        String result = CandidateRelease.extractGAName("7.4.22.GA.CR1");
-        Assert.assertEquals("7.4.22.GA", result);
+    public void extractVersion() throws NotFoundException {
+        Assert.assertEquals("7.4.22", CandidateRelease.extractVersion("7.4.22.GA"));
+        Assert.assertEquals("7.4.22", CandidateRelease.extractVersion("7.4.22.CR1"));
     }
 }

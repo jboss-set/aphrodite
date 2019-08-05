@@ -95,7 +95,7 @@ public class JiraRelease {
                 try {
                     JiraRelease release = new JiraRelease(version, new ArrayList<>());
                     release.addCandidateRelease(new CandidateRelease(version));
-                    releases.put(CandidateRelease.extractGAName(version.getName()), release);
+                    releases.put(CandidateRelease.extractVersion(version.getName()), release);
 
                 } catch (NotFoundException e) {
                     e.printStackTrace();
@@ -107,7 +107,7 @@ public class JiraRelease {
         versions.forEach(version -> {
             if (CandidateRelease.isCR(version.getName())) {
                 try {
-                    String nameGA = CandidateRelease.extractGAName(version.getName());
+                    String nameGA = CandidateRelease.extractVersion(version.getName());
                     if(releases.containsKey(nameGA)) {
                         releases.get(nameGA).addCandidateRelease(new CandidateRelease(version));
                     }

@@ -49,7 +49,9 @@ public class CandidateRelease {
         return GA_VERSION.matcher(releaseCandidateName).find();
     }
 
-    public static boolean isCR(String releaseCandidateName) { return CR_VERSION.matcher(releaseCandidateName).find(); }
+    public static boolean isCR(String releaseCandidateName) {
+        return CR_VERSION.matcher(releaseCandidateName).find();
+    }
 
     Version releaseCandidateVersion;
 
@@ -57,7 +59,7 @@ public class CandidateRelease {
         releaseCandidateVersion = version;
     }
 
-    public static String extractGAName(String name) throws NotFoundException {
+    public static String extractVersion(String name) throws NotFoundException {
         Matcher matcher = VERSION_PART.matcher(name);
 
         if(!matcher.find()) {
@@ -75,14 +77,5 @@ public class CandidateRelease {
         }
         return issues;
     }
-
-
-
-
-
-
-
-
-
 
 }
