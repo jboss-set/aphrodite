@@ -24,7 +24,7 @@ package org.jboss.set.aphrodite.jira.rest.client.internal.async;
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.internal.async.AbstractAsynchronousRestClient;
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
-import com.atlassian.util.concurrent.Promise;
+import io.atlassian.util.concurrent.Promise;
 import org.jboss.set.aphrodite.jira.rest.client.api.domain.Board;
 import org.jboss.set.aphrodite.jira.rest.client.api.domain.Page;
 import org.jboss.set.aphrodite.jira.rest.client.api.domain.Sprint;
