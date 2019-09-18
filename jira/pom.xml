@@ -11,8 +11,8 @@
     <artifactId>jboss-aphrodite-jira</artifactId>
 
     <properties>
-        <com.atlassian.fugue.version>2.6.1</com.atlassian.fugue.version>
-        <com.atlassian.jira.version>5.0.4</com.atlassian.jira.version>
+        <io.atlassian.fugue.version>4.7.2</io.atlassian.fugue.version>
+        <com.atlassian.jira.version>5.1.6</com.atlassian.jira.version>
         <org.slf4j.version>1.7.12</org.slf4j.version>
     </properties>
 
@@ -34,9 +34,9 @@
 
         <!-- dependencies not exported by com.atlassian.jira:jira-rest-java-client-core -->
         <dependency>
-            <groupId>com.atlassian.fugue</groupId>
+            <groupId>io.atlassian.fugue</groupId>
             <artifactId>fugue</artifactId>
-            <version>${com.atlassian.fugue.version}</version>
+            <version>${io.atlassian.fugue.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
