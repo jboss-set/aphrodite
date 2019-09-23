@@ -2,6 +2,6 @@ language: java
 jdk:
   - oraclejdk11
 install:  
-  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dcommunity
+  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dcommunity -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
 script:
-  - mvn test -B -Dcommunity
+  - mvn test -B -Dcommunity -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
