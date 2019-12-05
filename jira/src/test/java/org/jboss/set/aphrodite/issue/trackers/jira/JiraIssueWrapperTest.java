@@ -88,7 +88,7 @@ public class JiraIssueWrapperTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private static String JIRA_URL = "https://issues.jboss.org/";
+    private static String JIRA_URL = "https://issues.redhat.com/";
     private IssueWrapper issueWrapper;
     private URL jiraURL;
 

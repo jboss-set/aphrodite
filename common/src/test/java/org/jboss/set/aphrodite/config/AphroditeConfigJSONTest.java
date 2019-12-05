@@ -61,7 +61,7 @@ public class AphroditeConfigJSONTest {
         System.setProperty(JSON_FILE_PROPERTY, propertyFile);
 
         jr = Json.createReader(new FileInputStream(propertyFile));
-        jiraConfig = new IssueTrackerConfig("https://issues.jboss.org/", "user", "pass", TrackerType.JIRA, 5);
+        jiraConfig = new IssueTrackerConfig("https://issues.redhat.com/", "user", "pass", TrackerType.JIRA, 5);
         githubConfig = new RepositoryConfig("https://github.com/", "user", "pass", RepositoryType.GITHUB);
     }
 
@@ -132,7 +132,7 @@ public class AphroditeConfigJSONTest {
 
         JsonObject jo = Json.createObjectBuilder()
                 .add("issueTrackerConfigs", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder().add("url", "https://issues.jboss.org/"))
+                        .add(Json.createObjectBuilder().add("url", "https://issues.redhat.com/"))
                         .build())
                 .add("repositoryConfigs", Json.createArrayBuilder()
                         .add(Json.createObjectBuilder().add("url", "https://github.com/"))

@@ -11,11 +11,11 @@ import org.junit.Test;
 public class URLUtilsTest {
 
     private static String UPSTREAM_PR = "Upstream PR:";
-    private static String SIMPLE_URL = "http://issues.jboss.org/";
+    private static String SIMPLE_URL = "http://issues.redhat.com/";
     private static String SHORT_URL = "ftp://jboss.org";
-    private static String URL_WITH_CREDENTIALS = "https://tom:smurfs@issues.jboss.org";
-    private static String URL_WITH_PARAMETERS = "https://issues.jboss.org/browse/?filter=-1&true=true";
-    private static String URL_ALL_IN = "https://tom:smurfs@issues.jboss.org/browse/?filter=-1&true=true";
+    private static String URL_WITH_CREDENTIALS = "https://tom:smurfs@issues.redhat.com";
+    private static String URL_WITH_PARAMETERS = "https://issues.redhat.com/browse/?filter=-1&true=true";
+    private static String URL_ALL_IN = "https://tom:smurfs@issues.redhat.com/browse/?filter=-1&true=true";
     private static String URL_IPV4 = "https://1.2.3.4/a/b/c";
     private static String INVALID_URL_MISSING_PROTO = "www.jboss.org";
     private static String INVALID_URL_TOO_SHORT = "http://www";

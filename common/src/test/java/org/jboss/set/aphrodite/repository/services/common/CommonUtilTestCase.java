@@ -40,14 +40,14 @@ public class CommonUtilTestCase {
     private static String REFERENCED_PR_URL = "https://github.com/jbossas/jboss-eap7/pull/100";
     private static String REFERENCED_PR_URL_EXTERNAL = "https://github.com/wildfly/wildfly/pull/10611";
     private static String DESC = "(cherry picked from commit 9d0bd0a68656a6e859f3c5742ab547a3b4a3053f)\n" + "\n"
-            + "GSS 7.1.z issue: https://issues.jboss.org/browse/JBEAP-13660\n" + "\n"
-            + "upstream 7.2.0 issue: 7.2.0 https://issues.jboss.org/browse/JBEAP-13659\n"
-            + "upstream WFLY issue: https://issues.jboss.org/browse/WFLY-9499\n" + "\n" + "upstream PR: wildfly/wildfly#10611";
+            + "GSS 7.1.z issue: https://issues.redhat.com/browse/JBEAP-13660\n" + "\n"
+            + "upstream 7.2.0 issue: 7.2.0 https://issues.redhat.com/browse/JBEAP-13659\n"
+            + "upstream WFLY issue: https://issues.redhat.com/browse/WFLY-9499\n" + "\n" + "upstream PR: wildfly/wildfly#10611";
 
     private static String DESC_WITH_EXTERNAL_PR = "(cherry picked from commit 9d0bd0a68656a6e859f3c5742ab547a3b4a3053f)\n"
-            + "\n" + "GSS 7.1.z issue: https://issues.jboss.org/browse/JBEAP-13660\n" + "\n"
-            + "upstream 7.2.0 issue: 7.2.0 https://issues.jboss.org/browse/JBEAP-13659\n"
-            + "upstream WFLY issue: https://issues.jboss.org/browse/WFLY-9499\n" + "\n" + "upstream PR: jbossas/jboss-eap7#100";
+            + "\n" + "GSS 7.1.z issue: https://issues.redhat.com/browse/JBEAP-13660\n" + "\n"
+            + "upstream 7.2.0 issue: 7.2.0 https://issues.redhat.com/browse/JBEAP-13659\n"
+            + "upstream WFLY issue: https://issues.redhat.com/browse/WFLY-9499\n" + "\n" + "upstream PR: jbossas/jboss-eap7#100";
 
     @Test
     public void testCreateFromUrl() {

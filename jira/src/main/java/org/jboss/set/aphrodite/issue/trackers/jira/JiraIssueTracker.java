@@ -221,7 +221,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     private String getJQLFromFilter(URL filterUrl) throws NotFoundException {
         try {
-            // url type example https://issues.jboss.org/rest/api/latest/filter/12322199
+            // url type example https://issues.redhat.com/rest/api/latest/filter/12322199
             SearchRestClient searchClient = restClient.getSearchClient();
             Filter filter = searchClient.getFilter(filterUrl.toURI()).get();
             return filter.getJql();

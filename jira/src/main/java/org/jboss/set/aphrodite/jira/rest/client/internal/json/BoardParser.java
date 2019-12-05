@@ -33,7 +33,7 @@ import java.net.URI;
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
 public class BoardParser implements JsonObjectParser<Board> {
-    // "id":101,"self":"https://issues.jboss.org/rest/agile/1.0/board/101","name":"RichFaces Sandbox","type":"scrum"
+    // "id":101,"self":"https://issues.redhat.com/rest/agile/1.0/board/101","name":"RichFaces Sandbox","type":"scrum"
     @Override
     public Board parse(final JSONObject json) throws JSONException {
         final Long id = JsonParseUtil.getOptionalLong(json, "id");
