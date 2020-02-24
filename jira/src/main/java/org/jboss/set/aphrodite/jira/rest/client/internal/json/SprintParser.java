@@ -42,7 +42,7 @@ public class SprintParser implements JsonObjectParser<Sprint> {
     @Override
     public Sprint parse(final JSONObject json) throws JSONException {
         // https://docs.atlassian.com/jira-software/REST/latest/#agile/1.0/board/{boardId}/sprint
-        // {"id":4786,"self":"https://issues.jboss.org/rest/agile/1.0/sprint/4786","state":"closed","name":"EAP 7.0.1","startDate":"2016-05-11T02:48:59.548-04:00","endDate":"2016-07-20T02:48:00.000-04:00","completeDate":"2016-07-26T03:41:18.239-04:00","originBoardId":3466}
+        // {"id":4786,"self":"https://issues.redhat.com/rest/agile/1.0/sprint/4786","state":"closed","name":"EAP 7.0.1","startDate":"2016-05-11T02:48:59.548-04:00","endDate":"2016-07-20T02:48:00.000-04:00","completeDate":"2016-07-26T03:41:18.239-04:00","originBoardId":3466}
         final Long id = JsonParseUtil.getOptionalLong(json, "id");
         final URI self = JsonParseUtil.getSelfUri(json);
         final String state = json.getString("state");

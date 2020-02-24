@@ -156,7 +156,7 @@ Repository repo=aphrodite.getRepository(new URL("https://github.com/ryanemerson/
 Patch patch=aphrodite.getPatch(new URL("https://github.com/ryanemerson/aphrodite_test/pull/1"));
 
 // 3.Get all patches associated with a given issue
-List<Patch> patches=aphrodite.getPatchesAssociatedWith(new Issue(new URL("https://issues.jboss.org/browse/WFLY-100")));
+List<Patch> patches=aphrodite.getPatchesAssociatedWith(new Issue(new URL("https://issues.redhat.com/browse/WFLY-100")));
 
 // 4.Get patches by status
 List<Patch> patches=aphrodite.getPatchesByStatus(repo, PatchStatus.CLOSED);

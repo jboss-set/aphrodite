@@ -59,7 +59,7 @@ public class AphroditeConfigTest {
 
     @Before
     public void setUp() {
-        jiraConfig = new IssueTrackerConfig("https://issues.jboss.org/", "user", "pass", TrackerType.JIRA, 5);
+        jiraConfig = new IssueTrackerConfig("https://issues.redhat.com/", "user", "pass", TrackerType.JIRA, 5);
         githubConfig = new RepositoryConfig("https://github.com/", "user", "pass", RepositoryType.GITHUB);
 
         when(template.getIssueTrackerConfigs()).thenReturn(Collections.singletonList(jiraConfig));

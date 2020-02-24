@@ -4,7 +4,7 @@
     "initialDelay": 10,
     "issueTrackerConfigs": [
         {
-            "url": "https://issues.jboss.org/",
+            "url": "https://issues.redhat.com/",
             "username": "user",
             "password": "pass",
             "tracker": "JIRA",
