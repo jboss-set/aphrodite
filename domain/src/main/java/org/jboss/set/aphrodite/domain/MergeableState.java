@@ -22,14 +22,23 @@
 package org.jboss.set.aphrodite.domain;
 
 public enum MergeableState {
-    //no failures
+
+    // The head ref is out of date.
+    BEHIND("behind"),
+    // The merge is blocked.
+    BLOCKED("blocked"),
+    // Mergeable and passing commit status.
     CLEAN("clean"),
-    //conflicts ?
+    // The merge commit cannot be cleanly created.
     DIRTY("dirty"),
-    //CI failures
-    UNSTABLE("unstable"),
-    //unknown result
-    UNKNOWN("unknown");
+    // The merge is blocked due to the pull request being a draft.
+    DRAFT("draft"),
+    // Mergeable with passing commit status and pre-receive hooks.
+    HAS_HOOKS("has_hooks"),
+    // The state cannot currently be determined.
+    UNKNOWN("unknown"),
+    // Mergeable with non-passing commit status.
+    UNSTABLE("unstable");
 
     private final String mergeableState;
 
