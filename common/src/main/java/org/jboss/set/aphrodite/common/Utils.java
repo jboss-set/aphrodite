@@ -89,6 +89,11 @@ public class Utils {
             log.warn(message);
     }
 
+    public static void logDebugMessage(Log log, String message) {
+        if (log.isDebugEnabled())
+            log.debug(message);
+    }
+
     public static void logException(Log log, Exception e) {
         logException(log, null, e);
     }
