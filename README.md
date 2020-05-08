@@ -44,7 +44,7 @@ Add the remote repository to your pom:
 ```
 
 ##### Configuring via json file
-Specify the location of the aphrodite.properties.json file via the system property "aphrodite.config". An example properties file can be found [here](https://github.com/jboss-set/aphrodite/blob/master/aphrodite.properties.json.example)
+Specify the location of the aphrodite.properties.json file via the system property (or system environment variable) "aphrodite.config". An example properties file can be found [here](https://github.com/jboss-set/aphrodite/blob/master/aphrodite.properties.json.example)
 ```java
 Aphrodite aphrodite = Aphrodite.instance();
 ```
@@ -84,7 +84,7 @@ Or
 ##### Cache configuration
 Aphrodite supports **[conditional-requests](https://developer.github.com/v3/#conditional-requests)** by using OkHttp to provide a pluggable connector through HttpConnector.
 
-In order to use the HTTP response cache, you need to define the cache attributes through system properties:
+In order to use the HTTP response cache, you need to define the cache attributes through system properties (or system environment variables):
 
 * cacheDir: cache directory
 * cacheName: cache name
