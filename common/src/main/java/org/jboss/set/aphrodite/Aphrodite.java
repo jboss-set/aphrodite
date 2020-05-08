@@ -135,7 +135,9 @@ public class Aphrodite implements AutoCloseable {
     private AphroditeConfig config;
 
     private Aphrodite() throws AphroditeException {
-        String propFileLocation = System.getProperty(FILE_PROPERTY);
+        String propFileLocationProperty = System.getProperty(FILE_PROPERTY);
+        String propFileLocation = propFileLocationProperty != null ? propFileLocationProperty : System.getenv().get(FILE_PROPERTY);
+
         if (propFileLocation == null)
             throw new IllegalArgumentException("Property '" + FILE_PROPERTY + "' must be set");
 

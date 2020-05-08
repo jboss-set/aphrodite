@@ -41,6 +41,9 @@ import com.squareup.okhttp.OkUrlFactory;
 public abstract class AbstractGithubService extends AbstractRepositoryService {
 
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.repository.services.github.AbstractGithubService.class);
+    private static final String CACHE_DIR = "cacheDir";
+    private static final String CACHE_NAME = "cacheName";
+    private static final String CACHE_SIZE = "cacheSize";
     private static final int DEFAULT_CACHE_SIZE = 20;
 
     private static String cacheDir;
@@ -74,8 +77,8 @@ public abstract class AbstractGithubService extends AbstractRepositoryService {
     }
 
     public static boolean commonGithubInit(RepositoryConfig config) {
-        cacheDir = System.getProperty("cacheDir");
-        cacheName = System.getProperty("cacheName");
+        cacheDir = getValueFromPropertyAndEnv(CACHE_DIR);
+        cacheName = getValueFromPropertyAndEnv(CACHE_NAME);
 
         try {
             if (cacheDir == null || cacheName == null) {
@@ -84,7 +87,7 @@ public abstract class AbstractGithubService extends AbstractRepositoryService {
             } else {
                 // use cache
                 cacheFile = new File(cacheDir, cacheName);
-                cacheSize = System.getProperty("cacheSize");
+                cacheSize = getValueFromPropertyAndEnv(CACHE_SIZE);
                 if (cacheSize == null) {
                     cache = new Cache(cacheFile, DEFAULT_CACHE_SIZE * 1024 * 1024); // default 20MB cache
                 } else {
@@ -110,6 +113,14 @@ public abstract class AbstractGithubService extends AbstractRepositoryService {
             Utils.logException(LOG, "Authentication failed for username: " + config.getUsername(), e);
         }
         return false;
+    }
+
+    private static String getValueFromPropertyAndEnv(String key) {
+        String value = System.getProperty(key);
+        if (value == null) {
+            return System.getenv(key);
+        }
+        return value;
     }
 
 }
