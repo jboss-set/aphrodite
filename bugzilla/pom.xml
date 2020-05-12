@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.jboss.set</groupId>
         <artifactId>jboss-aphrodite-parent</artifactId>
-        <version>0.7.10.Final-SNAPSHOT</version>
+        <version>0.7.10.Final-openshift-001</version>
     </parent>
 
     <artifactId>jboss-aphrodite-bugzilla</artifactId>
