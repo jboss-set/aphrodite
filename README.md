@@ -14,11 +14,36 @@ Where possible, please try to link a commit to the GitHub issue that it aims to 
 ------------
 Add aphrodite to your pom:
 ```maven
-    <dependency>
-      <groupId>org.jboss.set</groupId>
-      <artifactId>aphrodite</artifactId>
-      <version>0.4.1</version>
-    </dependency>
+        <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-bugzilla</artifactId>
+                <version>${version.org.jboss.set.aphrodite}</version>
+        </dependency>
+        <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-common</artifactId>
+                <version>${version.org.jboss.set.aphrodite}</version>
+        </dependency>
+        <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-domain</artifactId>
+                <version>${version.org.jboss.set.aphrodite}</version>
+        </dependency>
+        <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-github</artifactId>
+                <version>${version.org.jboss.set.aphrodite}</version>
+        </dependency>
+        <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-jira</artifactId>
+                <version>${version.org.jboss.set.aphrodite}</version>
+        </dependency>
+        <dependency>
+                <groupId>org.jboss.set</groupId>
+                <artifactId>jboss-aphrodite-simplecontainer</artifactId>
+                <version>${version.org.jboss.set.aphrodite}</version>
+        </dependency>
 ```
 Add the remote repository to your pom:
 ```maven
