@@ -64,15 +64,10 @@ public abstract class AbstractGithubService extends AbstractRepositoryService {
         if (!parentInitiated)
             return false;
 
-        try {
-            if (github != null && github.isCredentialValid()) {
-                return true;
-            } else {
-                return commonGithubInit(config);
-            }
-        } catch (IOException e) {
-            Utils.logException(LOG, "Authentication failed for username: " + config.getUsername(), e);
-            return false;
+        if (github != null && github.isCredentialValid()) {
+            return true;
+        } else {
+            return commonGithubInit(config);
         }
     }
 
