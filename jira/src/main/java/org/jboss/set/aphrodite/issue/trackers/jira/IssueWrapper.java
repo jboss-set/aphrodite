@@ -30,7 +30,6 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditePriority;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -57,7 +56,6 @@ import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssueEstimation;
-import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.domain.User;
@@ -107,7 +105,7 @@ class IssueWrapper {
         issue.setTrackerId(jiraIssue.getKey());
         issue.setSummary(jiraIssue.getSummary());
         issue.setDescription(jiraIssue.getDescription());
-        issue.setStatus(getAphroditeStatus(jiraIssue.getStatus().getName()));
+        issue.setStatus(jiraIssue.getStatus().getName().toUpperCase());
         issue.setPriority(getAphroditePriority(jiraIssue.getPriority().getName()));
 
         TimeTracking timeTracking = jiraIssue.getTimeTracking();
@@ -316,21 +314,7 @@ class IssueWrapper {
 
     private void setIssueType(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         String type = jiraIssue.getIssueType().getName();
-        issue.setType(getIssueType(type));
-    }
-
-    private IssueType getIssueType(String type) {
-        type = type.trim().replaceAll(" +", " ");
-        switch (type) {
-            case "SUPPORT PATCH":
-                // Counter-intuitave as you would think this would be SUPPORT_PATCH,
-                // but this makes sense based upon JIRA description. See <jira domain>/rest/api/2/issuetype
-                return IssueType.ONE_OFF;
-            case "PATCH":
-                return IssueType.SUPPORT_PATCH;
-            default:
-                return IssueType.getMatchingIssueType(type);
-        }
+        issue.setType(type.toUpperCase());
     }
 
     private void setIssueSprintRelease(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {

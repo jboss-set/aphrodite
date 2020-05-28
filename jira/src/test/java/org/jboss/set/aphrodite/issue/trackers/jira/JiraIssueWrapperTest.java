@@ -225,7 +225,7 @@ public class JiraIssueWrapperTest {
                 .parse("2013-01-17T00:12:31.000-0500"));
         result.setAssignee(new User("jboss-set@redhat.com", "jboss-set"));
         result.setDescription("Test jira");
-        result.setStatus(IssueStatus.NEW);
+        result.setStatus(IssueStatus.OPEN);
         result.setPriority(IssuePriority.MAJOR);
         result.setComponents(Collections.singletonList("CLI"));
         result.setProduct("EAP");

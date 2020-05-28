@@ -146,7 +146,7 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
         String payloadTrackerId = "eap" + cpVersion.replace(".", "") + "-payload";
         try {
             Issue issue = bzClient.getIssue(payloadTrackerId);
-            if ((issue.getStatus().equals(IssueStatus.CLOSED) || issue.getStatus().equals(IssueStatus.VERIFIED)))
+            if ((issue.getStatus().equalsIgnoreCase(IssueStatus.CLOSED) || issue.getStatus().equalsIgnoreCase(IssueStatus.VERIFIED)))
                 return true;
         } catch (NotFoundException e) {
             Utils.logException(LOG, e);

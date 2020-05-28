@@ -95,7 +95,7 @@ class IssueWrapper {
         issue.setLastUpdated((Date) bug.get(LAST_UPDATED));
         issue.setSummary((String) bug.get(SUMMARY));
         issue.setDescription((String) bug.get(DESCRIPTION));
-        issue.setStatus(IssueStatus.valueOf((String) bug.get(STATUS)));
+        issue.setStatus(((String) bug.get(STATUS)).toUpperCase());
         issue.setPriority(IssuePriorityTranslatorUtil.translateFromBugzilla((String) bug.get(PRIORITY)));
 
         Object[] components = (Object[]) bug.get(COMPONENT);
@@ -105,10 +105,8 @@ class IssueWrapper {
         }
         issue.setComponents(tmp);
         issue.setProduct((String) bug.get(PRODUCT));
-        issue.setStatus(IssueStatus.valueOf(((String) bug.get(STATUS)).toUpperCase()));
 
-        String type = (String) bug.get(ISSUE_TYPE);
-        issue.setType(IssueType.getMatchingIssueType(type));
+        issue.setType(((String) bug.get(ISSUE_TYPE)).toUpperCase());
 
         setAffectedVersions(issue, (Object[]) (bug.get(VERSION)) );
         setReleases(issue, bug);
@@ -175,11 +173,11 @@ class IssueWrapper {
             params.put(ESTIMATED_TIME, tracking.getInitialEstimate());
         });
 
-        params.put(STATUS, issue.getStatus().toString());
+        params.put(STATUS, issue.getStatus());
         params.put(FLAGS, getStageAndStreamsMap(issue.getStreamStatus(), issue.getStage().getStateMap()));
 
-        if (issue.getType() != IssueType.UNDEFINED)
-            params.put(ISSUE_TYPE, issue.getType().get());
+        if (!issue.getType().equalsIgnoreCase(IssueType.UNDEFINED))
+            params.put(ISSUE_TYPE, issue.getType());
 
         addReleaseToUpdate(issue, params);
         addURLCollectionToParameters(issue.getDependsOn(), DEPENDS_ON, params);
@@ -195,12 +193,12 @@ class IssueWrapper {
         if (issue.getReporter().isPresent() && LOG.isWarnEnabled())
             LOG.warn("Bugzilla does not support updating the reporter field, field ignored.");
 
-        if (issue.getStatus() == IssueStatus.UNDEFINED && LOG.isWarnEnabled())
+        if (issue.getStatus().equalsIgnoreCase(IssueStatus.UNDEFINED) && LOG.isWarnEnabled())
             LOG.warn("IssueStatus.UNDEFINED is ignored when updating a Bugzilla operation.");
     }
 
     private void checkUnsupportedIssueStatus(Issue issue) throws AphroditeException {
-        if (issue.getStatus() == IssueStatus.CREATED) {
+        if (issue.getStatus().equalsIgnoreCase(IssueStatus.CREATED)) {
             throw new AphroditeException("Bugzilla issues do not support the IssueStatus CREATED");
         }
     }

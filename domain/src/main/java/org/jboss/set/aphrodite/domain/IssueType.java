@@ -22,25 +22,7 @@
 
 package org.jboss.set.aphrodite.domain;
 
-public enum IssueType {
-    UNDEFINED("undefined"), PAYLOAD("payload"), BUG("bug"), UPGRADE("component upgrade"), ONE_OFF("one off"),
-    SUPPORT_PATCH("support patch");
-
-    private final String type;
-
-    IssueType(String type) {
-        this.type = type;
-    }
-
-    public String get() {
-        return type;
-    }
-
-    public static IssueType getMatchingIssueType(String value) {
-        for (IssueType type : IssueType.values())
-            if (type.get().equalsIgnoreCase(value))
-                return type;
-
-        return UNDEFINED;
-    }
+public class IssueType {
+    public static final String UNDEFINED = "UNDEFINED";
+    public static final String BUG = "BUG";
 }

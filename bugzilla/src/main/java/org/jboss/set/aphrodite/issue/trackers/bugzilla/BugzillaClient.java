@@ -78,7 +78,6 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -318,7 +317,7 @@ public class BugzillaClient {
         return updateField(id, TARGET_RELEASE, targetRelease);
     }
 
-    public boolean updateStatus(int id, IssueStatus status) {
+    public boolean updateStatus(int id, String status) {
         return updateField(id, STATUS, status);
     }
 

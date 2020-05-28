@@ -153,9 +153,9 @@ class BugzillaQueryBuilder {
     // IssueStatus.CREATED not supported by BZ, so ignore status and log message
     private void addIssueStatusToMap() {
         if (criteria.getStatus().isPresent()) {
-            IssueStatus issueStatus = criteria.getStatus().get();
-            if (issueStatus != IssueStatus.CREATED) {
-                queryMap.put(STATUS, issueStatus.toString());
+            String issueStatus = criteria.getStatus().get();
+            if (issueStatus.equalsIgnoreCase(IssueStatus.CREATED)) {
+                queryMap.put(STATUS, issueStatus);
             } else {
                 Utils.logWarnMessage(LOG, "Bugzilla issues do not support the IssueStatus CREATED, so this field is ignored "
                         + "when searching for issues");

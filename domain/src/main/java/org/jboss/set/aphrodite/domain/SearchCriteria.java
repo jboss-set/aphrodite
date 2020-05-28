@@ -33,7 +33,7 @@ import java.util.Optional;
  * @author Ryan Emerson
  */
 public class SearchCriteria {
-    private final IssueStatus status;
+    private final String status;
     private final String assignee;
     private final String reporter;
     private final String product;
@@ -44,7 +44,7 @@ public class SearchCriteria {
     private final LocalDate lastUpdated;
     private final Integer maxResults;
 
-    private SearchCriteria(IssueStatus status, String assignee, String reporter, String product,
+    private SearchCriteria(String status, String assignee, String reporter, String product,
             String component, Stage stage, Release release, Map<Stream, FlagStatus> streams,
             LocalDate lastUpdated, Integer maxResults) {
         this.status = status;
@@ -62,7 +62,7 @@ public class SearchCriteria {
             throw new IllegalArgumentException("lastUpdated cannot be in the future.");
     }
 
-    public Optional<IssueStatus> getStatus() {
+    public Optional<String> getStatus() {
         return Optional.ofNullable(status);
     }
 
@@ -109,7 +109,7 @@ public class SearchCriteria {
 
     public static class Builder {
 
-        private IssueStatus status;
+        private String status;
         private String assignee;
         private String reporter;
         private String product;
@@ -120,7 +120,7 @@ public class SearchCriteria {
         private LocalDate startDate;
         private Integer maxResults;
 
-        public Builder setStatus(IssueStatus status) {
+        public Builder setStatus(String status) {
             this.status = status;
             return this;
         }

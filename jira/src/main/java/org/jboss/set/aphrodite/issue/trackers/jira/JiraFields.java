@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssuePriority;
-import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 
 import com.google.common.collect.BiMap;
@@ -59,17 +58,6 @@ class JiraFields {
             .put("TARGET_RELEASE", getJQLField(TARGET_RELEASE))
             .build();
 
-    static final BiMap<String, IssueStatus> STATUS_MAP = new ImmutableBiMap.Builder<String, IssueStatus>()
-            .put("new",IssueStatus.CREATED)
-            .put("open", IssueStatus.NEW)
-            .put("coding in progress", IssueStatus.ASSIGNED)
-            .put("pull request sent", IssueStatus.POST)
-            .put("resolved", IssueStatus.MODIFIED)
-            .put("ready for qa", IssueStatus.ON_QA)
-            .put("verified", IssueStatus.VERIFIED)
-            .put("closed", IssueStatus.CLOSED)
-            .build();
-
     static final BiMap<String, IssuePriority> PRIORITY_MAP = initPriorityMap();
 
     static BiMap<String, IssuePriority> initPriorityMap() {
@@ -85,29 +73,13 @@ class JiraFields {
             .put(Flag.QE, QE_ACK)
             .build();
 
-    static IssueStatus getAphroditeStatus(String status) {
-        status = status.toLowerCase();
-        IssueStatus issueStatus = STATUS_MAP.get(status);
-        if (issueStatus == null) {
-            switch (status) {
-                case "reopened":
-                    return IssueStatus.NEW;
-                case "qa in progress":
-                    return IssueStatus.ON_QA;
-                default:
-                    return IssueStatus.UNDEFINED;
-            }
-        }
-        return issueStatus;
-    }
-
     static IssuePriority getAphroditePriority(String priority) {
         IssuePriority issueStatus = PRIORITY_MAP.get(priority.toLowerCase());
         return (issueStatus == null ? IssuePriority.UNDEFINED : issueStatus);
     }
 
-    static String getJiraStatus(IssueStatus status) {
-        return STATUS_MAP.inverse().get(status);
+    static String getJiraStatus(String status) {
+        return status.toUpperCase();
     }
 
     static String getJQLField(String field) {
@@ -115,65 +87,63 @@ class JiraFields {
     }
 
     static boolean hasSameIssueStatus(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        IssueStatus status = issue.getStatus();
-        IssueStatus jiraStatus = getAphroditeStatus(jiraIssue.getStatus().getName());
-        return status == jiraStatus;
+        return issue.getStatus().equalsIgnoreCase(jiraIssue.getStatus().getName());
     }
 
     static String getJiraTransition(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) throws AphroditeException {
-        IssueStatus currentStatus = getAphroditeStatus(jiraIssue.getStatus().getName());
+        String currentStatus = jiraIssue.getStatus().getName();
         return getJiraTransition(currentStatus, issue.getStatus());
     }
 
     // Surely there is a better way of achieving this?????
-    static String getJiraTransition(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
-        switch (currentStatus) {
-            case CREATED:
+    static String getJiraTransition(String currentStatus, String newStatus) throws AphroditeException {
+        switch (currentStatus.toUpperCase()) {
+            case "NEW":
                 return transitionsForCreatedStatus(currentStatus,newStatus);
-            case NEW:
+            case "OPEN":
                 return transitionsForNewStatus(currentStatus, newStatus);
-            case ASSIGNED:
+            case "CODING IN PROGRESS":
                 return transitionsForAssignedStatus(currentStatus, newStatus);
-            case POST:
+            case "PULL REQUEST SENT":
                 return transitionsForPostStatus(currentStatus, newStatus);
-            case MODIFIED:
+            case "RESOLVED":
                 return transitionsForModifiedStatus(currentStatus, newStatus);
-            case ON_QA:
+            case "READY FOR QA":
                 return transitionsForON_QAStatus(currentStatus, newStatus);
-            case VERIFIED:
+            case "VERIFIED":
                 return transitionsForVerifiedStatus(currentStatus, newStatus);
-            case CLOSED:
+            case "CLOSED":
                 return transitionsForClosedStatus(currentStatus, newStatus);
             default:
                 throw new AphroditeException("It's not possible to transition from " + currentStatus);
         }
     }
 
-    private static String transitionsForCreatedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+    private static String transitionsForCreatedStatus(String currentStatus, String newStatus)
             throws AphroditeException {
-        switch (newStatus) {
-            case CREATED:
+        switch (newStatus.toUpperCase()) {
+            case "NEW":
                 return "Devel Approve";
-            case NEW:
+            case "OPEN":
                 return "Hand Over to Development";
-            case CLOSED:
+            case "CLOSED":
                 return "Close Issue";
             default:
                 throw new AphroditeException("It's not possible to transition from " + currentStatus);
         }
     }
 
-    private static String transitionsForNewStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
-        switch (newStatus) {
-            case CREATED:
+    private static String transitionsForNewStatus(String currentStatus, String newStatus) throws AphroditeException {
+        switch (newStatus.toUpperCase()) {
+            case "NEW":
                 return "Back To New";
-            case ASSIGNED:
+            case "CODING IN PROGRESS":
                 return "Start Progress";
-            case POST:
+            case "PULL REQUEST SENT":
                 return "Link Pull Request";
-            case MODIFIED:
+            case "RESOLVED":
                 return "Resolve Issue";
-            case CLOSED:
+            case "CLOSED":
                 return "Close Issue";
             default:
                 throw new AphroditeException("It's not possible to transition from "
@@ -181,31 +151,31 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForAssignedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+    private static String transitionsForAssignedStatus(String currentStatus, String newStatus)
             throws AphroditeException {
-        switch (newStatus) {
-            case CREATED:
+        switch (newStatus.toUpperCase()) {
+            case "NEW":
                 return "Back To New";
-            case NEW:
+            case "OPEN":
                 return "Stop Progress";
             default:
                 return transitionsForNewStatus(currentStatus, newStatus);
         }
     }
 
-    private static String transitionsForPostStatus(IssueStatus currentStatus, IssueStatus newStatus) throws AphroditeException {
-        switch (newStatus) {
-            case CREATED:
+    private static String transitionsForPostStatus(String currentStatus, String newStatus) throws AphroditeException {
+        switch (newStatus.toUpperCase()) {
+            case "NEW":
                 return "Back To New";
-            case MODIFIED:
+            case "RESOLVED":
                 return "Resolve Issue";
-            case ASSIGNED:
+            case "CODING IN PROGRESS":
                 return "Start Progress";
-            case POST:
+            case "PULL REQUEST SENT":
                 return "Update Pull Request";
-            case NEW:
+            case "OPEN":
                 return "Reject Pull Request";
-            case CLOSED:
+            case "CLOSED":
                 return "Close Issue";
             default:
                 throw new AphroditeException("It's not possible to transition from "
@@ -213,17 +183,17 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForModifiedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+    private static String transitionsForModifiedStatus(String currentStatus, String newStatus)
             throws AphroditeException {
-        switch (newStatus) {
-            case CREATED:
+        switch (newStatus.toUpperCase()) {
+            case "NEW":
                 return "Back To New";
-            case NEW:
-            case ASSIGNED:
+            case "REOPEN":
+            case "CODING IN PROGRESS":
                 return "Reopen Issue";
-            case ON_QA:
+            case "ON_QA":
                 return "Hand Over to QA";
-            case CLOSED:
+            case "CLOSED":
                 return "Close Issue";
             default:
                 throw new AphroditeException("It's not possible to transition from "
@@ -231,17 +201,17 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForON_QAStatus(IssueStatus currentStatus, IssueStatus newStatus)
+    private static String transitionsForON_QAStatus(String currentStatus, String newStatus)
             throws AphroditeException {
-        switch (newStatus) {
-            case CREATED:
+        switch (newStatus.toUpperCase()) {
+            case "NEW":
                 return "Back To New";
-            case NEW:
-            case ASSIGNED:
+            case "REOPEN":
+            case "CODING IN PROGRESS":
                 return "Reopen Issue From QA";
-            case VERIFIED:
+            case "VERIFIED":
                 return "Verify Issue";
-            case CLOSED:
+            case "CLOSED":
                 return "Close Issue";
             default:
                 throw new AphroditeException("It's not possible to transition from "
@@ -249,17 +219,17 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForVerifiedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+    private static String transitionsForVerifiedStatus(String currentStatus, String newStatus)
             throws AphroditeException {
         switch (newStatus) {
-            case CREATED:
+            case "NEW":
                 return "Back To New";
-            case NEW:
-            case ASSIGNED:
+            case "REOPEN":
+            case "CODING IN PROGRESS":
                 return "Reopen Issue";
-            case ON_QA:
+            case "READY FOR QA":
                 return "Retest";
-            case CLOSED:
+            case "CLOSED":
                 return "Close Issue";
             default:
                 throw new AphroditeException("It's not possible to transition from "
@@ -267,11 +237,11 @@ class JiraFields {
         }
     }
 
-    private static String transitionsForClosedStatus(IssueStatus currentStatus, IssueStatus newStatus)
+    private static String transitionsForClosedStatus(String currentStatus, String newStatus)
             throws AphroditeException {
-        switch (newStatus) {
-            case NEW:
-            case ASSIGNED:
+        switch (newStatus.toUpperCase()) {
+            case "REOPEN":
+            case "CODING IN PROGRESS":
                 return "Reopen Issue";
             default:
                 throw new AphroditeException("It's not possible to transition from "

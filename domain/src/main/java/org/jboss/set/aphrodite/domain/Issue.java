@@ -66,11 +66,11 @@ public class Issue {
 
     private Stage stage;
 
-    private IssueStatus status;
+    private String status;
 
     private IssuePriority priority;
 
-    private IssueType type;
+    private String type;
 
     private List<String> affectedVersions;
 
@@ -193,11 +193,11 @@ public class Issue {
         this.stage = stage;
     }
 
-    public IssueStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(IssueStatus status) {
+    public void setStatus(String status) {
         Objects.requireNonNull(status, "An Issue's status cannot be set to null");
         this.status = status;
     }
@@ -211,11 +211,11 @@ public class Issue {
         this.priority = priority;
     }
 
-    public IssueType getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(IssueType type) {
+    public void setType(String type) {
         Objects.requireNonNull(type, "An Issue's Type cannot be set to null");
         this.type = type;
     }
