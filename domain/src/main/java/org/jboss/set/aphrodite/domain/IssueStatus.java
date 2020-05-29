@@ -24,9 +24,19 @@ package org.jboss.set.aphrodite.domain;
 
 public class IssueStatus {
     public static final String UNDEFINED = "UNDEFINED";
-    public static final String CLOSED = "CLOSED";
-    public static final String VERIFIED = "VERIFIED";
     public static final String CREATED = "CREATED";
+
+    // Jira
     public static final String NEW = "NEW";
     public static final String OPEN = "OPEN";
+    public static final String CODING_IN_PROGRESS = "CODING IN PROGRESS";
+    public static final String PULL_REQUEST_SENT = "PULL REQUEST SENT";
+    public static final String RESOLVED = "RESOLVED";
+    public static final String READY_FOR_QA = "READY FOR QA";
+    public static final String VERIFIED = "VERIFIED";
+    public static final String REOPENED = "REOPENED";
+    public static final String QA_IN_PROGRESS = "QA IN PROGRESS";
+    public static final String CLOSED = "CLOSED";
+
+
 }
