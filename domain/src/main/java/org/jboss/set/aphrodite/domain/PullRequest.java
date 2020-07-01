@@ -52,6 +52,7 @@ public class PullRequest {
     private static final String UPGRADE_META_BIT_REGEX = "\\w++=\\w++";
     private static final String UPGRADE_META_REGEX = "\\s*+"+UPGRADE_META_BIT_REGEX+"(,\\s*+"+UPGRADE_META_BIT_REGEX+")*+";
     private static final Pattern UPGRADE = Pattern.compile("\\s*Upgrade[:|]"+UPGRADE_META_REGEX, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern DEPENDS_PRS = Pattern.compile("^\\s*\\[?Depend[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+" + "\\]?", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
 
     private final String id;
     private final URL url;
@@ -63,8 +64,11 @@ public class PullRequest {
     private boolean mergeable, merged, upgrade;
     private MergeableState mergableState;
     private Date mergedAt;
+    private List<String> commits;
 
-    public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state, String title, String body, boolean mergeable, boolean merged, MergeableState mergeableState, Date mergedAt) {
+    public PullRequest(final String id, final URL url, final Repository repository, final Codebase codebase,
+            final PullRequestState state, final String title, final String body, final boolean mergeable, final boolean merged,
+            final MergeableState mergeableState, final Date mergedAt, final List<String> commits) {
         this.id = id;
         this.url = url;
         this.codebase = codebase;
@@ -77,6 +81,19 @@ public class PullRequest {
         this.mergedAt = mergedAt;
         if(this.title != null)
             this.upgrade = UPGRADE_TITLE.matcher(this.title).find();
+        if(commits != null) {
+            this.commits = Collections.unmodifiableList(commits);
+        } else {
+            this.commits = Collections.unmodifiableList(new ArrayList<>());
+        }
+    }
+
+    /**
+     * Return list of commits for this PR - youngest at the start, oldest( first ) at the end.
+     * @return
+     */
+    public List<String> getCommits() {
+        return commits;
     }
 
     public String getId() {
@@ -212,6 +229,29 @@ public class PullRequest {
         }
     }
 
+    /**
+     * Searches PR body for links of related issues.
+     *
+     * TODO: Make this return at least all valid URLs, do not fail if one is invalid.
+     *
+     * @return related issues URLs or empty list
+     * @throws MalformedURLException if one of found URLs is invalid
+     */
+    public List<URL> findDependencyPullRequestsURL() throws MalformedURLException {
+        if(!hasDependencies()) {
+            return new ArrayList<>();
+        }
+        final String[] urls = URLUtils.extractURLs(body, DEPENDS_PRS, true);
+        if (urls == null || urls.length == 0 || urls[0] == null) {
+            return Collections.emptyList();
+        } else {
+            List<URL> issues = new ArrayList<>(urls.length);
+            for (String url : urls) {
+                issues.add(new URL(url));
+            }
+            return issues;
+        }
+    }
 
     /**
      * Check if this PR has upgrade meta present.
@@ -231,6 +271,7 @@ public class PullRequest {
 
     /**
      * TODO: Description - I don't know what this is.
+     * @deprecated - upgrade handling in processor wasnt green lit. Should be safe to remove.
      */
     public PullRequestUpgrade findPullRequestUpgrade() {
         Matcher m = UPGRADE.matcher(body);
@@ -304,6 +345,9 @@ public class PullRequest {
         return upgrade;
     }
 
+    public boolean hasDependencies() {
+        return DEPENDS_PRS.matcher(body).find();
+    }
 
     @Override
     public boolean equals(Object o) {
