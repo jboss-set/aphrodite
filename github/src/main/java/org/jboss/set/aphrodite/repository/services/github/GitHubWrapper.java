@@ -42,6 +42,7 @@ import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.kohsuke.github.GHBranch;
+import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
@@ -94,8 +95,29 @@ class GitHubWrapper {
                 urlString = urlString.substring(0, idx);
             }
             final Repository repo = new Repository(URI.create(urlString).toURL());
+            final int commitCount = pullRequest.getCommits();
+            final List<String> commits = new ArrayList<>(commitCount);
 
-            return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt);
+            if (pullRequest.getHead().getRepository() != null) {
+                //INFO: happens when someone sends PR and deletes repo.
+                //git handles it somehow, but we cant access commits...
+                GHCommit pointer = pullRequest.getHead().getCommit();
+                for (int i = 0; i < commitCount; i++) {
+                    commits.add(pointer.getSHA1());
+                    if (i != commitCount - 1) {
+                        // This is frail...
+                        final List<GHCommit> parents = pointer.getParents();
+                        if (parents == null || parents.size() != 1) {
+                            Utils.logWarnMessage(LOG, "Unexpected result, either no parents or more than one is present for '"
+                                    + pointer.getSHA1() + "' commit in '" + url + "'");
+                            // TODO: ignore for now, fail maybe?
+                        } else {
+                            pointer = parents.get(0);
+                        }
+                    }
+                }
+            }
+            return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt,commits);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             return null;

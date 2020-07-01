@@ -63,9 +63,9 @@ public class GitHubGetCommitStatusTest {
         multipURL = new URL("https://github.com/jboss-set/aphrodite/pull/40");
         otherURL = new URL("https://github.com/jboss-set/aphrodite/pull/15");
 
-        singleComPullRequest = new PullRequest(singleId, singleURL, null, null, null, null, null, false, false, null, null);
-        multipComPullRequest = new PullRequest(multipId, multipURL, null, null, null, null, null, false, false, null, null);
-        otherStatPullRequest = new PullRequest(otherId, otherURL, null, null, null, null, null, false, false, null, null);
+        singleComPullRequest = new PullRequest(singleId, singleURL, null, null, null, null, null, false, false, null, null, null);
+        multipComPullRequest = new PullRequest(multipId, multipURL, null, null, null, null, null, false, false, null, null, null);
+        otherStatPullRequest = new PullRequest(otherId, otherURL, null, null, null, null, null, false, false, null, null, null);
 
         when(aphrodite.getCommitStatusFromPullRequest(singleComPullRequest)).thenReturn(CommitStatus.SUCCESS);
         when(aphrodite.getCommitStatusFromPullRequest(multipComPullRequest)).thenReturn(CommitStatus.SUCCESS);
