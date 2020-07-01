@@ -66,6 +66,25 @@ public class PullRequest {
     private Date mergedAt;
     private List<String> commits;
 
+    /**
+     * @deprecated
+     * @param id
+     * @param url
+     * @param repository
+     * @param codebase
+     * @param state
+     * @param title
+     * @param body
+     * @param mergeable
+     * @param merged
+     * @param mergeableState
+     * @param mergedAt
+     */
+    public PullRequest(final String id, final URL url, final Repository repository, final Codebase codebase,
+            final PullRequestState state, final String title, final String body, final boolean mergeable, final boolean merged,
+            final MergeableState mergeableState, final Date mergedAt) {
+        this(id,url,repository,codebase,state, title, body, mergeable,merged, mergeableState, mergedAt, null);
+    }
     public PullRequest(final String id, final URL url, final Repository repository, final Codebase codebase,
             final PullRequestState state, final String title, final String body, final boolean mergeable, final boolean merged,
             final MergeableState mergeableState, final Date mergedAt, final List<String> commits) {
