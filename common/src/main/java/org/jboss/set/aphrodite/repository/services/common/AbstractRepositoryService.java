@@ -89,4 +89,8 @@ public abstract class AbstractRepositoryService {
             throw new NotFoundException("The requested Repository cannot be found as it is not " +
                     "hosted on this server.");
     }
+
+    public URL getBaseUrl() {
+        return baseUrl;
+    }
 }

@@ -44,6 +44,7 @@ import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHCompare;
@@ -68,13 +69,13 @@ class GitHubWrapper {
         return repo;
     }
 
-    List<PullRequest> toAphroditePullRequests(List<GHPullRequest> pullRequests) {
+    List<PullRequest> toAphroditePullRequests(List<GHPullRequest> pullRequests, PullRequestHome prHome) {
         return pullRequests.stream()
-                .map(this::pullRequestToPullRequest)
+                .map(pr -> this.pullRequestToPullRequest(pr, prHome))
                 .collect(Collectors.toList());
     }
 
-    PullRequest pullRequestToPullRequest(GHPullRequest pullRequest) {
+    PullRequest pullRequestToPullRequest(GHPullRequest pullRequest, PullRequestHome prHome) {
         try {
             final String id = Integer.toString(pullRequest.getNumber());
             final URL url = pullRequest.getHtmlUrl();
@@ -121,7 +122,7 @@ class GitHubWrapper {
                     }
                 }
             }
-            return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt,commits);
+            return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits, prHome);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             return null;
