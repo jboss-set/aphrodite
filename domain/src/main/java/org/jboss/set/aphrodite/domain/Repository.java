@@ -22,11 +22,20 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import org.jboss.set.aphrodite.container.Container;
+import org.jboss.set.aphrodite.domain.spi.CompareHome;
+
+import javax.naming.NameNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Repository {
+
+    private static final Pattern COMPONENT_VERSION = Pattern.compile("[+\\-]\\s+<version\\.(.*)>(.*)</version\\.(.*)>");
 
     private final URL url;
 
@@ -42,6 +51,40 @@ public class Repository {
 
     public List<Codebase> getCodebases() {
         return codebases;
+    }
+
+    public Compare getCompare(String tag1, String tag2) throws NameNotFoundException {
+        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getCompare(this.url, tag1, tag2);
+    }
+
+    public List<VersionUpgrade> getUpgradesForFile(String fileName, String tag1, String tag2) {
+        try {
+            String diff = getCompare(tag1, tag2).getDiffForFile(fileName);
+            List<VersionUpgrade> upgrades = new ArrayList<>();
+            String[] lines = diff.split(System.lineSeparator());
+            String component = null, old = null;
+
+            for (String line : lines) {
+                Matcher m = COMPONENT_VERSION.matcher(line);
+                if (m.find()) {
+                    if (component == null) {
+                        component = m.group(1);
+                        old = m.group(2);
+                    } else {
+                        upgrades.add(new VersionUpgrade(component, old, m.group(2)));
+                        component = null;
+                    }
+                }
+            }
+
+            return upgrades;
+        } catch (NameNotFoundException nnfe) {
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    public List<VersionUpgrade> getComponentUpgrades(String tag1, String tag2) {
+        return getUpgradesForFile("pom.xml", tag1, tag2);
     }
 
     @Override

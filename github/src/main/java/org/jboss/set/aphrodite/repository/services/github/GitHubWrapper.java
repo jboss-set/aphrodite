@@ -29,12 +29,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Compare;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.MergeableState;
 import org.jboss.set.aphrodite.domain.PullRequest;
@@ -43,6 +46,7 @@ import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHCommit;
+import org.kohsuke.github.GHCompare;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
@@ -150,5 +154,14 @@ class GitHubWrapper {
 
     private Codebase repositoryBranchToCodebase(GHBranch branch) {
         return new Codebase(branch.getName());
+    }
+
+    public Compare toCompare(GHCompare ghCompare) {
+        Map<String, String> diffs = new TreeMap<>();
+        for (GHCommit.File file : ghCompare.getFiles()) {
+            diffs.put(file.getFileName(), file.getPatch());
+        }
+
+        return new Compare(diffs);
     }
 }
