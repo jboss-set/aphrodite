@@ -61,9 +61,10 @@ public class PullRequest {
     private String title;
     private String body;
     private Repository repository;
-    private boolean mergeable, merged, upgrade;
-    private MergeableState mergableState;
-    private Date mergedAt;
+    private final boolean mergeable, merged;
+    private boolean upgrade;
+    private final MergeableState mergableState;
+    private final Date mergedAt;
     private List<String> commits;
 
     /**
@@ -90,13 +91,14 @@ public class PullRequest {
             final MergeableState mergeableState, final Date mergedAt, final List<String> commits) {
         this.id = id;
         this.url = url;
+        this.repository = repository;
         this.codebase = codebase;
         this.state = state;
         this.title = title;
         this.body = body;
-        this.repository = repository;
         this.mergeable = mergeable;
         this.merged = merged;
+        this.mergableState = mergeableState;
         this.mergedAt = mergedAt;
         if(this.title != null)
             this.upgrade = UPGRADE_TITLE.matcher(this.title).find();
