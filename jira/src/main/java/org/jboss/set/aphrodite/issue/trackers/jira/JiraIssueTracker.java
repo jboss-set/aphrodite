@@ -56,6 +56,7 @@ import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -135,6 +136,17 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             throw new NotFoundException("Unable to retrieve issue with id: " + issueKey , e);
         }
 
+    }
+
+    public List<Issue> getIssues(Version version) {
+        List<Issue> issues;
+        SearchCriteria sc = new SearchCriteria.Builder()
+                .setRelease(new Release(version.getName().trim()))
+                .setProduct("JBEAP")
+                .setMaxResults(config.getDefaultIssueLimit())
+                .build();
+        issues = searchIssues(sc);
+        return issues;
     }
 
     private List<IssueRestClient.Expandos> createExpandos() {
@@ -436,5 +448,9 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
 
         return false;
+    }
+
+    public Iterable<Version> getVersionsByProject(String projectName) {
+        return restClient.getProjectClient().getProject(projectName).claim().getVersions();
     }
 }
