@@ -29,7 +29,9 @@ import javax.naming.NameNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,22 +59,31 @@ public class Repository {
         return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getCompare(this.url, tag1, tag2);
     }
 
+    public List<String> getTags() throws NameNotFoundException {
+        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getTags(this.url);
+    }
+
+    public List<String> getBranches() throws NameNotFoundException {
+        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getBranches(this.url);
+    }
+
     public List<VersionUpgrade> getUpgradesForFile(String fileName, String tag1, String tag2) {
         try {
             String diff = getCompare(tag1, tag2).getDiffForFile(fileName);
             List<VersionUpgrade> upgrades = new ArrayList<>();
             String[] lines = diff.split(System.lineSeparator());
-            String component = null, old = null;
+            String component = null, version = null;
+            Map<String, String> oldVersions = new HashMap<>();
 
             for (String line : lines) {
                 Matcher m = COMPONENT_VERSION.matcher(line);
                 if (m.find()) {
-                    if (component == null) {
-                        component = m.group(1);
-                        old = m.group(2);
+                    component = m.group(1);
+                    version = m.group(2);
+                    if (!oldVersions.containsKey(component)) {
+                        oldVersions.put(component, version);
                     } else {
-                        upgrades.add(new VersionUpgrade(component, old, m.group(2)));
-                        component = null;
+                        upgrades.add(new VersionUpgrade(component, oldVersions.get(component), version));
                     }
                 }
             }
