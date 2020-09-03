@@ -32,10 +32,12 @@ import org.jboss.set.aphrodite.domain.PullRequest;
 public interface PullRequestHome {
 
     /**
-     * Find all the referenced pull requests to the given pull request.
+     * Find the referenced pull requests to the given pull request in this PullRequestHome.
+     * In order to locate all the PRs in all the repos use the <em>aphrodite</em> method.
      *
      * @param pullRequest the <code>PullRequest</code> on which referenced pull requests are being searched
      * @return list of referenced pull requests.
+     * @see org.jboss.set.aphrodite.Aphrodite#findReferencedPullRequests(org.jboss.set.aphrodite.domain.PullRequest)
      */
     List<PullRequest> findReferencedPullRequests(PullRequest pullRequest);
 

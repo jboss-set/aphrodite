@@ -43,6 +43,7 @@ import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
@@ -61,6 +62,7 @@ import org.kohsuke.github.GHUser;
 
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.getPRFromDescription;
+import static org.jboss.set.aphrodite.repository.services.github.AbstractGithubService.github;
 
 import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.getCombineStatus;
 
@@ -71,6 +73,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
     private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
     private static final GitHubWrapper WRAPPER = new GitHubWrapper();
+
+    private GithubPullRequestHomeService prHome;
 
     public GitHubRepositoryService() {
         super(RepositoryType.GITHUB);
@@ -90,7 +94,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
             String repositoryId = createRepositoryIdFromUrl(url);
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
-            return WRAPPER.pullRequestToPullRequest(pullRequest);
+            return WRAPPER.pullRequestToPullRequest(pullRequest, getPullRequestHome());
         } catch (IOException e) {
             Utils.logException(LOG, url.toString(), e);
             throw new NotFoundException(e);
@@ -154,7 +158,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
                 issueState = GHIssueState.OPEN;
             }
             List<GHPullRequest> pullRequests = githubRepository.getPullRequests(issueState);
-            return WRAPPER.toAphroditePullRequests(pullRequests);
+            return WRAPPER.toAphroditePullRequests(pullRequests, getPullRequestHome());
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -428,5 +432,13 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     public RepositoryType getRepositoryType() {
         return REPOSITORY_TYPE;
+    }
+
+    @Override
+    public PullRequestHome getPullRequestHome() {
+        if (prHome == null) {
+            prHome = new GithubPullRequestHomeService(config);
+        }
+        return prHome;
     }
 }

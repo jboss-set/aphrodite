@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
@@ -70,6 +71,11 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
         this.init(configuration);
     }
 
+    public GithubPullRequestHomeService(RepositoryConfig config) {
+        super(RepositoryType.GITHUB);
+        this.init(config);
+    }
+
     @Override
     public List<PullRequest> findReferencedPullRequests(PullRequest pullRequest) {
         try {
@@ -100,7 +106,7 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
-            return WRAPPER.pullRequestToPullRequest(pullRequest);
+            return WRAPPER.pullRequestToPullRequest(pullRequest, this);
         } catch (IOException e) {
             Utils.logException(LOG, "Unable to retrieve pull request from url " + url, e);
             return null;

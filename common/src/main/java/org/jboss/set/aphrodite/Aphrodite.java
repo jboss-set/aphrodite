@@ -62,6 +62,7 @@ import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.simplecontainer.SimpleContainer;
@@ -641,7 +642,7 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(url, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.repositoryAccessable(url) && repositoryService.urlExists(url))
+            if (repositoryService.urlExists(url) && repositoryService.repositoryAccessable(url))
                 return repositoryService.getPullRequest(url);
         }
         throw new NotFoundException("No pull request found which corresponds to url: " + url);
@@ -1011,5 +1012,23 @@ public class Aphrodite implements AutoCloseable {
     public AphroditeConfig getConfig() {
         // allow to get configuration to initialize service outside Aphrodite
         return config;
+    }
+
+    /**
+     * Return all the referenced PRs to a given PR using all the repositories
+     * defined in the instance. All of them are called in order to get the
+     * references for all of them.
+     *
+     * @param pullRequest The PR to obtain the references PRs
+     * @return The list of PRs referenced by this PR
+     */
+    public List<PullRequest> findReferencedPullRequests(PullRequest pullRequest) {
+        checkRepositoryServiceExists();
+        List<PullRequest> res = new ArrayList<>();
+        for (RepositoryService repositoryService : repositories) {
+            PullRequestHome prHome = repositoryService.getPullRequestHome();
+            res.addAll(prHome.findReferencedPullRequests(pullRequest));
+        }
+        return res;
     }
 }

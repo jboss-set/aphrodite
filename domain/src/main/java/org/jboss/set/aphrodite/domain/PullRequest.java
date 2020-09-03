@@ -66,6 +66,7 @@ public class PullRequest {
     private final MergeableState mergableState;
     private final Date mergedAt;
     private List<String> commits;
+    private PullRequestHome prHome;
 
     /**
      * @deprecated
@@ -115,6 +116,12 @@ public class PullRequest {
      */
     public List<String> getCommits() {
         return commits;
+    }
+
+    public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state, String title, String body,
+            boolean mergeable,boolean merged, MergeableState mergeableState, Date mergedAt, List<String> commits, PullRequestHome prHome) {
+        this(id, url, repository, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits);
+        this.prHome = prHome;
     }
 
     public String getId() {
@@ -310,40 +317,45 @@ public class PullRequest {
                 metas.getProperty("version"), metas.getProperty("branch"));
     }
 
+    private PullRequestHome getPullRequestHome() throws NameNotFoundException {
+        // return associated PullRequestHome or previous container instance
+        return prHome != null? prHome : Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class));
+    }
+
     public List<PullRequest> findReferencedPullRequests() throws NameNotFoundException {
-        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).findReferencedPullRequests(this);
+        return getPullRequestHome().findReferencedPullRequests(this);
     }
 
     public boolean addComment(String comment) throws NameNotFoundException {
-        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).addComment(this, comment);
+        return getPullRequestHome().addComment(this, comment);
     }
 
     public List<Label> getLabels() throws NameNotFoundException {
-        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).getLabels(this);
+        return getPullRequestHome().getLabels(this);
     }
 
     public boolean setLabels(List<Label> labels) throws NameNotFoundException {
-        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).setLabels(this, labels);
+        return getPullRequestHome().setLabels(this, labels);
     }
 
     public boolean addLabel(Label label) throws NameNotFoundException {
-        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).addLabel(this, label);
+        return getPullRequestHome().addLabel(this, label);
     }
 
     public boolean removeLabel(Label label) throws NameNotFoundException {
-        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).removeLabel(this, label);
+        return getPullRequestHome().removeLabel(this, label);
     }
 
     public CommitStatus getCommitStatus() throws NameNotFoundException {
-        return Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).getCommitStatus(this);
+        return getPullRequestHome().getCommitStatus(this);
     }
 
     public void approveOnPullRequest() throws NameNotFoundException {
-        Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).approveOnPullRequest(this);
+        getPullRequestHome().approveOnPullRequest(this);
     }
 
     public void requestChangesOnPullRequest(String comment) throws NameNotFoundException {
-        Container.instance().lookup(PullRequestHome.class.getSimpleName(), (PullRequestHome.class)).requestChangesOnPullRequest(this, comment);
+        getPullRequestHome().requestChangesOnPullRequest(this, comment);
     }
 
     public boolean isMergeable() {

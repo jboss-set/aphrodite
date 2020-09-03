@@ -34,6 +34,7 @@ import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 
 public interface RepositoryService {
@@ -219,4 +220,11 @@ public interface RepositoryService {
      * @return RepositoryType
      */
     RepositoryType getRepositoryType();
+
+    /**
+     * Return the PullRequestHome service for this repository.
+     *
+     * @return Returns The PR home service for this repository.
+     */
+    PullRequestHome getPullRequestHome();
 }
