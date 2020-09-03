@@ -56,6 +56,10 @@ public class JiraRelease {
         this.candidateReleases = candidateReleases;
     }
 
+    public Version getVersion() {
+        return version;
+    }
+
     private void addCandidateRelease(CandidateRelease cr) {
         candidateReleases.add(cr);
     }
