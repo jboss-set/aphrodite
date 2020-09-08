@@ -28,6 +28,7 @@ import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssuePriority;
 import org.jboss.set.aphrodite.domain.IssueStatus;
+import org.jboss.set.aphrodite.domain.IssueType;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 
 import com.google.common.collect.BiMap;
@@ -99,6 +100,22 @@ class JiraFields {
             }
         }
         return issueStatus;
+    }
+
+    static IssueType getAphroditeType(String type) {
+        type = type.trim().replaceAll(" +", " ");
+        switch (type) {
+            case "SUPPORT PATCH":
+                // Counter-intuitave as you would think this would be SUPPORT_PATCH,
+                // but this makes sense based upon JIRA description. See <jira domain>/rest/api/2/issuetype
+                return IssueType.ONE_OFF;
+            case "PATCH":
+                return IssueType.SUPPORT_PATCH;
+            case "SUB-TASK":
+                return IssueType.TASK;
+            default:
+                return IssueType.getMatchingIssueType(type);
+        }
     }
 
     static IssuePriority getAphroditePriority(String priority) {
