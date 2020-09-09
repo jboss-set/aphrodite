@@ -225,11 +225,11 @@ public class JiraIssueWrapperTest {
                 .parse("2013-01-17T00:12:31.000-0500"));
         result.setAssignee(new User("jboss-set@redhat.com", "jboss-set"));
         result.setDescription("Test jira");
-        result.setStatus(IssueStatus.NEW);
+        result.setStatus(IssueStatus.NEW, IssueStatus.NEW.name());
         result.setPriority(IssuePriority.MAJOR);
         result.setComponents(Collections.singletonList("CLI"));
         result.setProduct("EAP");
-        result.setType(org.jboss.set.aphrodite.domain.IssueType.BUG);
+        result.setType(org.jboss.set.aphrodite.domain.IssueType.BUG, org.jboss.set.aphrodite.domain.IssueType.BUG.get());
 
         List<Release> releases = new ArrayList<>();
         releases.add(new Release("6.4.4"));

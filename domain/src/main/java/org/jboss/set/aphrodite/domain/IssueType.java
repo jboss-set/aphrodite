@@ -24,7 +24,7 @@ package org.jboss.set.aphrodite.domain;
 
 public enum IssueType {
     UNDEFINED("undefined"), PAYLOAD("payload"), BUG("bug"), UPGRADE("component upgrade"), ONE_OFF("one off"),
-    SUPPORT_PATCH("support patch");
+    SUPPORT_PATCH("support patch"), TASK("task"), ENHANCEMENT("enhancement");
 
     private final String type;
 

@@ -95,7 +95,8 @@ class IssueWrapper {
         issue.setLastUpdated((Date) bug.get(LAST_UPDATED));
         issue.setSummary((String) bug.get(SUMMARY));
         issue.setDescription((String) bug.get(DESCRIPTION));
-        issue.setStatus(IssueStatus.valueOf((String) bug.get(STATUS)));
+        String status = (String) bug.get(STATUS);
+        issue.setStatus(IssueStatus.valueOf(status), status);
         issue.setPriority(IssuePriorityTranslatorUtil.translateFromBugzilla((String) bug.get(PRIORITY)));
 
         Object[] components = (Object[]) bug.get(COMPONENT);
@@ -108,7 +109,7 @@ class IssueWrapper {
         issue.setStatus(IssueStatus.valueOf(((String) bug.get(STATUS)).toUpperCase()));
 
         String type = (String) bug.get(ISSUE_TYPE);
-        issue.setType(IssueType.getMatchingIssueType(type));
+        issue.setType(IssueType.getMatchingIssueType(type), type);
 
         setAffectedVersions(issue, (Object[]) (bug.get(VERSION)) );
         setReleases(issue, bug);

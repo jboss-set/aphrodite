@@ -68,9 +68,13 @@ public class Issue {
 
     private IssueStatus status;
 
+    private String rawStatus;
+
     private IssuePriority priority;
 
     private IssueType type;
+
+    private String rawType;
 
     private List<String> affectedVersions;
 
@@ -106,7 +110,9 @@ public class Issue {
         this.trackerType = type;
         this.stage = new Stage();
         this.status = IssueStatus.UNDEFINED;
+        this.rawStatus = IssueStatus.UNDEFINED.name();
         this.type = IssueType.UNDEFINED;
+        this.rawType = IssueType.UNDEFINED.get();
         this.releases = new ArrayList<>();
         this.streamStatus = new HashMap<>();
         this.dependsOn = new ArrayList<>();
@@ -197,9 +203,19 @@ public class Issue {
         return status;
     }
 
+    @Deprecated
     public void setStatus(IssueStatus status) {
-        Objects.requireNonNull(status, "An Issue's status cannot be set to null");
-        this.status = status;
+        setStatus(status, status.name());
+    }
+
+    public void setStatus(IssueStatus issueStatus, String rawStatus) {
+        Objects.requireNonNull(issueStatus, "An Issue's status cannot be set to null");
+        this.rawStatus = rawStatus.toUpperCase();
+        this.status = issueStatus;
+    }
+
+    public String getRawStatus() {
+        return rawStatus;
     }
 
     public IssuePriority getPriority() {
@@ -207,7 +223,7 @@ public class Issue {
     }
 
     public void setPriority(IssuePriority priority) {
-        Objects.requireNonNull(status, "An Issue's priority cannot be set to null");
+        Objects.requireNonNull(priority, "An Issue's priority cannot be set to null");
         this.priority = priority;
     }
 
@@ -215,9 +231,19 @@ public class Issue {
         return type;
     }
 
+    @Deprecated
     public void setType(IssueType type) {
-        Objects.requireNonNull(type, "An Issue's Type cannot be set to null");
-        this.type = type;
+        setType(type, type.get());
+    }
+
+    public void setType(IssueType issueType, String rawType) {
+        Objects.requireNonNull(issueType, "An Issue's Type cannot be set to null");
+        this.rawType = rawType.toUpperCase();
+        this.type = issueType;
+    }
+
+    public String getRawType() {
+        return rawType;
     }
 
     public void setAffectedVersions(List<String> affectedVersions) {
@@ -317,8 +343,10 @@ public class Issue {
                 ", reporter='" + reporter + '\'' +
                 ", stage=" + stage +
                 ", status=" + status +
+                ", rawStatus=" + rawStatus +
                 ", priority=" + priority +
                 ", type=" + type +
+                ", rawType=" + rawType +
                 ", release=" + releases +
                 ", streamStatus=" + streamStatus +
                 ", dependsOn=" + dependsOn +

@@ -189,10 +189,10 @@ public class BZIssueWrapperTest {
         result.setCreationTime(getCreationDate());
         result.setSummary("Test Issue");
         result.setDescription("Test bugzilla");
-        result.setStatus(IssueStatus.NEW);
+        result.setStatus(IssueStatus.NEW, IssueStatus.NEW.name());
         result.setComponents(Collections.singletonList("CLI"));
         result.setProduct("EAP");
-        result.setType(IssueType.BUG);
+        result.setType(IssueType.BUG, IssueType.BUG.get());
 
         List<Release> releases = new ArrayList<>();
         releases.add(new Release("6.4.4", "---"));
