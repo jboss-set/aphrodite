@@ -154,4 +154,24 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
         }
         return false;
     }
+
+    @Override
+    public Issue createIssue(URL trackerURL, String projectKey, String[] parameters) throws NotFoundException{
+        //https://www.bugzilla.org/docs/4.4/en/html/api/Bugzilla/WebService/Bug.html#create
+        /*
+         * parameters[0] = issue description( title )
+         * parameters[1] = component
+         * parameters[2] = version
+         */
+        assert parameters != null;
+        assert parameters.length >= 3;
+        assert parameters[0] != null;
+        assert parameters[1] != null;
+        assert parameters[2] != null;
+        assert projectKey != null;
+        assert trackerURL != null; // cant be, but hey...
+
+        return this.bzClient.createIssue(projectKey,parameters[0],parameters[1],parameters[2]);
+    }
+
 }

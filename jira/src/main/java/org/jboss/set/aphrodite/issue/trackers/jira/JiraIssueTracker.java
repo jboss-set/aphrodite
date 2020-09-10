@@ -30,6 +30,7 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELE
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -66,6 +67,7 @@ import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Filter;
 import com.atlassian.jira.rest.client.api.domain.IssueLink;
 import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
@@ -74,6 +76,7 @@ import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.LinkIssuesInput;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
@@ -453,4 +456,31 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     public Iterable<Version> getVersionsByProject(String projectName) {
         return restClient.getProjectClient().getProject(projectName).claim().getVersions();
     }
+
+    @Override
+    public Issue createIssue(URL trackerURL, String projectKey, String[] parameters) throws MalformedURLException, NotFoundException {
+        /*
+         * parameters[0] =  issue description( title )
+         * parameters[1] = L - type of issue, to get types(for EAP): https://issues.redhat.com/rest/api/2/issue/createmeta?projectKeys=JBEAP
+         */
+        assert parameters != null;
+        assert parameters.length >= 2;
+        assert parameters[0] != null;
+        assert parameters[1] != null;
+        assert projectKey != null;
+        assert trackerURL != null; // cant be, but hey...
+
+        final long issueTypeID = Long.parseLong(parameters[1]);
+        final IssueInputBuilder builder = new IssueInputBuilder(projectKey, issueTypeID, parameters[0]);
+        final IssueInput newIssue = builder.build();
+        final BasicIssue basicIssue = restClient.getIssueClient().createIssue(newIssue).claim();
+
+        // org.jboss.set.aphrodite.domain.Issue issue = tracker.getIssue(new URL(basicIssue.getKey()));
+        if (trackerURL.toString().endsWith("browse") || trackerURL.toString().endsWith("browse/")) {
+            return this.getIssue(new URL(trackerURL, basicIssue.getKey()));
+        } else {
+            return this.getIssue(new URL(trackerURL, "browse/" + basicIssue.getKey()));
+        }
+    }
+
 }

@@ -235,9 +235,25 @@ public class Aphrodite implements AutoCloseable {
         if(its != null){
            return its.getIssue(url);
         }
-        throw new NotFoundException("No issues found which correspond to url: " + url);
+        throw new NotFoundException("No tracker for issue url: " + url);
     }
 
+    /**
+     * Create skeletal issue.
+     * @param trackerURL - URL of tracker in which issue should be created
+     * @param projectKey - ID of project/product
+     * @param parameters - parameters, differ for each tracker.
+     * @return
+     * @throws NotFoundException
+     * @throws MalformedURLException
+     */
+    public Issue createIssue(final URL trackerURL, final String projectKey, final String[] parameters) throws NotFoundException, MalformedURLException {
+        final IssueTrackerService its = getTrackerFor(trackerURL);
+        if(its != null){
+            return its.createIssue(trackerURL, projectKey, parameters);
+         }
+        throw new NotFoundException("No tracker for url: " + trackerURL);
+    }
     /**
      * Retrieve issue associated with PR. This method require PR to conform to metadata scheme and have issue linked to this PR
      * with 'Issue: &lt;TICKET&gt;'
