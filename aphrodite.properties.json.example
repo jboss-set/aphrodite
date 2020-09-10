@@ -5,9 +5,16 @@
     "issueTrackerConfigs": [
         {
             "url": "https://issues.redhat.com/",
-            "username": "user",
-            "password": "pass",
+            "username": "",
+            "password": "",
             "tracker": "JIRA",
+            "defaultIssueLimit": 1
+        },
+    {
+            "url": "https://bugzilla.redhat.com/",
+            "username": "",
+            "password": "",
+            "tracker": "BUGZILLA",
             "defaultIssueLimit": 1
         }
     ],
@@ -17,6 +24,12 @@
             "username": "",
             "password": "",
             "type": "GITHUB"
+        },
+        {
+            "url": "https://gitlab.cee.redhat.com/",
+            "username": "",
+            "password": "",
+            "type": "GITLAB"
         }
     ],
     "streamConfigs": [
