@@ -74,6 +74,7 @@ class BugzillaFields {
     static final String UPDATE_FIELDS = "updates";
     static final String VERSION = "version";
 
+    static final String METHOD_CREATE_BUG = "Bug.create";
     static final String METHOD_GET_BUG = "Bug.get";
     static final String METHOD_UPDATE_BUG = "Bug.update";
     static final String METHOD_ADD_COMMENT = "Bug.add_comment";

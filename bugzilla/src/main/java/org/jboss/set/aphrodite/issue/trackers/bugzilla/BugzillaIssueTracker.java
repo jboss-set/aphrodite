@@ -32,6 +32,7 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
+import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
@@ -154,4 +155,25 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
         }
         return false;
     }
+
+    @Override
+    public Issue createIssue(final IssueCreationDetails details) throws NotFoundException {
+        // https://www.bugzilla.org/docs/4.4/en/html/api/Bugzilla/WebService/Bug.html#create
+
+        assert details != null;
+        assert details instanceof BugzillaIssueCreationDetails;
+
+        final BugzillaIssueCreationDetails localDetails = (BugzillaIssueCreationDetails) details;
+
+        assert details.getDescription() != null;
+        assert details.getProjectKey() != null;
+        assert localDetails.getComponent() != null;
+        assert localDetails.getVersion() != null;
+        assert localDetails.getTrackerURL() != null;
+        assert localDetails.getProjectKey() != null; // cant be, but hey...
+
+        return this.bzClient.createIssue(localDetails.getProjectKey(), localDetails.getDescription(),
+                localDetails.getComponent(), localDetails.getVersion());
+    }
+
 }

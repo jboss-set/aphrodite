@@ -29,7 +29,9 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
+import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -173,4 +175,13 @@ public interface IssueTrackerService {
      * allows to destroy and deallocate resources
      */
     default void destroy() { }
+
+    /**
+     * Create skeletal issue.
+     * @param details - implementation of issue detail proper for identified tracker
+     * @return issue that was created
+     * @throws NotFoundException
+     * @throws MalformedURLException
+     */
+    Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException;
 }

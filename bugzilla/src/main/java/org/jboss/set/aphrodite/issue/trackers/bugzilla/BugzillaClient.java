@@ -28,12 +28,14 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COM
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT_FIELDS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT_ID;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT_IS_PRIVATE;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMPONENT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ESTIMATED_TIME;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FILTER_SHARER_ID;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ID;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISSUE_IDS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.LOGIN;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_ADD_COMMENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_CREATE_BUG;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_FILTER_SEARCH;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_GET_BUG;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_GET_COMMENT;
@@ -42,14 +44,17 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.MET
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_USER_LOGIN;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.NAME;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PASSWORD;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIVATE_COMMENT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_BUGS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_FIELDS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_INCLUDE_FIELDS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_PERMISSIVE_SEARCH;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.STATUS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.SUMMARY;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.UPDATE_FIELDS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.VERSION;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -406,6 +411,21 @@ public class BugzillaClient {
         return runCommand(METHOD_UPDATE_BUG, params);
     }
 
+    public Issue createIssue(String projectKey, String summary, String component, String version) throws NotFoundException {
+        Map<String, Object> params = new HashMap<>(loginDetails);
+
+        params.put(PRODUCT, projectKey);
+        params.put(SUMMARY, summary);
+        params.put(COMPONENT, component);
+        params.put(VERSION, version);
+        Map<String, ?> results = executeRequest(XMLRPC.RPC_STRUCT, METHOD_CREATE_BUG, params);
+        if(results == null || results.size() != 1 || results.get(ID) == null) {
+            throw new NotFoundException("Failed to create issue, result: " + results);
+        }
+        final String trackerId = results.get(ID).toString();
+        return this.getIssue(trackerId);
+    }
+
     private <T> T executeRequest(final XMLRPC<T> type, String method, Object... params) {
         try {
             return type.cast(getRpcClient().execute(method, params));
@@ -505,4 +525,5 @@ public class BugzillaClient {
             };
         }
     }
+
 }
