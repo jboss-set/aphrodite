@@ -29,6 +29,7 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
+import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -177,12 +178,10 @@ public interface IssueTrackerService {
 
     /**
      * Create skeletal issue.
-     * @param trackerURL - URL of tracker in which issue should be created
-     * @param projectKey - ID of project/product
-     * @param parameters - parameters, differ for each tracker.
+     * @param details - implementation of issue detail proper for identified tracker
      * @return issue that was created
      * @throws NotFoundException
      * @throws MalformedURLException
      */
-    Issue createIssue(URL trackerURL, String projectKey, String[] parameters) throws MalformedURLException, NotFoundException;
+    Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException;
 }

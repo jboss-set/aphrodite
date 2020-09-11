@@ -60,6 +60,7 @@ import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
+import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
@@ -458,22 +459,24 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public Issue createIssue(URL trackerURL, String projectKey, String[] parameters) throws MalformedURLException, NotFoundException {
-        /*
-         * parameters[0] =  issue description( title )
-         * parameters[1] = L - type of issue, to get types(for EAP): https://issues.redhat.com/rest/api/2/issue/createmeta?projectKeys=JBEAP
-         */
-        assert parameters != null;
-        assert parameters.length >= 2;
-        assert parameters[0] != null;
-        assert parameters[1] != null;
-        assert projectKey != null;
-        assert trackerURL != null; // cant be, but hey...
+    public Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException {
 
-        final long issueTypeID = Long.parseLong(parameters[1]);
-        final IssueInputBuilder builder = new IssueInputBuilder(projectKey, issueTypeID, parameters[0]);
+        assert details != null;
+        assert details instanceof JIRAIssueCreationDetails;
+
+        final JIRAIssueCreationDetails localDetails = (JIRAIssueCreationDetails) details;
+
+        assert details.getTrackerURL() != null;
+        assert details.getProjectKey() != null;
+        assert details.getDescription() != null;
+        assert localDetails.getIssueType() != null;
+
+
+        final IssueInputBuilder builder = new IssueInputBuilder(localDetails.getProjectKey(), localDetails.getIssueType(), localDetails.getDescription());
         final IssueInput newIssue = builder.build();
         final BasicIssue basicIssue = restClient.getIssueClient().createIssue(newIssue).claim();
+
+        final URL trackerURL = localDetails.getTrackerURL();
 
         // org.jboss.set.aphrodite.domain.Issue issue = tracker.getIssue(new URL(basicIssue.getKey()));
         if (trackerURL.toString().endsWith("browse") || trackerURL.toString().endsWith("browse/")) {

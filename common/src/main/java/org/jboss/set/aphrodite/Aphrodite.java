@@ -63,6 +63,7 @@ import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
+import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.simplecontainer.SimpleContainer;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -247,12 +248,14 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException
      * @throws MalformedURLException
      */
-    public Issue createIssue(final URL trackerURL, final String projectKey, final String[] parameters) throws NotFoundException, MalformedURLException {
-        final IssueTrackerService its = getTrackerFor(trackerURL);
+    public Issue createIssue(final IssueCreationDetails details) throws NotFoundException, MalformedURLException {
+        assert details != null;
+        assert details.getTrackerURL() != null;
+        final IssueTrackerService its = getTrackerFor(details.getTrackerURL());
         if(its != null){
-            return its.createIssue(trackerURL, projectKey, parameters);
+            return its.createIssue(details);
          }
-        throw new NotFoundException("No tracker for url: " + trackerURL);
+        throw new NotFoundException("No tracker for url: " + details.getTrackerURL());
     }
     /**
      * Retrieve issue associated with PR. This method require PR to conform to metadata scheme and have issue linked to this PR
