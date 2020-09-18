@@ -25,6 +25,7 @@ package org.jboss.set.aphrodite.domain;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A generic search object that allows for issues to be searched without knowing details of the
@@ -43,10 +44,12 @@ public class SearchCriteria {
     private final Map<Stream, FlagStatus> streams;
     private final LocalDate lastUpdated;
     private final Integer maxResults;
+    private final Set<String> labels;
+    private final String stream;
 
     private SearchCriteria(IssueStatus status, String assignee, String reporter, String product,
             String component, Stage stage, Release release, Map<Stream, FlagStatus> streams,
-            LocalDate lastUpdated, Integer maxResults) {
+            LocalDate lastUpdated, Integer maxResults, Set<String> labels, String stream) {
         this.status = status;
         this.assignee = assignee;
         this.reporter = reporter;
@@ -57,6 +60,8 @@ public class SearchCriteria {
         this.streams = streams;
         this.lastUpdated = lastUpdated;
         this.maxResults = maxResults;
+        this.labels = labels;
+        this.stream = stream;
 
         if (lastUpdated != null && lastUpdated.isAfter(LocalDate.now()))
             throw new IllegalArgumentException("lastUpdated cannot be in the future.");
@@ -102,6 +107,14 @@ public class SearchCriteria {
         return Optional.ofNullable(maxResults);
     }
 
+    public Optional<String> getStream() {
+        return Optional.ofNullable(stream);
+    }
+
+    public java.util.stream.Stream<String> getLabels() {
+        return labels==null? java.util.stream.Stream.empty():labels.stream();
+    }
+
     public boolean isEmpty() {
         return status == null && assignee == null && reporter == null && product == null && component == null && stage == null
                 && release == null && streams == null && lastUpdated == null && maxResults == null;
@@ -119,6 +132,8 @@ public class SearchCriteria {
         private Map<Stream, FlagStatus> streams;
         private LocalDate startDate;
         private Integer maxResults;
+        private Set<String> labels;
+        private String stream;
 
         public Builder setStatus(IssueStatus status) {
             this.status = status;
@@ -170,9 +185,19 @@ public class SearchCriteria {
             return this;
         }
 
+        public Builder setLabels(Set<String> labels) {
+            this.labels = labels;
+            return this;
+        }
+
+        public Builder setStream(String stream) {
+            this.stream = stream;
+            return this;
+        }
+
         public SearchCriteria build() {
             return new SearchCriteria(status, assignee, reporter, product, component, stage, release,
-                    streams, startDate, maxResults);
+                    streams, startDate, maxResults, labels, stream);
         }
     }
 }
