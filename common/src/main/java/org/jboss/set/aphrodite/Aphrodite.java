@@ -1020,7 +1020,7 @@ public class Aphrodite implements AutoCloseable {
         }
     }
 
-    private IssueTrackerService getTrackerFor(final URL url){
+    public IssueTrackerService getTrackerFor(final URL url){
         final String id = AbstractIssueTracker.convertToTrackerID(url);
         if(this.issueTrackers.containsKey(id)){
            return this.issueTrackers.get(id);

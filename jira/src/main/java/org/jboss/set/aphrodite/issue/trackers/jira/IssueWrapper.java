@@ -229,6 +229,10 @@ class IssueWrapper {
         updateFixVersions(issue, versionsMap, inputBuilder);
         updateStreamStatus(issue, jiraIssue, versionsMap, inputBuilder);
 
+        if (!((JiraIssue)issue).getLabels().isEmpty()) {
+            inputBuilder.setFieldValue("labels", ((JiraIssue) issue).getLabels().stream().map(JiraLabel::getName).collect(Collectors.toList()));
+        }
+
         return inputBuilder.build();
     }
 

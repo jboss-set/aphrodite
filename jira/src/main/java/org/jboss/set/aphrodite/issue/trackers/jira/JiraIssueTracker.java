@@ -271,11 +271,6 @@ public class JiraIssueTracker extends AbstractIssueTracker {
                 }
             }
 
-            // only supports add
-            for(LinkIssuesInput linkIssuesInput : calculateNewLinks(issue, jiraIssue)) {
-                issueClient.linkIssue(linkIssuesInput).claim();
-            }
-
             return true;
         } catch (ExecutionException | InterruptedException e) {
             throw new AphroditeException(getUpdateErrorMessage(issue, e), e);
@@ -381,7 +376,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         return LOG;
     }
 
-    private String getIssueKey(URL url) throws NotFoundException {
+    static String getIssueKey(URL url) throws NotFoundException {
         String path = correctPath(url.getPath());
         boolean api = path.contains(API_ISSUE_PATH);
         boolean browse = path.contains(BROWSE_ISSUE_PATH);
@@ -392,7 +387,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         return api ? path.substring(API_ISSUE_PATH.length()) : path.substring(BROWSE_ISSUE_PATH.length());
     }
 
-    private String correctPath(String path) {
+    static String correctPath(String path) {
         Matcher m = PROJECTS_ISSUE_PATTERN.matcher(path);
         if (m.find()) {
             return m.replaceFirst(BROWSE_ISSUE_PATH);
@@ -486,4 +481,8 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
     }
 
+    public void linkIssues(Issue from, Issue to, String linkType) {
+        LinkIssuesInput link = new LinkIssuesInput(toKey(from.getURL()), toKey(to.getURL()),linkType);
+        restClient.getIssueClient().linkIssue(link).claim();
+    }
 }
