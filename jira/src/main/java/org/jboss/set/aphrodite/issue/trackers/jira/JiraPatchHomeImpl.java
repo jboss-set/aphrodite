@@ -67,7 +67,9 @@ public class JiraPatchHomeImpl implements PatchHome {
         if (patchType.equals(PatchType.PULLREQUEST)) {
             try {
                 PullRequest pullRequest = Aphrodite.instance().getPullRequest(url);
-                return PatchState.valueOf(pullRequest.getState().toString());
+                if (pullRequest.getState() != null) {
+                    return PatchState.valueOf(pullRequest.getState().toString());
+                }
             } catch (NotFoundException e) {
                 Utils.logException(logger, "Unable to find pull request with url: " + url, e);
             } catch (AphroditeException e) {
