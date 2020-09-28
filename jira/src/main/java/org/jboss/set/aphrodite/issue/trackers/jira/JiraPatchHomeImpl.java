@@ -18,6 +18,7 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 
 import java.net.URL;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,11 +47,12 @@ public class JiraPatchHomeImpl implements PatchHome {
     }
 
     private java.util.stream.Stream<Patch> mapURLtoPatchStream(List<URL> urls) {
-        return urls.stream().map(e -> {
+        List<Patch> list = urls.stream().map(e -> {
             PatchType patchType = getPatchType(e);
             PatchState patchState = getPatchState(e, patchType);
-            return new Patch(e, getPatchType(e), patchState);
-        });
+            return new Patch(e, patchType, patchState);
+            }).collect(Collectors.toList());
+        return list.stream();
     }
 
     private PatchType getPatchType(URL url) {
@@ -67,7 +69,7 @@ public class JiraPatchHomeImpl implements PatchHome {
         if (patchType.equals(PatchType.PULLREQUEST)) {
             try {
                 PullRequest pullRequest = Aphrodite.instance().getPullRequest(url);
-                if (pullRequest.getState() != null) {
+                if (pullRequest !=null && pullRequest.getState() != null) {
                     return PatchState.valueOf(pullRequest.getState().toString());
                 }
             } catch (NotFoundException e) {
