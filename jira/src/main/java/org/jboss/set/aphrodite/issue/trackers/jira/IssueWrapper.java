@@ -240,7 +240,7 @@ class IssueWrapper {
                                     Map<String, Version> versionsMap, IssueInputBuilder inputBuilder) throws NotFoundException {
         String customField = JSON_CUSTOM_FIELD + TARGET_RELEASE;
         IssueField issueField = jiraIssue.getField(customField);
-        if (issueField == null || (issueField.getType() == null && issueField.getValue() == null)) {
+        if (issueField == null) {
             String msg = String.format("Unable to set a stream status for issue %1$s as %2$s projects do not utilise field: %3$s",
                     jiraIssue.getKey(), jiraIssue.getProject().getName(), customField);
             Utils.logWarnMessage(LOG, msg);
@@ -252,7 +252,7 @@ class IssueWrapper {
                 String streamName = entry.getKey();
                 Version version = versionsMap.get(streamName);
                 if (version != null) {
-                    inputBuilder.setFieldInput(new FieldInput(customField, ComplexIssueInputFieldValue.with("value", version.getId())));
+                    inputBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("id", version.getId().toString()));
                 } else {
                     throw new NotFoundException("No Stream exists for this project with the name : " + streamName);
                 }
