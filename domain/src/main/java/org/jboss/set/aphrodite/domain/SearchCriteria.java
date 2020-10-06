@@ -45,11 +45,10 @@ public class SearchCriteria {
     private final LocalDate lastUpdated;
     private final Integer maxResults;
     private final Set<String> labels;
-    private final String stream;
 
     private SearchCriteria(IssueStatus status, String assignee, String reporter, String product,
             String component, Stage stage, Release release, Map<Stream, FlagStatus> streams,
-            LocalDate lastUpdated, Integer maxResults, Set<String> labels, String stream) {
+            LocalDate lastUpdated, Integer maxResults, Set<String> labels) {
         this.status = status;
         this.assignee = assignee;
         this.reporter = reporter;
@@ -61,7 +60,6 @@ public class SearchCriteria {
         this.lastUpdated = lastUpdated;
         this.maxResults = maxResults;
         this.labels = labels;
-        this.stream = stream;
 
         if (lastUpdated != null && lastUpdated.isAfter(LocalDate.now()))
             throw new IllegalArgumentException("lastUpdated cannot be in the future.");
@@ -107,10 +105,6 @@ public class SearchCriteria {
         return Optional.ofNullable(maxResults);
     }
 
-    public Optional<String> getStream() {
-        return Optional.ofNullable(stream);
-    }
-
     public java.util.stream.Stream<String> getLabels() {
         return labels==null? java.util.stream.Stream.empty():labels.stream();
     }
@@ -133,7 +127,6 @@ public class SearchCriteria {
         private LocalDate startDate;
         private Integer maxResults;
         private Set<String> labels;
-        private String stream;
 
         public Builder setStatus(IssueStatus status) {
             this.status = status;
@@ -190,14 +183,9 @@ public class SearchCriteria {
             return this;
         }
 
-        public Builder setStream(String stream) {
-            this.stream = stream;
-            return this;
-        }
-
         public SearchCriteria build() {
             return new SearchCriteria(status, assignee, reporter, product, component, stage, release,
-                    streams, startDate, maxResults, labels, stream);
+                    streams, startDate, maxResults, labels);
         }
     }
 }
