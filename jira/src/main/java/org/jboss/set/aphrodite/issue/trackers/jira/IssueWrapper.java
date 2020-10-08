@@ -418,7 +418,8 @@ class IssueWrapper {
 
         for (com.atlassian.jira.rest.client.api.domain.IssueLink il : links) {
             // Add links of cloned to/from issues to the issue
-            if (il.getIssueLinkType().getDescription().contains("cloned")) {
+            if (il.getIssueLinkType().getDescription().contains("cloned")
+                    || il.getIssueLinkType().getDescription().contains("clones")) {
                 URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 ((JiraIssue) issue).getLinkedCloneIssues().add(url);
             }
