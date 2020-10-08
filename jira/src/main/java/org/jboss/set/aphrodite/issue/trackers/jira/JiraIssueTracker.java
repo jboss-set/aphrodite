@@ -25,7 +25,10 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PROJECTS_ISSUE_PATTERN;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE_VALUE_TRUE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
 
@@ -34,6 +37,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -76,6 +80,7 @@ import com.atlassian.jira.rest.client.api.domain.Project;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.LinkIssuesInput;
@@ -454,7 +459,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException {
+    public Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException, AphroditeException {
 
         assert details != null;
         assert details instanceof JIRAIssueCreationDetails;
@@ -466,8 +471,16 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         assert details.getDescription() != null;
         assert localDetails.getIssueType() != null;
 
-
         final IssueInputBuilder builder = new IssueInputBuilder(localDetails.getProjectKey(), localDetails.getIssueType(), localDetails.getDescription());
+        if (localDetails.isSecuritySensitiveIssue()) {
+            builder.setFieldValue(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE,
+                    Arrays.asList(ComplexIssueInputFieldValue.with("id", SECURITY_SENSITIVE_VALUE_TRUE)));
+        }
+        if (localDetails.getSecurityLevel() != null) {
+            String id = JiraFields.getSecurityLevelId(localDetails.getSecurityLevel());
+            builder.setFieldValue("security", ComplexIssueInputFieldValue.with("id", id));
+        }
+
         final IssueInput newIssue = builder.build();
         final BasicIssue basicIssue = restClient.getIssueClient().createIssue(newIssue).claim();
 

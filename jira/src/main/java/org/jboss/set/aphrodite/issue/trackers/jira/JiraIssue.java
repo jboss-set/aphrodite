@@ -55,6 +55,8 @@ public class JiraIssue extends Issue {
     private List<URL> linkedCloneIssues = new ArrayList<>();
 
     private List<URL> linkedIncorporatesIssues = new ArrayList<>();
+    private String securityLevel;
+    private boolean securitySensitiveIssue;
 
     public JiraIssue(final URL url) {
         super(url, JIRA);
@@ -121,6 +123,22 @@ public class JiraIssue extends Issue {
 
     public void setLinkedIncorporatesIssues(List<URL> linkedIncorporatesIssues) {
         this.linkedIncorporatesIssues = linkedIncorporatesIssues;
+    }
+
+    public String getSecurityLevel() {
+        return this.securityLevel;
+    }
+
+    public void setSecurityLevel(String securityLevel) {
+        this.securityLevel = securityLevel;
+    }
+
+    public boolean isSecuritySensitiveIssue() {
+        return this.securitySensitiveIssue;
+    }
+
+    public void setSecuritySensitiveIssue(boolean securitySensitiveIssue) {
+        this.securitySensitiveIssue = securitySensitiveIssue;
     }
 
     @Override

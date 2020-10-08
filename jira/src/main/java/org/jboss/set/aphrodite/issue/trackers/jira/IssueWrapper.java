@@ -28,6 +28,9 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_LEVEL;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE_VALUE_TRUE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditePriority;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
@@ -36,6 +39,7 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphrodit
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -61,6 +65,7 @@ import org.jboss.set.aphrodite.domain.IssueEstimation;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.domain.User;
+import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
@@ -140,6 +145,30 @@ class IssueWrapper {
         setLabels(issue, jiraIssue);
         setChangelog(issue, jiraIssue);
         setResolution(issue, jiraIssue);
+        setSecuritySensitive(jiraIssue, issue);
+        setSecurityLevel(jiraIssue, issue);
+    }
+
+    private void setSecurityLevel(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, JiraIssue issue) {
+        IssueField secLevel = jiraIssue.getField(SECURITY_LEVEL);
+        if (secLevel != null && secLevel.getValue() != null) {
+            JSONObject o = (JSONObject) secLevel.getValue();
+            try {
+                issue.setSecurityLevel(o.getString("name"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setSecuritySensitive(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, JiraIssue issue) {
+        IssueField securitySensitiveField = jiraIssue.getField(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE);
+        if (securitySensitiveField != null && securitySensitiveField.getValue() != null) {
+            JSONArray value = (JSONArray) securitySensitiveField.getValue();
+            if (value != null && value.length() > 0) {
+                issue.setSecuritySensitiveIssue(true);
+            }
+        }
     }
 
     private void setLabels(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
@@ -204,7 +233,7 @@ class IssueWrapper {
     }
 
     // TODO find a solution for updating time estimates, see https://github.com/jboss-set/aphrodite/issues/23
-    IssueInput issueToFluentUpdate(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, Project project) throws NotFoundException {
+    IssueInput issueToFluentUpdate(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, Project project) throws NotFoundException, AphroditeException {
         checkUnsupportedUpdateFields(issue);
         IssueInputBuilder inputBuilder = new IssueInputBuilder(jiraIssue.getProject().getKey(), jiraIssue.getIssueType().getId());
 
@@ -231,6 +260,17 @@ class IssueWrapper {
 
         if (!((JiraIssue)issue).getLabels().isEmpty()) {
             inputBuilder.setFieldValue("labels", ((JiraIssue) issue).getLabels().stream().map(JiraLabel::getName).collect(Collectors.toList()));
+        }
+
+        if (((JiraIssue)issue).isSecuritySensitiveIssue()) {
+            inputBuilder.setFieldValue(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE,
+                    Arrays.asList(ComplexIssueInputFieldValue.with("id", SECURITY_SENSITIVE_VALUE_TRUE)));
+        } else {
+            inputBuilder.setFieldValue(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE, Collections.emptyList());
+        }
+        if (((JiraIssue)issue).getSecurityLevel() != null) {
+            String id = JiraFields.getSecurityLevelId(((JiraIssue)issue).getSecurityLevel());
+            inputBuilder.setFieldValue(SECURITY_LEVEL, ComplexIssueInputFieldValue.with("id", id));
         }
 
         return inputBuilder.build();

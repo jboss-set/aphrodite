@@ -33,6 +33,8 @@ public class JIRAIssueCreationDetails extends IssueCreationDetails {
 
     //type of issue, to get types(for EAP): https://issues.redhat.com/rest/api/2/issue/createmeta?projectKeys=JBEAP
     protected Long issueType;
+    protected String securityLevel;
+    protected boolean securitySensitiveIssue;
 
     public Long getIssueType() {
         return issueType;
@@ -43,4 +45,19 @@ public class JIRAIssueCreationDetails extends IssueCreationDetails {
         return this;
     }
 
+    public String getSecurityLevel() {
+        return securityLevel;
+    }
+
+    public void setSecurityLevel(String securityLevel) {
+        this.securityLevel = securityLevel;
+    }
+
+    public boolean isSecuritySensitiveIssue() {
+        return securitySensitiveIssue;
+    }
+
+    public void setSecuritySensitiveIssue(boolean securitySensitiveIssue) {
+        this.securitySensitiveIssue = securitySensitiveIssue;
+    }
 }
