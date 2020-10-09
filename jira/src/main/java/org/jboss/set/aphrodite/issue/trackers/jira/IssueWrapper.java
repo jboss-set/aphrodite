@@ -268,8 +268,9 @@ class IssueWrapper {
         } else {
             inputBuilder.setFieldValue(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE, Collections.emptyList());
         }
-        if (((JiraIssue)issue).getSecurityLevel() != null) {
-            String id = JiraFields.getSecurityLevelId(((JiraIssue)issue).getSecurityLevel());
+
+        if (((JiraIssue)issue).getSecurityLevel().isPresent()) {
+            String id = JiraFields.getSecurityLevelId(((JiraIssue)issue).getSecurityLevel().get());
             inputBuilder.setFieldValue(SECURITY_LEVEL, ComplexIssueInputFieldValue.with("id", id));
         }
 

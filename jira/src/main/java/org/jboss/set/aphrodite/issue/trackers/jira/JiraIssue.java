@@ -30,6 +30,7 @@ import org.jboss.set.aphrodite.domain.spi.PatchHome;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.naming.NameNotFoundException;
@@ -55,7 +56,7 @@ public class JiraIssue extends Issue {
     private List<URL> linkedCloneIssues = new ArrayList<>();
 
     private List<URL> linkedIncorporatesIssues = new ArrayList<>();
-    private String securityLevel;
+    private Optional<String> securityLevel = Optional.empty();
     private boolean securitySensitiveIssue;
 
     public JiraIssue(final URL url) {
@@ -125,12 +126,12 @@ public class JiraIssue extends Issue {
         this.linkedIncorporatesIssues = linkedIncorporatesIssues;
     }
 
-    public String getSecurityLevel() {
+    public Optional<String> getSecurityLevel() {
         return this.securityLevel;
     }
 
     public void setSecurityLevel(String securityLevel) {
-        this.securityLevel = securityLevel;
+        this.securityLevel = Optional.ofNullable(securityLevel);
     }
 
     public boolean isSecuritySensitiveIssue() {

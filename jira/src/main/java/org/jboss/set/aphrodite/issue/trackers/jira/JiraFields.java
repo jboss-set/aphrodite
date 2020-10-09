@@ -77,7 +77,7 @@ class JiraFields {
 
     static final BiMap<String, String> SECURITY_LEVEL_MAP = new ImmutableBiMap.Builder<String, String>()
             .put("Red Hat Internal", "10291")
-            .put("Security issue", "10292")
+            .put("Security Issue", "10292")
             .put("None", "-1")
             .build();
 
