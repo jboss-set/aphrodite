@@ -53,6 +53,7 @@ class JiraFields {
     static final String QE_ACK = "12311244";
     static final String TARGET_RELEASE = "12311240";
     static final String SECURITY_SENSITIVE = "12311640";
+    public static final String INVOLVED_FIELD = "12311641";
     static final String SECURITY_SENSITIVE_VALUE_TRUE = "10650";
 
     static final String SECURITY_LEVEL = "security";

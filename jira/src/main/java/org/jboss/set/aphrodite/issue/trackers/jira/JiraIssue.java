@@ -58,6 +58,7 @@ public class JiraIssue extends Issue {
     private List<URL> linkedIncorporatesIssues = new ArrayList<>();
     private Optional<String> securityLevel = Optional.empty();
     private boolean securitySensitiveIssue;
+    private List<String> involved = new ArrayList<>();
 
     public JiraIssue(final URL url) {
         super(url, JIRA);
@@ -145,5 +146,13 @@ public class JiraIssue extends Issue {
     @Override
     public Stream<Patch> getPatches() throws NameNotFoundException {
         return Container.instance().lookup(JiraPatchHomeImpl.class.getSimpleName(), (PatchHome.class)).findPatchesByIssue(this);
+    }
+
+    public void setInvolved(List<String> involved) {
+        this.involved = involved;
+    }
+
+    public List<String> getInvolved() {
+        return involved;
     }
 }

@@ -25,6 +25,7 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.INVOLVED_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
@@ -147,6 +148,23 @@ class IssueWrapper {
         setResolution(issue, jiraIssue);
         setSecuritySensitive(jiraIssue, issue);
         setSecurityLevel(jiraIssue, issue);
+        setInvolved(jiraIssue, issue);
+    }
+
+    private void setInvolved(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, JiraIssue issue) {
+        ArrayList<String> involved = new ArrayList<>();
+        IssueField invField = jiraIssue.getField(JSON_CUSTOM_FIELD + JiraFields.INVOLVED_FIELD);
+        if (invField != null && invField.getValue() != null) {
+            JSONArray invArray = (JSONArray) jiraIssue.getField(JSON_CUSTOM_FIELD + JiraFields.INVOLVED_FIELD).getValue();
+            for (int i = 0; i < invArray.length(); i++) {
+                try {
+                    involved.add(((JSONObject) invArray.get(i)).getString("name"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        issue.setInvolved(involved);
     }
 
     private void setSecurityLevel(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, JiraIssue issue) {
@@ -272,6 +290,14 @@ class IssueWrapper {
         if (((JiraIssue)issue).getSecurityLevel().isPresent()) {
             String id = JiraFields.getSecurityLevelId(((JiraIssue)issue).getSecurityLevel().get());
             inputBuilder.setFieldValue(SECURITY_LEVEL, ComplexIssueInputFieldValue.with("id", id));
+        }
+
+        if (!((JiraIssue)issue).getInvolved().isEmpty()) {
+            ArrayList<ComplexIssueInputFieldValue> inv = new ArrayList<>();
+            for (String name : ((JiraIssue) issue).getInvolved()) {
+                inv.add(ComplexIssueInputFieldValue.with("name", name));
+            }
+            inputBuilder.setFieldValue(JSON_CUSTOM_FIELD + INVOLVED_FIELD, inv);
         }
 
         return inputBuilder.build();
