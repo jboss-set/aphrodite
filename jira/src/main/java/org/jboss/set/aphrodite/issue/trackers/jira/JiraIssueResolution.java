@@ -33,7 +33,9 @@ public enum JiraIssueResolution {
     WONTDO(10000, "WON'T DO"),
     CANNOT_REPRODUCE(10002, "CANNOT REPRODUCE"),
     EXPLAINED(10300, "EXPLAINED"),
-    DUPLICATE(10700, "DUPLICATE");
+    DUPLICATE(10700, "DUPLICATE"),
+    NOT_A_BUG(10802, "NOT A BUG"),
+    EOL(10809, "EOL");
 
     private long id;
     private String label;
