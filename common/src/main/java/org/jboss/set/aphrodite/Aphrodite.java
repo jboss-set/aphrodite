@@ -51,6 +51,7 @@ import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Comment;
+import org.jboss.set.aphrodite.domain.Commit;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
@@ -1049,5 +1050,26 @@ public class Aphrodite implements AutoCloseable {
             res.addAll(prHome.findReferencedPullRequests(pullRequest));
         }
         return res;
+    }
+
+    /**
+     * Returns a list of commits on a given branch between a given date and now
+     *
+     * @param url URL of the <code>Repository</code>
+     * @param branch branch in the <code>Repository</code>
+     * @param since date in milliseconds
+     * @return List of commits past the given date
+     * @throws NotFoundException if the specified <code>Repository</code> cannot be found.
+     */
+    public List<Commit> getCommitsSince(URL url, String branch, long since) throws NotFoundException {
+        checkRepositoryServiceExists();
+        Objects.requireNonNull(url, "url cannot be null");
+        Objects.requireNonNull(branch, "branch cannot be null");
+
+        for (RepositoryService repositoryService : repositories) {
+            if (repositoryService.urlExists(url) && repositoryService.repositoryAccessable(url))
+                return repositoryService.getCommitsSince(url, branch, since);
+        }
+        throw new NotFoundException("No pull request found which corresponds to url: " + url);
     }
 }

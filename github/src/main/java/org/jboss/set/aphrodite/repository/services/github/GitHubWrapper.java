@@ -38,6 +38,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Codebase;
+import org.jboss.set.aphrodite.domain.Commit;
 import org.jboss.set.aphrodite.domain.Compare;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.MergeableState;
@@ -103,10 +104,10 @@ class GitHubWrapper {
             }
             final Repository repo = new Repository(URI.create(urlString).toURL());
             final int commitCount = pullRequest.getCommits();
-            final List<String> commits = new ArrayList<>(commitCount);
+            final List<Commit> commits = new ArrayList<>(commitCount);
 
             for (GHPullRequestCommitDetail det : pullRequest.listCommits()) {
-                commits.add(det.getSha());
+                commits.add(new Commit(det.getSha(), det.getCommit().getMessage()));
             }
             Collections.reverse(commits);
             return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits, prHome);

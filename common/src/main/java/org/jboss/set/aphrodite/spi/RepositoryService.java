@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
+import org.jboss.set.aphrodite.domain.Commit;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
@@ -227,4 +228,14 @@ public interface RepositoryService {
      * @return Returns The PR home service for this repository.
      */
     PullRequestHome getPullRequestHome();
+
+    /**
+     * returns list of commits committed after a given date
+     *
+     * @param url - repository url
+     * @param branch - repository branch
+     * @param since - date in Unix time
+     * @return list of commits since a given date
+     */
+    List<Commit> getCommitsSince(URL url, String branch, long since);
 }

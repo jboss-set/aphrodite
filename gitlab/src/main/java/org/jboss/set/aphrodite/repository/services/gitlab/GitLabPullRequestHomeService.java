@@ -40,6 +40,7 @@ import org.gitlab4j.api.models.CommitStatusFilter;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.MergeRequestParams;
 import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.domain.Commit;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
@@ -219,10 +220,10 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
         String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
-            List<String> commits = pullRequest.getCommits();
+            List<Commit> commits = pullRequest.getCommits();
             if (commits != null && !commits.isEmpty()) {
                 // get the last commit
-                String sha = commits.get(commits.size() - 1);
+                String sha = commits.get(commits.size() - 1).getSha();
                 CommitStatusFilter filter = new CommitStatusFilter().withAll(true);
                 List<org.gitlab4j.api.models.CommitStatus> statuses = gitLabApi.getCommitsApi().getCommitStatuses(repoId, sha, filter);
                 // TODO: there are no test suite here so what to do here, for the moment returning one (it's always empty right now)

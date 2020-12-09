@@ -200,7 +200,7 @@ public class GitLabUtils {
                 m.getMergedAt() != null, // merged
                 MergeableState.UNKNOWN, //merge state
                 m.getMergedAt(),
-                commits.stream().map(Commit::getId).collect(Collectors.toList()),
+                commits.stream().map(commit -> new org.jboss.set.aphrodite.domain.Commit(commit.getId(), commit.getMessage())).collect(Collectors.toList()),
                 prHome);
     }
 
