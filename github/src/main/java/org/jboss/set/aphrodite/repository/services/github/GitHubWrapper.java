@@ -27,6 +27,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import org.kohsuke.github.GHCompare;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRateLimit;
 
 /**
@@ -103,25 +105,10 @@ class GitHubWrapper {
             final int commitCount = pullRequest.getCommits();
             final List<String> commits = new ArrayList<>(commitCount);
 
-            if (pullRequest.getHead().getRepository() != null) {
-                //INFO: happens when someone sends PR and deletes repo.
-                //git handles it somehow, but we cant access commits...
-                GHCommit pointer = pullRequest.getHead().getCommit();
-                for (int i = 0; i < commitCount; i++) {
-                    commits.add(pointer.getSHA1());
-                    if (i != commitCount - 1) {
-                        // This is frail...
-                        final List<GHCommit> parents = pointer.getParents();
-                        if (parents == null || parents.size() != 1) {
-                            Utils.logWarnMessage(LOG, "Unexpected result, either no parents or more than one is present for '"
-                                    + pointer.getSHA1() + "' commit in '" + url + "'");
-                            // TODO: ignore for now, fail maybe?
-                        } else {
-                            pointer = parents.get(0);
-                        }
-                    }
-                }
+            for (GHPullRequestCommitDetail det : pullRequest.listCommits()) {
+                commits.add(det.getSha());
             }
+            Collections.reverse(commits);
             return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits, prHome);
         } catch (IOException e) {
             Utils.logException(LOG, e);
