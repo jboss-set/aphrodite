@@ -26,10 +26,14 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -76,6 +80,9 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
     private GithubPullRequestHomeService prHome;
 
+    private Map<String, GHRepository> ghRepositories = new HashMap<>();
+    private LocalTime timeStamp = LocalTime.now();
+
     public GitHubRepositoryService() {
         super(RepositoryType.GITHUB);
     }
@@ -91,8 +98,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         String[] elements = url.getPath().split("/");
         try {
             int pullId = Integer.parseInt(elements[elements.length - 1]);
-            String repositoryId = createRepositoryIdFromUrl(url);
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
             return WRAPPER.pullRequestToPullRequest(pullRequest, getPullRequestHome());
         } catch (IOException e) {
@@ -107,10 +113,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     public Repository getRepository(URL url) throws NotFoundException {
         checkHost(url);
-
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             Collection<GHBranch> branches = repository.getBranches().values();
             return WRAPPER.toAphroditeRepository(url, branches);
         } catch (IOException e) {
@@ -147,10 +151,9 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         URL url = repository.getURL();
         checkHost(url);
 
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             // String githubState = state.toString().toLowerCase();
-            GHRepository githubRepository = github.getRepository(repositoryId);
+            GHRepository githubRepository = getGHRepository(url);
             GHIssueState issueState;
             try {
                 issueState = GHIssueState.valueOf(state.toString().toUpperCase());
@@ -172,9 +175,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         checkHost(url);
 
         int id = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             GHIssue issue = repository.getIssue(id);
             issue.comment(comment);
         } catch (IOException e) {
@@ -188,10 +190,9 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         URL url = repository.getURL();
         checkHost(url);
 
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHMyself myself = github.getMyself();
-            GHRepository githubRepository = github.getRepository(repositoryId);
+            GHRepository githubRepository = getGHRepository(url);
             Set<GHUser> collaborators = githubRepository.listCollaborators().asSet();
             return collaborators.stream().anyMatch(e -> e.getLogin().equals(myself.getLogin()));
         } catch (Throwable t) {
@@ -211,9 +212,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         checkHost(url);
 
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             GHLabel newLabel = getLabel(repository, labelName);
             GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
@@ -250,10 +250,9 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         URL url = repository.getURL();
         checkHost(url);
 
-        String repositoryId = createRepositoryIdFromUrl(url);
         List<GHLabel> labels;
         try {
-            GHRepository githubRepository = github.getRepository(repositoryId);
+            GHRepository githubRepository = getGHRepository(url);
             labels = githubRepository.listLabels().asList();
         } catch (IOException e) {
             Utils.logException(LOG, e);
@@ -268,9 +267,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
         URL url = pullRequest.getURL();
         checkHost(url);
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             GHIssue issue = repository.getIssue(Integer.parseInt(pullRequest.getId()));
             return WRAPPER.pullRequestLabeltoPullRequestLabel(issue.getLabels());
         } catch (IOException | NumberFormatException e) {
@@ -286,9 +284,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         checkHost(url);
 
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             GHIssue issue = repository.getIssue(pullRequestId);
             List<GHLabel> issueLabels = new ArrayList<>();
             List<GHLabel> existingLabels = repository.listLabels().asList();
@@ -312,9 +309,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         checkHost(url);
 
         int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
 
@@ -332,7 +328,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
             throw new NotFoundException(e);
         }
         throw new NotFoundException("No label exists with the name '" + name +
-                "' at repository '" + repositoryId + "'");
+                "' at repository '" + url + "'");
     }
 
     @Override
@@ -368,11 +364,10 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
         CommitStatus status = null;
         int pullRequestId = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
             String sha = null;
 
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             GHPullRequest ghPullRequest = repository.getPullRequest(pullRequestId);
 
             List<GHPullRequestCommitDetail> commits = ghPullRequest.listCommits().asList();
@@ -407,9 +402,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
             return false;
         }
 
-        String repositoryId = createRepositoryIdFromUrl(url);
         try {
-            GHRepository repository = github.getRepository(repositoryId);
+            GHRepository repository = getGHRepository(url);
             repository.getBranches(); // action to test account repository accessibility
         } catch (IOException e) {
             Utils.logWarnMessage(LOG,
@@ -440,5 +434,19 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
             prHome = new GithubPullRequestHomeService(config);
         }
         return prHome;
+    }
+
+    private GHRepository getGHRepository(URL url) throws IOException {
+        String repositoryId = createRepositoryIdFromUrl(url);
+        if (Duration.between(timeStamp, LocalTime.now()).toHours() >= 2) {
+            timeStamp = LocalTime.now();
+            ghRepositories.clear();
+        }
+        GHRepository repository = ghRepositories.get(repositoryId);
+        if (repository == null) {
+            repository = github.getRepository(repositoryId);
+            ghRepositories.put(repositoryId, repository);
+        }
+        return repository;
     }
 }
