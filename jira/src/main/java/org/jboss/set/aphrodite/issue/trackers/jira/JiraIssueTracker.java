@@ -282,39 +282,6 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
     }
 
-    private List<LinkIssuesInput> calculateNewLinks(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        // When jiraIssueLinks is null, this means that issue links have been disabled, so return an empty list
-        Iterable<IssueLink> jiraIssueLinks = jiraIssue.getIssueLinks();
-        if (jiraIssueLinks == null)
-            return new ArrayList<>();
-
-        // Process the existing IssueLinks and retrieve their Issue keys
-        List<IssueLink> tmp = StreamSupport.stream(jiraIssueLinks.spliterator(), false).collect(Collectors.toList());
-        List<String> inbound = getExistingIssueLinkKeys(tmp, Direction.INBOUND);
-        List<String> outbound = getExistingIssueLinkKeys(tmp, Direction.OUTBOUND);
-
-        return Stream.concat(
-                createIssueLinks(issue, inbound, e -> new LinkIssuesInput(e, jiraIssue.getKey(), "Dependency")),
-                createIssueLinks(issue, outbound, e -> new LinkIssuesInput(jiraIssue.getKey(), e, "Dependency")))
-                .collect(Collectors.toList());
-    }
-
-    private Stream<LinkIssuesInput> createIssueLinks(Issue issue, List<String> existingLinks,
-                                                     Function<String, LinkIssuesInput> createLink) {
-        return issue.getBlocks().stream()
-                .map(this::toKey)
-                .filter(e -> !e.isEmpty() && !existingLinks.contains(e))
-                .map(createLink);
-    }
-
-    private List<String> getExistingIssueLinkKeys(List<IssueLink> issueLinks, Direction linkDirection) {
-        return issueLinks.stream()
-                .filter(link -> link.getIssueLinkType().getDirection().equals(linkDirection))
-                .filter(link -> link.getIssueLinkType().getName().equals("Dependency"))
-                .map(IssueLink::getTargetIssueKey)
-                .collect(Collectors.toList());
-    }
-
     private String toKey(URL url) {
         try {
             return getIssueKey(url);
