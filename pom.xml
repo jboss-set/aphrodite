@@ -110,8 +110,8 @@
         <org.gitlab4j.gitlab4j-api.version>4.14.30</org.gitlab4j.gitlab4j-api.version>
         <org.mockito.version>1.10.19</org.mockito.version>
         <org.wildfly.checkstyle-config.version>1.0.4.Final</org.wildfly.checkstyle-config.version>
-        <org.kohsuke.github-api.version>1.116</org.kohsuke.github-api.version>
-        <com.squareup.okhttp.okhttp-urlconnection.version>2.7.5</com.squareup.okhttp.okhttp-urlconnection.version>
+        <org.kohsuke.github-api.version>1.119</org.kohsuke.github-api.version>
+        <com.squareup.okhttp.okhttp-urlconnection.version>3.14.9</com.squareup.okhttp.okhttp-urlconnection.version>
     </properties>
 
 
