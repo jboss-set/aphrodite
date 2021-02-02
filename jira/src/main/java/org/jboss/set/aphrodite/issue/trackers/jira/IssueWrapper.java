@@ -25,9 +25,13 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.INVOLVED_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PM_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.QE_ACK;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_LEVEL;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE_VALUE_TRUE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditePriority;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
@@ -36,6 +40,7 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphrodit
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -61,6 +66,7 @@ import org.jboss.set.aphrodite.domain.IssueEstimation;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.domain.User;
+import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
@@ -140,6 +146,47 @@ class IssueWrapper {
         setLabels(issue, jiraIssue);
         setChangelog(issue, jiraIssue);
         setResolution(issue, jiraIssue);
+        setSecuritySensitive(jiraIssue, issue);
+        setSecurityLevel(jiraIssue, issue);
+        setInvolved(jiraIssue, issue);
+    }
+
+    private void setInvolved(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, JiraIssue issue) {
+        ArrayList<String> involved = new ArrayList<>();
+        IssueField invField = jiraIssue.getField(JSON_CUSTOM_FIELD + JiraFields.INVOLVED_FIELD);
+        if (invField != null && invField.getValue() != null) {
+            JSONArray invArray = (JSONArray) jiraIssue.getField(JSON_CUSTOM_FIELD + JiraFields.INVOLVED_FIELD).getValue();
+            for (int i = 0; i < invArray.length(); i++) {
+                try {
+                    involved.add(((JSONObject) invArray.get(i)).getString("name"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        issue.setInvolved(involved);
+    }
+
+    private void setSecurityLevel(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, JiraIssue issue) {
+        IssueField secLevel = jiraIssue.getField(SECURITY_LEVEL);
+        if (secLevel != null && secLevel.getValue() != null) {
+            JSONObject o = (JSONObject) secLevel.getValue();
+            try {
+                issue.setSecurityLevel(o.getString("name"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setSecuritySensitive(com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, JiraIssue issue) {
+        IssueField securitySensitiveField = jiraIssue.getField(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE);
+        if (securitySensitiveField != null && securitySensitiveField.getValue() != null) {
+            JSONArray value = (JSONArray) securitySensitiveField.getValue();
+            if (value != null && value.length() > 0) {
+                issue.setSecuritySensitiveIssue(true);
+            }
+        }
     }
 
     private void setLabels(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
@@ -204,7 +251,7 @@ class IssueWrapper {
     }
 
     // TODO find a solution for updating time estimates, see https://github.com/jboss-set/aphrodite/issues/23
-    IssueInput issueToFluentUpdate(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, Project project) throws NotFoundException {
+    IssueInput issueToFluentUpdate(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, Project project) throws NotFoundException, AphroditeException {
         checkUnsupportedUpdateFields(issue);
         IssueInputBuilder inputBuilder = new IssueInputBuilder(jiraIssue.getProject().getKey(), jiraIssue.getIssueType().getId());
 
@@ -229,6 +276,30 @@ class IssueWrapper {
         updateFixVersions(issue, versionsMap, inputBuilder);
         updateStreamStatus(issue, jiraIssue, versionsMap, inputBuilder);
 
+        if (!((JiraIssue)issue).getLabels().isEmpty()) {
+            inputBuilder.setFieldValue("labels", ((JiraIssue) issue).getLabels().stream().map(JiraLabel::getName).collect(Collectors.toList()));
+        }
+
+        if (((JiraIssue)issue).isSecuritySensitiveIssue()) {
+            inputBuilder.setFieldValue(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE,
+                    Arrays.asList(ComplexIssueInputFieldValue.with("id", SECURITY_SENSITIVE_VALUE_TRUE)));
+        } else {
+            inputBuilder.setFieldValue(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE, Collections.emptyList());
+        }
+
+        if (((JiraIssue)issue).getSecurityLevel().isPresent()) {
+            String id = JiraFields.getSecurityLevelId(((JiraIssue)issue).getSecurityLevel().get());
+            inputBuilder.setFieldValue(SECURITY_LEVEL, ComplexIssueInputFieldValue.with("id", id));
+        }
+
+        if (!((JiraIssue)issue).getInvolved().isEmpty()) {
+            ArrayList<ComplexIssueInputFieldValue> inv = new ArrayList<>();
+            for (String name : ((JiraIssue) issue).getInvolved()) {
+                inv.add(ComplexIssueInputFieldValue.with("name", name));
+            }
+            inputBuilder.setFieldValue(JSON_CUSTOM_FIELD + INVOLVED_FIELD, inv);
+        }
+
         return inputBuilder.build();
     }
 
@@ -236,7 +307,7 @@ class IssueWrapper {
                                     Map<String, Version> versionsMap, IssueInputBuilder inputBuilder) throws NotFoundException {
         String customField = JSON_CUSTOM_FIELD + TARGET_RELEASE;
         IssueField issueField = jiraIssue.getField(customField);
-        if (issueField == null || (issueField.getType() == null && issueField.getValue() == null)) {
+        if (issueField == null) {
             String msg = String.format("Unable to set a stream status for issue %1$s as %2$s projects do not utilise field: %3$s",
                     jiraIssue.getKey(), jiraIssue.getProject().getName(), customField);
             Utils.logWarnMessage(LOG, msg);
@@ -248,7 +319,7 @@ class IssueWrapper {
                 String streamName = entry.getKey();
                 Version version = versionsMap.get(streamName);
                 if (version != null) {
-                    inputBuilder.setFieldInput(new FieldInput(customField, ComplexIssueInputFieldValue.with("value", version.getId())));
+                    inputBuilder.setFieldValue(customField, ComplexIssueInputFieldValue.with("id", version.getId().toString()));
                 } else {
                     throw new NotFoundException("No Stream exists for this project with the name : " + streamName);
                 }
@@ -374,7 +445,8 @@ class IssueWrapper {
 
         for (com.atlassian.jira.rest.client.api.domain.IssueLink il : links) {
             // Add links of cloned to/from issues to the issue
-            if (il.getIssueLinkType().getDescription().contains("cloned")) {
+            if (il.getIssueLinkType().getDescription().contains("cloned")
+                    || il.getIssueLinkType().getDescription().contains("clones")) {
                 URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 ((JiraIssue) issue).getLinkedCloneIssues().add(url);
             }

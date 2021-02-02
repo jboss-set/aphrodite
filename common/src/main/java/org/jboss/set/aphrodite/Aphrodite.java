@@ -249,7 +249,7 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException
      * @throws MalformedURLException
      */
-    public Issue createIssue(final IssueCreationDetails details) throws NotFoundException, MalformedURLException {
+    public Issue createIssue(final IssueCreationDetails details) throws NotFoundException, MalformedURLException, AphroditeException {
         assert details != null;
         assert details.getTrackerURL() != null;
         final IssueTrackerService its = getTrackerFor(details.getTrackerURL());
@@ -1020,7 +1020,7 @@ public class Aphrodite implements AutoCloseable {
         }
     }
 
-    private IssueTrackerService getTrackerFor(final URL url){
+    public IssueTrackerService getTrackerFor(final URL url){
         final String id = AbstractIssueTracker.convertToTrackerID(url);
         if(this.issueTrackers.containsKey(id)){
            return this.issueTrackers.get(id);

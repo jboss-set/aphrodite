@@ -52,6 +52,11 @@ class JiraFields {
     static final String DEV_ACK = "12311243";
     static final String QE_ACK = "12311244";
     static final String TARGET_RELEASE = "12311240";
+    static final String SECURITY_SENSITIVE = "12311640";
+    public static final String INVOLVED_FIELD = "12311641";
+    static final String SECURITY_SENSITIVE_VALUE_TRUE = "10650";
+
+    static final String SECURITY_LEVEL = "security";
 
     static final BiMap<String, String> CUSTOM_FIELD_MAP = new ImmutableBiMap.Builder<String, String>()
             .put(Flag.DEV.toString(), getJQLField(DEV_ACK))
@@ -71,6 +76,12 @@ class JiraFields {
             .put("closed", IssueStatus.CLOSED)
             .build();
 
+    static final BiMap<String, String> SECURITY_LEVEL_MAP = new ImmutableBiMap.Builder<String, String>()
+            .put("Red Hat Internal", "10291")
+            .put("Security Issue", "10292")
+            .put("None", "-1")
+            .build();
+
     static final BiMap<String, IssuePriority> PRIORITY_MAP = initPriorityMap();
 
     static BiMap<String, IssuePriority> initPriorityMap() {
@@ -85,6 +96,13 @@ class JiraFields {
             .put(Flag.PM, PM_ACK)
             .put(Flag.QE, QE_ACK)
             .build();
+
+    static String getSecurityLevelId(String name) throws AphroditeException {
+        if (!SECURITY_LEVEL_MAP.containsKey(name)) {
+            throw new AphroditeException("Unknown security level: " + name);
+        }
+        return SECURITY_LEVEL_MAP.get(name);
+    }
 
     static IssueStatus getAphroditeStatus(String status) {
         status = status.toLowerCase();

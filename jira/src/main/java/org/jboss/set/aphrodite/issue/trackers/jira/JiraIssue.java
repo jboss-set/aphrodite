@@ -30,6 +30,7 @@ import org.jboss.set.aphrodite.domain.spi.PatchHome;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.naming.NameNotFoundException;
@@ -55,6 +56,9 @@ public class JiraIssue extends Issue {
     private List<URL> linkedCloneIssues = new ArrayList<>();
 
     private List<URL> linkedIncorporatesIssues = new ArrayList<>();
+    private Optional<String> securityLevel = Optional.empty();
+    private boolean securitySensitiveIssue;
+    private List<String> involved = new ArrayList<>();
 
     public JiraIssue(final URL url) {
         super(url, JIRA);
@@ -123,8 +127,32 @@ public class JiraIssue extends Issue {
         this.linkedIncorporatesIssues = linkedIncorporatesIssues;
     }
 
+    public Optional<String> getSecurityLevel() {
+        return this.securityLevel;
+    }
+
+    public void setSecurityLevel(String securityLevel) {
+        this.securityLevel = Optional.ofNullable(securityLevel);
+    }
+
+    public boolean isSecuritySensitiveIssue() {
+        return this.securitySensitiveIssue;
+    }
+
+    public void setSecuritySensitiveIssue(boolean securitySensitiveIssue) {
+        this.securitySensitiveIssue = securitySensitiveIssue;
+    }
+
     @Override
     public Stream<Patch> getPatches() throws NameNotFoundException {
         return Container.instance().lookup(JiraPatchHomeImpl.class.getSimpleName(), (PatchHome.class)).findPatchesByIssue(this);
+    }
+
+    public void setInvolved(List<String> involved) {
+        this.involved = involved;
+    }
+
+    public List<String> getInvolved() {
+        return involved;
     }
 }

@@ -25,7 +25,10 @@ package org.jboss.set.aphrodite.issue.trackers.jira;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PROJECTS_ISSUE_PATTERN;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE_VALUE_TRUE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
 
@@ -34,6 +37,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -42,11 +46,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.logging.Log;
@@ -70,12 +72,11 @@ import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Filter;
-import com.atlassian.jira.rest.client.api.domain.IssueLink;
-import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
 import com.atlassian.jira.rest.client.api.domain.Project;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.LinkIssuesInput;
@@ -271,48 +272,10 @@ public class JiraIssueTracker extends AbstractIssueTracker {
                 }
             }
 
-            // only supports add
-            for(LinkIssuesInput linkIssuesInput : calculateNewLinks(issue, jiraIssue)) {
-                issueClient.linkIssue(linkIssuesInput).claim();
-            }
-
             return true;
         } catch (ExecutionException | InterruptedException e) {
             throw new AphroditeException(getUpdateErrorMessage(issue, e), e);
         }
-    }
-
-    private List<LinkIssuesInput> calculateNewLinks(Issue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        // When jiraIssueLinks is null, this means that issue links have been disabled, so return an empty list
-        Iterable<IssueLink> jiraIssueLinks = jiraIssue.getIssueLinks();
-        if (jiraIssueLinks == null)
-            return new ArrayList<>();
-
-        // Process the existing IssueLinks and retrieve their Issue keys
-        List<IssueLink> tmp = StreamSupport.stream(jiraIssueLinks.spliterator(), false).collect(Collectors.toList());
-        List<String> inbound = getExistingIssueLinkKeys(tmp, Direction.INBOUND);
-        List<String> outbound = getExistingIssueLinkKeys(tmp, Direction.OUTBOUND);
-
-        return Stream.concat(
-                createIssueLinks(issue, inbound, e -> new LinkIssuesInput(e, jiraIssue.getKey(), "Dependency")),
-                createIssueLinks(issue, outbound, e -> new LinkIssuesInput(jiraIssue.getKey(), e, "Dependency")))
-                .collect(Collectors.toList());
-    }
-
-    private Stream<LinkIssuesInput> createIssueLinks(Issue issue, List<String> existingLinks,
-                                                     Function<String, LinkIssuesInput> createLink) {
-        return issue.getBlocks().stream()
-                .map(this::toKey)
-                .filter(e -> !e.isEmpty() && !existingLinks.contains(e))
-                .map(createLink);
-    }
-
-    private List<String> getExistingIssueLinkKeys(List<IssueLink> issueLinks, Direction linkDirection) {
-        return issueLinks.stream()
-                .filter(link -> link.getIssueLinkType().getDirection().equals(linkDirection))
-                .filter(link -> link.getIssueLinkType().getName().equals("Dependency"))
-                .map(IssueLink::getTargetIssueKey)
-                .collect(Collectors.toList());
     }
 
     private String toKey(URL url) {
@@ -381,7 +344,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         return LOG;
     }
 
-    private String getIssueKey(URL url) throws NotFoundException {
+    static String getIssueKey(URL url) throws NotFoundException {
         String path = correctPath(url.getPath());
         boolean api = path.contains(API_ISSUE_PATH);
         boolean browse = path.contains(BROWSE_ISSUE_PATH);
@@ -392,7 +355,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         return api ? path.substring(API_ISSUE_PATH.length()) : path.substring(BROWSE_ISSUE_PATH.length());
     }
 
-    private String correctPath(String path) {
+    static String correctPath(String path) {
         Matcher m = PROJECTS_ISSUE_PATTERN.matcher(path);
         if (m.find()) {
             return m.replaceFirst(BROWSE_ISSUE_PATH);
@@ -459,7 +422,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException {
+    public Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException, AphroditeException {
 
         assert details != null;
         assert details instanceof JIRAIssueCreationDetails;
@@ -471,8 +434,16 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         assert details.getDescription() != null;
         assert localDetails.getIssueType() != null;
 
-
         final IssueInputBuilder builder = new IssueInputBuilder(localDetails.getProjectKey(), localDetails.getIssueType(), localDetails.getDescription());
+        if (localDetails.isSecuritySensitiveIssue()) {
+            builder.setFieldValue(JSON_CUSTOM_FIELD + SECURITY_SENSITIVE,
+                    Arrays.asList(ComplexIssueInputFieldValue.with("id", SECURITY_SENSITIVE_VALUE_TRUE)));
+        }
+        if (localDetails.getSecurityLevel() != null) {
+            String id = JiraFields.getSecurityLevelId(localDetails.getSecurityLevel());
+            builder.setFieldValue("security", ComplexIssueInputFieldValue.with("id", id));
+        }
+
         final IssueInput newIssue = builder.build();
         final BasicIssue basicIssue = restClient.getIssueClient().createIssue(newIssue).claim();
 
@@ -486,4 +457,8 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
     }
 
+    public void linkIssues(Issue from, Issue to, String linkType) {
+        LinkIssuesInput link = new LinkIssuesInput(toKey(from.getURL()), toKey(to.getURL()),linkType);
+        restClient.getIssueClient().linkIssue(link).claim();
+    }
 }

@@ -52,7 +52,11 @@ class JiraQueryBuilder {
         });
 
         criteria.getRelease().ifPresent(release -> {
-            addCriteriaToJQL("fixVersion = ", release.getVersion().orElse(null), " AND ", sb);
+            if (release.getVersion().isPresent()) {
+                addCriteriaToJQL("fixVersion = ", release.getVersion().orElse(null), " AND ", sb);
+            } else {
+                sb.append(" AND fixVersion is EMPTY");
+            }
             addCriteriaToJQL(getJQLField(TARGET_RELEASE) + " = ", release.getMilestone().orElse(null), " AND ", sb);
         });
 
@@ -64,6 +68,7 @@ class JiraQueryBuilder {
                                 addCriteriaToJQL(CUSTOM_FIELD_MAP.get(entry.getKey().toString()) + " = ",
                                         entry.getValue().getSymbol(), " AND ", sb)));
 
+        criteria.getLabels().forEach(label->addCriteriaToJQL("labels = ", label, " AND ", sb));
         return sb.toString();
     }
 

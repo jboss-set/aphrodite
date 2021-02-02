@@ -183,5 +183,5 @@ public interface IssueTrackerService {
      * @throws NotFoundException
      * @throws MalformedURLException
      */
-    Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException;
+    Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException, AphroditeException;
 }
