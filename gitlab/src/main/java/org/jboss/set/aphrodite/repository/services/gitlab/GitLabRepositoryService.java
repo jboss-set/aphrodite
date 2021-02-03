@@ -25,6 +25,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -318,6 +319,22 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
         } catch (GitLabApiException e) {
             LOG.info("Invalid repo url " + url, e);
             return false;
+        }
+    }
+
+    @Override
+    public List<org.jboss.set.aphrodite.domain.Commit> getCommitsSince(URL url, String branch, long since) {
+        try {
+            String repoId = GitLabUtils.getProjectIdFromURL(url);
+            List<Commit> glCommits = gitLabApi.getCommitsApi().getCommits(repoId, branch, new Date(since), new Date());
+
+            List<org.jboss.set.aphrodite.domain.Commit> commits = new ArrayList<>();
+            for (Commit c : glCommits) {
+                commits.add(new org.jboss.set.aphrodite.domain.Commit(c.getId(), c.getTitle()));
+            }
+            return commits;
+        } catch (GitLabApiException glae) {
+            return Collections.EMPTY_LIST;
         }
     }
 

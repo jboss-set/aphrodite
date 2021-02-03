@@ -65,7 +65,7 @@ public class PullRequest {
     private boolean upgrade;
     private final MergeableState mergableState;
     private final Date mergedAt;
-    private List<String> commits;
+    private List<Commit> commits;
     private PullRequestHome prHome;
 
     /**
@@ -89,7 +89,7 @@ public class PullRequest {
     }
     public PullRequest(final String id, final URL url, final Repository repository, final Codebase codebase,
             final PullRequestState state, final String title, final String body, final boolean mergeable, final boolean merged,
-            final MergeableState mergeableState, final Date mergedAt, final List<String> commits) {
+            final MergeableState mergeableState, final Date mergedAt, final List<Commit> commits) {
         this.id = id;
         this.url = url;
         this.repository = repository;
@@ -114,12 +114,12 @@ public class PullRequest {
      * Return list of commits for this PR - youngest at the start, oldest( first ) at the end.
      * @return
      */
-    public List<String> getCommits() {
+    public List<Commit> getCommits() {
         return commits;
     }
 
     public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state, String title, String body,
-            boolean mergeable,boolean merged, MergeableState mergeableState, Date mergedAt, List<String> commits, PullRequestHome prHome) {
+            boolean mergeable,boolean merged, MergeableState mergeableState, Date mergedAt, List<Commit> commits, PullRequestHome prHome) {
         this(id, url, repository, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits);
         this.prHome = prHome;
     }

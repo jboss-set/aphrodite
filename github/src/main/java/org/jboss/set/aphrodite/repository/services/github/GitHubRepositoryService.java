@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.domain.Commit;
 import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
@@ -52,8 +53,10 @@ import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
 import org.kohsuke.github.GHBranch;
+import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
+import org.kohsuke.github.GHException;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHLabel;
@@ -66,7 +69,6 @@ import org.kohsuke.github.GHUser;
 
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.getPRFromDescription;
-import static org.jboss.set.aphrodite.repository.services.github.AbstractGithubService.github;
 
 import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.getCombineStatus;
 
@@ -411,6 +413,22 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
             return false;
         }
         return true;
+    }
+
+    @Override
+    public List<Commit> getCommitsSince(URL url, String branch, long since) {
+        try {
+            GHRepository repo = github.getRepository(createRepositoryIdFromUrl(url));
+            Iterable<GHCommit> ghCommits = repo.queryCommits().from(branch).since(since).pageSize(100).list();
+
+            List<Commit> commits = new ArrayList<>();
+            for (GHCommit c : ghCommits) {
+                commits.add(new Commit(c.getSHA1(), c.getCommitShortInfo().getMessage()));
+            }
+            return commits;
+        } catch (IOException | GHException e) {
+            return Collections.EMPTY_LIST;
+        }
     }
 
     public RateLimit getRateLimit() throws NotFoundException {
