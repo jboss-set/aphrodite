@@ -130,7 +130,9 @@ public class GitLabUtils {
     }
 
     /**
-     * Converts gitlab state into a PullRequestState
+     * Converts a gitlab state into a PullRequestState
+     * Valid gitlab states: opened, closed, locked or merged
+     *
      *
      * @param state The gitlab state
      * @return The aphrodite state
@@ -140,6 +142,7 @@ public class GitLabUtils {
             case "opened":
                 return PullRequestState.OPEN;
             case "closed":
+            case "merged":
                 return PullRequestState.CLOSED;
             default:
                 return PullRequestState.UNDEFINED;
