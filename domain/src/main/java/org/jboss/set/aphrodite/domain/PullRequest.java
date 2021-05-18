@@ -53,6 +53,7 @@ public class PullRequest {
     private static final String UPGRADE_META_REGEX = "\\s*+"+UPGRADE_META_BIT_REGEX+"(,\\s*+"+UPGRADE_META_BIT_REGEX+")*+";
     private static final Pattern UPGRADE = Pattern.compile("\\s*Upgrade[:|]"+UPGRADE_META_REGEX, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private static final Pattern DEPENDS_PRS = Pattern.compile("^\\s*\\[?Depend[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+" + "\\]?", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern NO_ISSUE_REQUIRED = Pattern.compile("^\\s*No issue required.*$|^\\s*Issue not required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
 
     private final String id;
     private final URL url;
@@ -182,6 +183,17 @@ public class PullRequest {
     }
 
     /**
+     * Checks if PR body contains indication that Issue is not required.
+     *
+     * @return is Issue required?
+     */
+
+    public boolean isIssueRequired(){
+        final Matcher m1 = NO_ISSUE_REQUIRED.matcher(body);
+        return !(m1.find());
+    }
+
+    /**
      * Searches PR body for link to upstream PR.
      *
      * @return upstream PR URL or null
@@ -229,11 +241,14 @@ public class PullRequest {
      * @throws MalformedURLException if found URL is invalid
      */
     public URL findIssueURL() throws MalformedURLException {
-        final String[] url = URLUtils.extractURLs(body, ISSUE, false);
-        if (url == null || url.length == 0 || url[0] == null)
+        if (this.isIssueRequired()) {
+            final String[] url = URLUtils.extractURLs(body, ISSUE, false);
+            if (url == null || url.length == 0 || url[0] == null)
+                return null;
+            else
+                return new URL(url[0]);
+        } else
             return null;
-        else
-            return new URL(url[0]);
     }
 
     /**
