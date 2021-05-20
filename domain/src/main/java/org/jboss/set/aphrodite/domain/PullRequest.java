@@ -54,6 +54,7 @@ public class PullRequest {
     private static final Pattern UPGRADE = Pattern.compile("\\s*Upgrade[:|]"+UPGRADE_META_REGEX, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private static final Pattern DEPENDS_PRS = Pattern.compile("^\\s*\\[?Depend[s|][:|]\\s*+"+URL_REGEX_STRING+"(,\\s*+"+URL_REGEX_STRING+")*+" + "\\]?", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private static final Pattern NO_ISSUE_REQUIRED = Pattern.compile("^\\s*No issue required.*$|^\\s*Issue not required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final Pattern UPSTREAM_PR_NOT_REQUIRED = Pattern.compile("^\\s*Upstream PR not required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
 
     private final String id;
     private final URL url;
@@ -180,6 +181,16 @@ public class PullRequest {
         final Matcher m1 = UPSTREAM_ISSUE_NOT_REQUIRED.matcher(body);
         final Matcher m2 = NO_UPSTREAM_REQUIRED.matcher(body);
         return !(m1.find() || m2.find());
+    }
+
+    /**
+     * Checks if PR body contains indication that Upstream PR is not required.
+     *
+     * @return true if PR body contains phrase {@code Upstream PR not required}.
+     */
+    public boolean isUpstreamPrRequired() {
+        final Matcher matcher = UPSTREAM_PR_NOT_REQUIRED.matcher(body);
+        return !(matcher.find());
     }
 
     /**
