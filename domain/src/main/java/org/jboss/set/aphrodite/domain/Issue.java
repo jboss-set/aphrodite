@@ -369,20 +369,33 @@ public class Issue {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o)
+    public boolean equals(Object obj) {
+        if (this == obj)
             return true;
-        if (o == null || getClass() != o.getClass())
+        if (obj == null)
             return false;
-
-        Issue issue = (Issue) o;
-
-        return url.equals(issue.url);
-
+        if (getClass() != obj.getClass())
+            return false;
+        Issue other = (Issue) obj;
+        if (summary == null) {
+            if (other.summary != null)
+                return false;
+        } else if (!summary.equals(other.summary))
+            return false;
+        if (trackerId == null) {
+            if (other.trackerId != null)
+                return false;
+        } else if (!trackerId.equals(other.trackerId))
+            return false;
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return url.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((summary == null) ? 0 : summary.hashCode());
+        result = prime * result + ((trackerId == null) ? 0 : trackerId.hashCode());
+        return result;
     }
 }
