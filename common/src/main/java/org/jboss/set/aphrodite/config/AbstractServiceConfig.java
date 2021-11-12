@@ -35,7 +35,6 @@ public abstract class AbstractServiceConfig {
 
     public AbstractServiceConfig(String url, String username, String password) {
         Objects.requireNonNull(url, "A services 'url' must be specified.");
-        Objects.requireNonNull(username, "A 'username' must be specified for each service.");
         Objects.requireNonNull(password, "A 'password' must be specified for each service.");
 
         this.url = url;

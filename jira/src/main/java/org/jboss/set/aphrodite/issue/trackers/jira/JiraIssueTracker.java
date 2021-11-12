@@ -63,6 +63,7 @@ import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
+import org.jboss.set.aphrodite.issue.trackers.jira.auth.BearerHttpAuthenticationHandler;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
@@ -114,11 +115,18 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         try {
             JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
             URI jiraServerUri = baseUrl.toURI();
-            restClient = factory.createWithBasicHttpAuthentication(jiraServerUri, config.getUsername(), config.getPassword());
+            String username = config.getUsername();
+            String password = config.getPassword();
+            if (username == null || username.isEmpty()) {
+                // We're moving to use PAT for Jira, username is null and password is taken as PAT from configuration.
+                restClient= factory.createWithAuthenticationHandler(jiraServerUri, new BearerHttpAuthenticationHandler(password));
+            } else {
+                // Attempt with username/password for Basic Authentication.
+                restClient = factory.createWithBasicHttpAuthentication(jiraServerUri, username, password);
+            }
             //work around to auth. No need to check number, its just garbage or general login failure number, not related to our
             //activity.
             restClient.getSessionClient().getCurrentSession().get().getLoginInfo().getFailedLoginCount();
-
         } catch (Exception e) {
             Utils.logException(LOG, e);
             return false;
