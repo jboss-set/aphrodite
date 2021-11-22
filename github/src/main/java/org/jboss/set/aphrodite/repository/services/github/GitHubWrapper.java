@@ -74,7 +74,7 @@ class GitHubWrapper {
 
     List<PullRequest> toAphroditePullRequests(List<GHPullRequest> pullRequests, PullRequestHome prHome) {
         return pullRequests.stream()
-                .map(pr -> this.pullRequestToPullRequest(pr, prHome))
+                .map(pr -> this.pullRequestToPullRequest(pr, prHome)).filter(x -> x!=null)
                 .collect(Collectors.toList());
     }
 
