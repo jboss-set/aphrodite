@@ -78,6 +78,13 @@ Aphrodite aphrodite = Aphrodite.instance();
 ```java
 IssueTrackerConfig jiraService =
                 new IssueTrackerConfig("https://issues.stage.jboss.org", "your username", "your password", "jira", 200);
+```
+or
+```java
+IssueTrackerConfig jiraService =
+                new IssueTrackerConfig("https://issues.stage.jboss.org", "your token", "jira", 200);
+```
+```java
 List<IssueTrackerConfig> issueTrackerConfigs = new ArrayList<>();
 issueTrackerConfigs.add(jiraService);
 
