@@ -5,8 +5,8 @@
     "issueTrackerConfigs": [
         {
             "url": "https://issues.redhat.com/",
-            "username": "",
-            "password": "",
+            "username": "Your username(remove it or leave it empty if you use Bearer Authentication with token)",
+            "password": "Your password or token value",
             "tracker": "JIRA",
             "defaultIssueLimit": 1
         },

@@ -40,6 +40,16 @@ public class IssueTrackerConfig extends AbstractServiceConfig {
         this.defaultIssueLimit = defaultIssueLimit;
     }
 
+    public IssueTrackerConfig(String url, String password, TrackerType tracker,
+            int defaultIssueLimit) {
+        // IssueTrackerConfig constructor takes only password (token)
+        super(url, null, password);
+
+        Objects.requireNonNull(tracker, "The 'tracker' field must be set for all IssueTrackers");
+        this.tracker = tracker;
+        this.defaultIssueLimit = defaultIssueLimit;
+    }
+
     public TrackerType getTracker() {
         return tracker;
     }
