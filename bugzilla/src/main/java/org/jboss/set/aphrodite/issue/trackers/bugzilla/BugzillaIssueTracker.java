@@ -68,7 +68,8 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
             return false;
 
         try {
-            bzClient = new BugzillaClient(baseUrl, config.getUsername(), config.getPassword(), executorService);
+            // TODO update the IssueTrackerConfig attributes
+            bzClient = new BugzillaClient(baseUrl, config.getPassword(), executorService);
         } catch (IllegalStateException e) {
             Utils.logException(LOG, e);
             return false;

@@ -63,14 +63,11 @@ class BugzillaQueryBuilder {
     private static final Log LOG = LogFactory.getLog(BugzillaQueryBuilder.class);
 
     private final SearchCriteria criteria;
-    private final Map<String, Object> loginDetails;
     private final int defaultIssueLimit;
     private Map<String, Object> queryMap;
 
-    BugzillaQueryBuilder(SearchCriteria criteria, Map<String, Object> loginDetails,
-            int defaultIssueLimit) {
+    BugzillaQueryBuilder(SearchCriteria criteria, int defaultIssueLimit) {
         this.criteria = criteria;
-        this.loginDetails = loginDetails;
         this.defaultIssueLimit = defaultIssueLimit;
     }
 
@@ -98,7 +95,6 @@ class BugzillaQueryBuilder {
             queryMap = null;
             return null;
         }
-        queryMap.putAll(loginDetails);
         queryMap.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
         queryMap.put(RESULT_PERMISSIVE_SEARCH, true);
 

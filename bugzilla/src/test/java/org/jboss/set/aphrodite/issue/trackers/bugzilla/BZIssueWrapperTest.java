@@ -72,7 +72,6 @@ public class BZIssueWrapperTest {
     private URL bugzillaURL;
     private URL bz01URL;
     private Map<String, Object> bz01;
-    private Map<String, Object> loginMap;
     private Issue issue01;
 
     private IssueWrapper wrapper = new IssueWrapper();
@@ -84,10 +83,6 @@ public class BZIssueWrapperTest {
 
         bz01 = createTestBZ01();
         issue01 = createTestIssue01(bz01URL);
-
-        loginMap = new HashMap<>();
-        loginMap.put(BugzillaFields.LOGIN, "user");
-        loginMap.put(BugzillaFields.PASSWORD, "pass");
     }
 
     @Test
@@ -109,7 +104,7 @@ public class BZIssueWrapperTest {
 
     @Test
     public void validIssueToBZTest() throws AphroditeException {
-        Map<String, Object> result = wrapper.issueToBugzillaBug(issue01, loginMap);
+        Map<String, Object> result = wrapper.issueToBugzillaBug(issue01);
         result.put(BugzillaFields.CREATION_TIME, getCreationDate());
 
         assertNotNull(result);
@@ -119,15 +114,7 @@ public class BZIssueWrapperTest {
     @Test
     public void nullIssuetoBZTest() throws AphroditeException {
         expectedException.expect(NullPointerException.class);
-        Map<String, Object> result = wrapper.issueToBugzillaBug(null, loginMap);
-
-        assertNull(result);
-    }
-
-    @Test
-    public void nullLoginIssuetoBZTest() throws AphroditeException {
-        expectedException.expect(NullPointerException.class);
-        Map<String, Object> result = wrapper.issueToBugzillaBug(issue01, null);
+        Map<String, Object> result = wrapper.issueToBugzillaBug(null);
 
         assertNull(result);
     }
