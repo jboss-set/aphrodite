@@ -22,29 +22,6 @@
 
 package org.jboss.set.aphrodite;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.ServiceLoader;
-import java.util.TreeMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.json.Json;
-import javax.json.JsonReader;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
@@ -66,6 +43,7 @@ import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
+import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.simplecontainer.SimpleContainer;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -73,6 +51,28 @@ import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
 import org.jboss.set.aphrodite.spi.StreamService;
+
+import javax.json.Json;
+import javax.json.JsonReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.ServiceLoader;
+import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class Aphrodite implements AutoCloseable {
 
@@ -173,11 +173,11 @@ public class Aphrodite implements AutoCloseable {
         for (IssueTrackerService is : ServiceLoader.load(IssueTrackerService.class)) {
             boolean initialised = is.init(mutableConfig);
             if (initialised) {
-                issueTrackers.put(is.getTrackerID(),is);
+                issueTrackers.put(is.getTrackerID(), is);
                 container.register(is.getClass().getSimpleName(), is);
-            } else {
-                failed = true;
+            } else if (AbstractIssueTracker.exists((AbstractIssueTracker) is)) {
                 error.append("Failed to initialize issue tracker: ").append(is.getTrackerID()).append("\n");
+                failed = true;
             }
         }
 
@@ -185,9 +185,9 @@ public class Aphrodite implements AutoCloseable {
             boolean initialised = rs.init(mutableConfig);
             if (initialised) {
                 repositories.add(rs);
-            } else {
-                failed = true;
+            } else if (AbstractRepositoryService.exists((AbstractRepositoryService) rs)) {
                 error.append("Failed to initialize repository: ").append(rs.getRepositoryType()).append("\n");
+                failed = true;
             }
         }
 
