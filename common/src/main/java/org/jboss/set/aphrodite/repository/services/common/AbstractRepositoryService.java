@@ -83,6 +83,10 @@ public abstract class AbstractRepositoryService {
         Objects.requireNonNull(url);
         return url.getHost().equals(baseUrl.getHost());
     }
+    
+    public static boolean exists(AbstractRepositoryService abstractRepositoryService) {
+        return abstractRepositoryService.REPOSITORY_TYPE != null && abstractRepositoryService.baseUrl != null;
+    }
 
     protected void checkHost(URL url) throws NotFoundException {
         if (!urlExists(url))
