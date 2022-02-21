@@ -352,7 +352,7 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
      */
     @Override
     public RepositoryType getRepositoryType() {
-        return REPOSITORY_TYPE;
+        return repositoryType;
     }
 
     /**

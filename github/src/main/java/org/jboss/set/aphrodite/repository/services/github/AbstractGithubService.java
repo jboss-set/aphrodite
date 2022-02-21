@@ -53,8 +53,8 @@ public abstract class AbstractGithubService extends AbstractRepositoryService {
     protected static GitHub github;
     protected static GHUser user;
 
-    public AbstractGithubService(RepositoryType REPOSITORY_TYPE) {
-        super(REPOSITORY_TYPE);
+    public AbstractGithubService(RepositoryType repositoryType) {
+        super(repositoryType);
     }
 
     @Override

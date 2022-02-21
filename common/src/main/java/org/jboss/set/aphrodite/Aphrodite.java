@@ -66,6 +66,7 @@ import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
+import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.simplecontainer.SimpleContainer;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -175,9 +176,9 @@ public class Aphrodite implements AutoCloseable {
             if (initialised) {
                 issueTrackers.put(is.getTrackerID(),is);
                 container.register(is.getClass().getSimpleName(), is);
-            } else {
-                failed = true;
+            } else if (AbstractIssueTracker.exists((AbstractIssueTracker) is)) {
                 error.append("Failed to initialize issue tracker: ").append(is.getTrackerID()).append("\n");
+                failed = true;
             }
         }
 
@@ -185,9 +186,9 @@ public class Aphrodite implements AutoCloseable {
             boolean initialised = rs.init(mutableConfig);
             if (initialised) {
                 repositories.add(rs);
-            } else {
-                failed = true;
+            } else if (AbstractRepositoryService.exists((AbstractRepositoryService) rs)) {
                 error.append("Failed to initialize repository: ").append(rs.getRepositoryType()).append("\n");
+                failed = true;
             }
         }
 
