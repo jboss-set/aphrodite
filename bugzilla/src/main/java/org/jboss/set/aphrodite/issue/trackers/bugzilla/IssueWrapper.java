@@ -159,11 +159,11 @@ class IssueWrapper {
 
     }
 
-    Map<String, Object> issueToBugzillaBug(Issue issue, Map<String, Object> loginDetails) throws AphroditeException {
+    Map<String, Object> issueToBugzillaBug(Issue issue) throws AphroditeException {
         checkUnsupportedUpdateFields(issue);
         checkUnsupportedIssueStatus(issue);
 
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
         issue.getTrackerId().ifPresent(trackerId -> params.put(ISSUE_IDS, trackerId));
         issue.getSummary().ifPresent(summary -> params.put(SUMMARY, summary));
         issue.getProduct().ifPresent(product -> params.put(PRODUCT, product));

@@ -33,7 +33,6 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.EST
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FILTER_SHARER_ID;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ID;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISSUE_IDS;
-import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.LOGIN;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_ADD_COMMENT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_CREATE_BUG;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_FILTER_SEARCH;
@@ -41,9 +40,7 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.MET
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_GET_COMMENT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_SEARCH;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_UPDATE_BUG;
-import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_USER_LOGIN;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.NAME;
-import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PASSWORD;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIVATE_COMMENT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_BUGS;
@@ -76,9 +73,15 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xmlrpc.XmlRpcException;
+import org.apache.xmlrpc.XmlRpcRequest;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfig;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.apache.xmlrpc.client.XmlRpcClientException;
+import org.apache.xmlrpc.client.XmlRpcCommonsTransport;
+import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
+import org.apache.xmlrpc.client.XmlRpcTransport;
+import org.apache.xmlrpc.client.XmlRpcTransportFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.FlagStatus;
@@ -102,25 +105,18 @@ public class BugzillaClient {
     private final ExecutorService executorService;
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private final URL baseURL;
-    private final Map<String, Object> loginDetails;
+    private final String apiKey;
 
-    public BugzillaClient(URL baseURL, String login, String password, ExecutorService executorService) throws IllegalStateException {
-        this.executorService = executorService;
+    public BugzillaClient(URL baseURL, String apiKey, ExecutorService executorService) throws IllegalStateException {
         this.baseURL = baseURL;
-
-        Map<String, String> params = new HashMap<>();
-        if (login != null)
-            params.put(LOGIN, login);
-        if (password != null)
-            params.put(PASSWORD, password);
-        loginDetails = Collections.unmodifiableMap(params);
-
-        // Check that the provided login details are correct - Fail fast.
-        runCommand(METHOD_USER_LOGIN, params);
+        // remove old authentication login via username and password in call parameters.
+        // set header with API key later in XmlRpcClient for every call.
+        this.apiKey = apiKey;
+        this.executorService = executorService;
     }
 
     public Issue getIssue(String trackerId) throws NotFoundException {
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
         params.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
         params.put(ISSUE_IDS, trackerId);
         params.put(RESULT_PERMISSIVE_SEARCH, true);
@@ -148,7 +144,7 @@ public class BugzillaClient {
             }
         }
 
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
         params.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
         params.put(ISSUE_IDS, ids.toArray());
         params.put(RESULT_PERMISSIVE_SEARCH, true);
@@ -199,7 +195,7 @@ public class BugzillaClient {
             Collections.emptyMap();
         }
 
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
         params.put(ISSUE_IDS, extractIssueIdsList(issues.values()));
         params.put(RESULT_INCLUDE_FIELDS, COMMENT_FIELDS);
 
@@ -247,7 +243,7 @@ public class BugzillaClient {
     }
 
     public List<Comment> getCommentsForIssue(String trackerId) {
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
         params.put(ISSUE_IDS, trackerId);
         params.put(RESULT_INCLUDE_FIELDS, COMMENT_FIELDS);
         Map<String, ?> results = executeRequest(XMLRPC.RPC_STRUCT, METHOD_GET_COMMENT, params);
@@ -262,7 +258,7 @@ public class BugzillaClient {
     public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
         String filterName = Utils.getParamaterFromUrl(FILTER_NAME_PARAM_PATTERN, filterUrl);
         int sharerId = Integer.parseInt(Utils.getParamaterFromUrl(SHARER_ID_PARAM_PATTERN, filterUrl));
-        Map<String, Object> queryMap = new HashMap<>(loginDetails);
+        Map<String, Object> queryMap = new HashMap<>();
         queryMap.put(METHOD_FILTER_SEARCH, filterName);
         queryMap.put(FILTER_SHARER_ID, sharerId);
         queryMap.put(RESULT_INCLUDE_FIELDS, RESULT_FIELDS);
@@ -279,7 +275,7 @@ public class BugzillaClient {
     }
 
     public List<Issue> searchIssues(SearchCriteria criteria, int defaultIssueLimit) {
-        Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, loginDetails, defaultIssueLimit).getQueryMap();
+        Map<String, Object> queryMap = new BugzillaQueryBuilder(criteria, defaultIssueLimit).getQueryMap();
         if (queryMap == null)
             return new ArrayList<>();
         return searchIssues(queryMap);
@@ -315,7 +311,7 @@ public class BugzillaClient {
     }
 
     public boolean updateIssue(Issue issue) throws AphroditeException {
-        Map<String, Object> params = WRAPPER.issueToBugzillaBug(issue, loginDetails);
+        Map<String, Object> params = WRAPPER.issueToBugzillaBug(issue);
         return runCommand(METHOD_UPDATE_BUG, params);
     }
 
@@ -341,7 +337,7 @@ public class BugzillaClient {
     }
 
     public boolean postComment(int id, String comment, boolean isPrivate) {
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
         params.put(ID, id);
         params.put(COMMENT, comment);
         params.put(PRIVATE_COMMENT, isPrivate);
@@ -386,7 +382,7 @@ public class BugzillaClient {
         updates.put(STATUS, flagStatus);
         Object[] updateArray = { updates };
 
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
         params.put(ISSUE_IDS, ids);
         params.put(UPDATE_FIELDS, updateArray);
         params.put(RESULT_PERMISSIVE_SEARCH, true);
@@ -405,14 +401,14 @@ public class BugzillaClient {
     }
 
     private boolean updateField(int bugzillaId, String field, Object content) {
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
         params.put(ID, bugzillaId);
         params.put(field, content);
         return runCommand(METHOD_UPDATE_BUG, params);
     }
 
     public Issue createIssue(String projectKey, String summary, String component, String version) throws NotFoundException {
-        Map<String, Object> params = new HashMap<>(loginDetails);
+        Map<String, Object> params = new HashMap<>();
 
         params.put(PRODUCT, projectKey);
         params.put(SUMMARY, summary);
@@ -437,12 +433,26 @@ public class BugzillaClient {
 
     private XmlRpcClient getRpcClient() {
         String apiURL = baseURL + API_URL;
-        XmlRpcClient rpcClient;
-        rpcClient = new XmlRpcClient();
-
+        XmlRpcClient rpcClient = new XmlRpcClient();
         try {
             URL url = new URL(apiURL);
             rpcClient.setConfig(getClientConfig(url));
+            // Sometimes org.apache.commons.httpclient.NoHttpResponseException is caught when processing request: The server
+            // bugzilla.redhat.com failed to respond, but result seems fine after auto request retrying.
+            XmlRpcTransportFactory xmlRpcTransportFactory = new XmlRpcCommonsTransportFactory(rpcClient) {
+                @Override
+                public XmlRpcTransport getTransport() {
+                    return new XmlRpcCommonsTransport(this) {
+                        @Override
+                        protected void initHttpHeaders(XmlRpcRequest request) throws XmlRpcClientException {
+                            super.initHttpHeaders(request);
+                            //set custom header with API Key
+                            super.setRequestHeader("Authorization", "Bearer " + apiKey);
+                        }
+                    };
+                }
+            };
+            rpcClient.setTransportFactory(xmlRpcTransportFactory);
         } catch (MalformedURLException e) {
             Utils.logException(LOG, e);
             throw new RuntimeException(e);
@@ -451,9 +461,10 @@ public class BugzillaClient {
     }
 
     private XmlRpcClientConfig getClientConfig(URL apiURL) {
-        XmlRpcClientConfigImpl config;
-        config = new XmlRpcClientConfigImpl();
+        XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
         config.setServerURL(apiURL);
+        config.setEnabledForExtensions(true);
+        config.setContentLengthOptional(false);
         return config;
     }
 

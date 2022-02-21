@@ -12,8 +12,7 @@
         },
     {
             "url": "https://bugzilla.redhat.com/",
-            "username": "",
-            "password": "",
+            "password": "Your API key value",
             "tracker": "BUGZILLA",
             "defaultIssueLimit": 1
         }
