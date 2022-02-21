@@ -33,6 +33,7 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.EST
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.FILTER_SHARER_ID;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ID;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISSUE_IDS;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISSUE_TYPE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_ADD_COMMENT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_CREATE_BUG;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_FILTER_SEARCH;
@@ -126,6 +127,8 @@ public class BugzillaClient {
         if (bugs.length == 1) {
             @SuppressWarnings("unchecked")
             Map<String, Object> results = (Map<String, Object>) bugs[0];
+            // BugZilla does not contain the "Type" parameter, required by the Issue Class.
+            results.putIfAbsent(ISSUE_TYPE, "UNDEFINED");
             return WRAPPER.bugzillaBugToIssue(results, baseURL);
         } else {
             Utils.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
