@@ -443,7 +443,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
     @Override
     public RepositoryType getRepositoryType() {
-        return REPOSITORY_TYPE;
+        return repositoryType;
     }
 
     @Override

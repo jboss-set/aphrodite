@@ -145,6 +145,10 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         return convertToTrackerID(this.baseUrl);
     }
 
+    public static boolean exists(AbstractIssueTracker abstractIssueTracker) {
+        return abstractIssueTracker.TRACKER_TYPE != null && abstractIssueTracker.baseUrl != null;
+    }
+
     public static String convertToTrackerID(URL url) {
         Objects.requireNonNull(url);
         StringBuilder stringBuilder = new StringBuilder(40);

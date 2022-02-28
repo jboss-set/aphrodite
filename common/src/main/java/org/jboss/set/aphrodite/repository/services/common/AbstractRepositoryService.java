@@ -38,21 +38,21 @@ import java.util.Objects;
  */
 public abstract class AbstractRepositoryService {
 
-    protected final RepositoryType REPOSITORY_TYPE;
+    protected final RepositoryType repositoryType;
     protected RepositoryConfig config;
     protected URL baseUrl;
 
     protected abstract Log getLog();
 
-    public AbstractRepositoryService(RepositoryType REPOSITORY_TYPE) {
-        this.REPOSITORY_TYPE = REPOSITORY_TYPE;
+    public AbstractRepositoryService(RepositoryType repositoryType) {
+        this.repositoryType = repositoryType;
     }
 
     public boolean init(AphroditeConfig aphroditeConfig) {
         Iterator<RepositoryConfig> i = aphroditeConfig.getRepositoryConfigs().iterator();
         while (i.hasNext()) {
             RepositoryConfig config = i.next();
-            if (config.getType() == REPOSITORY_TYPE) {
+            if (config.getType() == repositoryType) {
                 // i.remove(); // Remove so that this service cannot be instantiated twice
                 // Don't remove anymore, GitHubRepositoryService is initialized from Aphrodite instance,
                 // GithubPullRequestHomeService is initialize from container.
@@ -82,6 +82,10 @@ public abstract class AbstractRepositoryService {
     public boolean urlExists(URL url) {
         Objects.requireNonNull(url);
         return url.getHost().equals(baseUrl.getHost());
+    }
+
+    public static boolean exists(AbstractRepositoryService abstractRepositoryService) {
+        return abstractRepositoryService.repositoryType != null && abstractRepositoryService.baseUrl != null;
     }
 
     protected void checkHost(URL url) throws NotFoundException {
