@@ -10,7 +10,7 @@
 
     <groupId>org.jboss.set</groupId>
     <artifactId>jboss-aphrodite-parent</artifactId>
-    <version>0.7.17.Final-SNAPSHOT</version>
+    <version>0.7.17.Final</version>
     <packaging>pom</packaging>
     <name>Aphrodite</name>
     <description>An api for retrieving and updating SET issues from multiple issue trackers
@@ -94,7 +94,7 @@
         <connection>scm:git:git://github.com/jboss-set/aphrodite.git</connection>
         <developerConnection>scm:git:git@github.com:jboss-set/aphrodite.git</developerConnection>
         <url>https://github.com/jboss-set/aphrodite</url>
-      <tag>HEAD</tag>
+      <tag>jboss-aphrodite-parent-0.7.17.Final</tag>
   </scm>
 
     <properties>
