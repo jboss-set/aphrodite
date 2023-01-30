@@ -46,7 +46,7 @@ class JiraQueryBuilder {
         criteria.getReporter().ifPresent(reporter -> addCriteriaToJQL("reporter = ", reporter, " AND ", sb));
         criteria.getComponent().ifPresent(component -> addCriteriaToJQL("component = ", component, " AND ", sb));
         criteria.getProduct().ifPresent(product -> addCriteriaToJQL("project = ", product, " AND ", sb));
-        criteria.getLastUpdated().ifPresent(date -> {
+        criteria.getStartDate().ifPresent(date -> {
             String formattedDate = date.atStartOfDay().format((DateTimeFormatter.ISO_LOCAL_DATE));
             addCriteriaToJQL("updated >= ", formattedDate, " AND ", sb);
         });
@@ -69,6 +69,23 @@ class JiraQueryBuilder {
                                         entry.getValue().getSymbol(), " AND ", sb)));
 
         criteria.getLabels().forEach(label->addCriteriaToJQL("labels = ", label, " AND ", sb));
+        return sb.toString();
+    }
+
+    String getSearchJQLFromTo(SearchCriteria criteria) {
+        StringBuilder sb = new StringBuilder();
+        addCriteriaToJQL("project = ", criteria.getProduct().orElse(null), " AND ", sb);
+        addCriteriaToJQL("fixVersion = ", criteria.getRelease().get().getVersion().orElse(null), " AND ", sb);
+        criteria.getStartDate().ifPresent(startDate -> {
+            addCriteriaToJQL("fixVersion was not ", criteria.getRelease().get().getVersion().orElse(null), " AND ", sb);
+            String formattedDate = startDate.atStartOfDay().format((DateTimeFormatter.ISO_LOCAL_DATE));
+            addCriteriaToJQL("", formattedDate, " BEFORE ", sb);
+        });
+        criteria.getEndDate().ifPresent(endDate -> {
+            addCriteriaToJQL("fixVersion was ", criteria.getRelease().get().getVersion().orElse(null), " AND ", sb);
+            String formattedDate = endDate.atStartOfDay().format((DateTimeFormatter.ISO_LOCAL_DATE));
+            addCriteriaToJQL("", formattedDate, " BEFORE ", sb);
+        });
         return sb.toString();
     }
 

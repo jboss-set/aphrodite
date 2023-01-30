@@ -53,9 +53,11 @@ public class CandidateRelease {
         return CR_VERSION.matcher(releaseCandidateName).find();
     }
 
-    Version releaseCandidateVersion;
+    private String project;
+    private Version releaseCandidateVersion;
 
-    public CandidateRelease(Version version) {
+    public CandidateRelease(String project, Version version) {
+        this.project = project;
         releaseCandidateVersion = version;
     }
 
@@ -73,7 +75,7 @@ public class CandidateRelease {
         if (issues == null) {
             //fetch
             JiraIssueTracker issueTrackerService = SimpleContainer.instance().lookup(JiraIssueTracker.class.getSimpleName(), JiraIssueTracker.class);
-            issues = issueTrackerService.getIssues(releaseCandidateVersion);
+            issues = issueTrackerService.getIssues(project, releaseCandidateVersion);
         }
         return issues;
     }
