@@ -43,7 +43,8 @@ public enum JiraIssueResolution {
     UPSTREAM(10806, "UPSTREAM"),
     RAWHIDE(10807, "RAWHIDE"),
     CURRENT_RELEASE(10808, "CURRENT RELEASE"),
-    EOL(10809, "EOL");
+    EOL(10809, "EOL"),
+    OBSOLETE(10900, "OBSOLETE");
 
     private long id;
     private String label;
