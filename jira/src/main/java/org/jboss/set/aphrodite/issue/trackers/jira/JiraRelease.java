@@ -28,6 +28,7 @@ import org.jboss.set.aphrodite.simplecontainer.SimpleContainer;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import javax.naming.NameNotFoundException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -98,7 +99,7 @@ public class JiraRelease {
             if (CandidateRelease.isGA(version.getName())) {
                 try {
                     JiraRelease release = new JiraRelease(version, new ArrayList<>());
-                    release.addCandidateRelease(new CandidateRelease(version));
+                    release.addCandidateRelease(new CandidateRelease(PROJECT_NAME, version));
                     releases.put(CandidateRelease.extractVersion(version.getName()), release);
 
                 } catch (NotFoundException e) {
@@ -113,7 +114,7 @@ public class JiraRelease {
                 try {
                     String nameGA = CandidateRelease.extractVersion(version.getName());
                     if(releases.containsKey(nameGA)) {
-                        releases.get(nameGA).addCandidateRelease(new CandidateRelease(version));
+                        releases.get(nameGA).addCandidateRelease(new CandidateRelease(PROJECT_NAME, version));
                     }
                 } catch (NotFoundException e) {
                     e.printStackTrace();
@@ -124,4 +125,9 @@ public class JiraRelease {
         return releases.values();
     }
 
+    public List<Issue> getNewIssues(LocalDate from, LocalDate to) throws NameNotFoundException {
+        JiraIssueTracker issueTrackerService = SimpleContainer.instance().lookup(JiraIssueTracker.class.getSimpleName(), JiraIssueTracker.class);
+
+        return issueTrackerService.getIssuesAddedToVersion(PROJECT_NAME, version, from, to);
+    }
 }

@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -151,14 +152,26 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     }
 
-    public List<Issue> getIssues(Version version) {
+    public List<Issue> getIssues(String project, Version version) {
         List<Issue> issues;
         SearchCriteria sc = new SearchCriteria.Builder()
                 .setRelease(new Release(version.getName().trim()))
-                .setProduct("JBEAP")
+                .setProduct(project)
                 .setMaxResults(config.getDefaultIssueLimit())
                 .build();
         issues = searchIssues(sc);
+        return issues;
+    }
+
+    public List<Issue> getIssuesAddedToVersion(String project, Version version, LocalDate from, LocalDate to) {
+        List<Issue> issues;
+        SearchCriteria sc = new SearchCriteria.Builder()
+                .setRelease(new Release(version.getName().trim()))
+                .setProduct(project)
+                .setStartDate(from)
+                .setEndDate(to)
+                .build();
+        issues = searchNewIssues(queryBuilder.getSearchJQLFromTo(sc), 20);
         return issues;
     }
 
@@ -211,6 +224,24 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         try {
             Set<String> fields = new HashSet<>();
             fields.add("*all");
+            return paginateResults(restClient.getSearchClient(), jql, fields, maxResults);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private List<Issue> searchNewIssues(String jql, int maxResults) {
+        try {
+            /* minimal amount of required fields */
+            Set<String> fields = new HashSet<>();
+            fields.add("summary");
+            fields.add("issuetype");
+            fields.add("created");
+            fields.add("updated");
+            fields.add("project");
+            fields.add("status");
+            fields.add("priority");
+            fields.add("components");
             return paginateResults(restClient.getSearchClient(), jql, fields, maxResults);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);

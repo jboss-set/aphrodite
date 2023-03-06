@@ -42,13 +42,14 @@ public class SearchCriteria {
     private final Stage stage;
     private final Release release;
     private final Map<Stream, FlagStatus> streams;
-    private final LocalDate lastUpdated;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
     private final Integer maxResults;
     private final Set<String> labels;
 
     private SearchCriteria(IssueStatus status, String assignee, String reporter, String product,
-            String component, Stage stage, Release release, Map<Stream, FlagStatus> streams,
-            LocalDate lastUpdated, Integer maxResults, Set<String> labels) {
+                           String component, Stage stage, Release release, Map<Stream, FlagStatus> streams,
+                           LocalDate startDate, LocalDate endDate, Integer maxResults, Set<String> labels) {
         this.status = status;
         this.assignee = assignee;
         this.reporter = reporter;
@@ -57,12 +58,16 @@ public class SearchCriteria {
         this.stage = stage;
         this.release = release;
         this.streams = streams;
-        this.lastUpdated = lastUpdated;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.maxResults = maxResults;
         this.labels = labels;
 
-        if (lastUpdated != null && lastUpdated.isAfter(LocalDate.now()))
-            throw new IllegalArgumentException("lastUpdated cannot be in the future.");
+        if (startDate != null && startDate.isAfter(LocalDate.now()))
+            throw new IllegalArgumentException("startDate cannot be in the future.");
+
+        if (endDate != null && endDate.isAfter(LocalDate.now()))
+            throw new IllegalArgumentException("endDate cannot be in the future.");
     }
 
     public Optional<IssueStatus> getStatus() {
@@ -97,8 +102,11 @@ public class SearchCriteria {
         return Optional.ofNullable(streams);
     }
 
-    public Optional<LocalDate> getLastUpdated() {
-        return Optional.ofNullable(lastUpdated);
+    public Optional<LocalDate> getStartDate() {
+        return Optional.ofNullable(startDate);
+    }
+    public Optional<LocalDate> getEndDate() {
+        return Optional.ofNullable(endDate);
     }
 
     public Optional<Integer> getMaxResults() {
@@ -111,7 +119,7 @@ public class SearchCriteria {
 
     public boolean isEmpty() {
         return status == null && assignee == null && reporter == null && product == null && component == null && stage == null
-                && release == null && streams == null && lastUpdated == null && maxResults == null;
+                && release == null && streams == null && startDate == null && endDate == null && maxResults == null;
     }
 
     public static class Builder {
@@ -125,6 +133,7 @@ public class SearchCriteria {
         private Release release;
         private Map<Stream, FlagStatus> streams;
         private LocalDate startDate;
+        private LocalDate endDate;
         private Integer maxResults;
         private Set<String> labels;
 
@@ -173,6 +182,11 @@ public class SearchCriteria {
             return this;
         }
 
+        public Builder setEndDate(LocalDate endDate) {
+            this.endDate = endDate;
+            return this;
+        }
+
         public Builder setMaxResults(Integer maxResults) {
             this.maxResults = maxResults;
             return this;
@@ -185,7 +199,7 @@ public class SearchCriteria {
 
         public SearchCriteria build() {
             return new SearchCriteria(status, assignee, reporter, product, component, stage, release,
-                    streams, startDate, maxResults, labels);
+                    streams, startDate, endDate, maxResults, labels);
         }
     }
 }
