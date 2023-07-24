@@ -122,6 +122,19 @@ public class JiraRelease {
             }
         });
 
+        // Since EAP 8 first CP, the version format has been changed to "8.0 Update 1"
+        versions.forEach(version -> {
+            if (CandidateRelease.isCPUpdate(version.getName())) {
+                try {
+                    JiraRelease release = new JiraRelease(version, new ArrayList<>());
+                    release.addCandidateRelease(new CandidateRelease(PROJECT_NAME, version));
+                    releases.put(CandidateRelease.extractCPUpdateVersion(version.getName()), release);
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         return releases.values();
     }
 
