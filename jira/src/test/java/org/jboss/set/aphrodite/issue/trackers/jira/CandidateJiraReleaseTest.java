@@ -50,8 +50,27 @@ public class CandidateJiraReleaseTest {
     }
 
     @Test
+    public void testIsCPUpdateVersion() {
+        Assert.assertTrue(CandidateRelease.isCPUpdate("8.0 Update 1"));
+        Assert.assertTrue(CandidateRelease.isCPUpdate("8.1 Update 2"));
+        Assert.assertTrue(CandidateRelease.isCPUpdate("8.3 Update 10"));
+        Assert.assertTrue(CandidateRelease.isCPUpdate("8.4 Update 11"));
+
+        Assert.assertFalse(CandidateRelease.isCPUpdate("7.4 Update 1"));
+        Assert.assertFalse(CandidateRelease.isCPUpdate(" 8.0 Update 1"));
+    }
+
+    @Test
     public void extractVersion() throws NotFoundException {
         Assert.assertEquals("7.4.22", CandidateRelease.extractVersion("7.4.22.GA"));
         Assert.assertEquals("7.4.22", CandidateRelease.extractVersion("7.4.22.CR1"));
+    }
+
+    @Test
+    public void extractCPUpdateVersion() throws NotFoundException {
+        Assert.assertEquals("8.0.1", CandidateRelease.extractCPUpdateVersion("8.0 Update 1"));
+        Assert.assertEquals("8.1.2", CandidateRelease.extractCPUpdateVersion("8.1 Update 2"));
+        Assert.assertEquals("8.2.11", CandidateRelease.extractCPUpdateVersion("8.2 Update 11"));
+        Assert.assertEquals("8.3.12", CandidateRelease.extractCPUpdateVersion("8.3 Update 12"));
     }
 }

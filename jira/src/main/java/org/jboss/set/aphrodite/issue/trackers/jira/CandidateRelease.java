@@ -39,10 +39,10 @@ public class CandidateRelease {
     private List<Issue> issues;
 
     public static final Pattern GA_VERSION = Pattern.compile("^[7-9]+\\.[0-9]+\\.[0-9]+\\.GA$");
-
     public static final Pattern VERSION_PART = Pattern.compile("^[7-9]+\\.[0-9]+\\.[0-9]+");
-
     public static final Pattern CR_VERSION = Pattern.compile("^[7-9]*\\.[0-9]*\\.[0-9]*\\.CR[0-9]+$");
+    public static final Pattern CP_UPDATE_VERSION = Pattern.compile("^[8-9]+\\.[0-9]+\\s+Update\\s+[0-9]+$");
+    public static final Pattern CP_UPDATE_VERSION_PART = Pattern.compile("(^[8-9]+)\\.([0-9]+)\\s+Update\\s+([0-9]+)$");
 
 
     public static boolean isGA(String releaseCandidateName) {
@@ -51,6 +51,10 @@ public class CandidateRelease {
 
     public static boolean isCR(String releaseCandidateName) {
         return CR_VERSION.matcher(releaseCandidateName).find();
+    }
+
+    public static boolean isCPUpdate(String releaseCandidateName) {
+        return CP_UPDATE_VERSION.matcher(releaseCandidateName).find();
     }
 
     private String project;
@@ -70,6 +74,15 @@ public class CandidateRelease {
 
         return matcher.group();
     }
+
+    public static String extractCPUpdateVersion(String name) throws NotFoundException {
+        Matcher matcher = CP_UPDATE_VERSION_PART.matcher(name);
+        if (!matcher.find()) {
+            throw new NotFoundException();
+        }
+        return matcher.group(1) + "." + matcher.group(2) + "." + matcher.group(3);
+    }
+
 
     public List<Issue> getIssues() throws NameNotFoundException {
         if (issues == null) {
