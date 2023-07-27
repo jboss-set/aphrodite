@@ -207,7 +207,10 @@ public class Aphrodite implements AutoCloseable {
     }
 
     private void initialiseStreams(AphroditeConfig mutableConfig) throws AphroditeException {
-        if ( mutableConfig.getStreamConfigs().isEmpty() && repositories.isEmpty()) {
+        if (mutableConfig.getStreamConfigs().isEmpty()) {
+            return;
+        }
+        if (repositories.isEmpty()) {
             throw new AphroditeException("Unable to initialise any Stream Services as no " +
                     RepositoryService.class.getName() + " have been created.");
         }
