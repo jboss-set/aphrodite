@@ -28,6 +28,9 @@ import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.MergeRequest;
 import org.jboss.set.aphrodite.domain.Codebase;
@@ -47,28 +50,54 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
  */
 public class GitLabUtils {
 
+    private static final Log LOG = LogFactory.getLog(GitLabUtils.class);
+
     /**
      * Return the project id from a gitlab repo URL. The URL is in the form:
      * <em>http(s)://hostname:port/group/project</em> and the method returns
      * the part <em>group/project</em>.
-     *
+     *<p>
+     * For More information: <a href="https://gitlab.com/gitlab-org/gitlab/-/issues/214217">
+     *     Changes in GitLab routing</a>
+     *</p>
      * @param url The gitab repo URL
      * @return The project id in the form <em>group/project</em>
      */
     public static String getProjectIdFromURL(URL url) {
-        String[] parts = getProjectIdAndLastFieldFromURL(url);
-        if (parts != null) {
-            return parts[0];
-        } else {
+        try {
+            url = url.toURI().normalize().toURL();
+            String[] path = url.getPath().split("/");
+            String projectId = null;
+            boolean done = false;
+            for (int i = 0; i < path.length && !done; i++) {
+                if (!path[i].isEmpty()) {
+                    if ("-".equals(path[i])) {
+                        done = true;
+                    } else {
+                        projectId = projectId == null ? path[i] : projectId + "/" + path[i];
+                    }
+                }
+            }
+            return projectId;
+        } catch (MalformedURLException | URISyntaxException e) {
+            LOG.debug(url + "is not a valid URL", e);
             return null;
         }
     }
 
     /**
      * Return the projectId and the last path part in a two sized array. The
-     * first string will be the project ID and the second the last path. For the
-     * URL <em>http(s)://hostname:port/group/project/.../32</em> the method
+     * first string will be the project ID and the second the last path.
+     * <p>
+     * For the URL <em>http(s)://hostname:port/group/project/.../32</em> the method
      * returns the array <em>["group/project", "32"]</em>.
+     * </p>
+     * <p>
+     * For the URL <em>http(s)://hostname:port/group/subgroup/project/.../32</em> the method
+     * returns the array <em>["group/subgroup/project", "32"]</em>.
+     * </p>
+     * For More information: <a href="https://gitlab.com/gitlab-org/gitlab/-/issues/214217">
+     *     Changes in GitLab routing</a>
      * @param url The URL to parse
      * @return The array with two parts or null
      */
@@ -76,28 +105,34 @@ public class GitLabUtils {
         try {
             url = url.toURI().normalize().toURL();
             String[] path = url.getPath().split("/");
-            String owner = null, project = null;
-            for (int i = 0; i < path.length && (owner == null || project == null); i++) {
+            String projectId = null;
+            boolean done = false;
+            int idx = -1;
+            for (int i = 0; i < path.length && !done; i++) {
                 if (!path[i].isEmpty()) {
-                    if (owner == null) {
-                        owner = path[i];
+                    if ("-".equals(path[i])) {
+                        done = true;
+                        idx = i;
                     } else {
-                        project = path[i];
+                        projectId = projectId == null ? path[i] : projectId + "/" + path[i];
                     }
                 }
             }
             String mergeId = null;
-            for (int i = path.length - 1; i > 0 && mergeId == null; i--) {
-                if (!path[i].isEmpty()) {
-                    mergeId = path[i];
+            if (idx != -1) {
+                for (int i = path.length - 1; i > idx && mergeId == null; i--) {
+                    if (!path[i].isEmpty()) {
+                        mergeId = path[i];
+                    }
                 }
             }
-            if (owner != null && project != null && mergeId != null) {
-                return new String[]{owner + "/" + project, mergeId};
+            if (projectId != null && mergeId != null) {
+                return new String[]{projectId, mergeId};
             } else {
                 return null;
             }
         } catch (MalformedURLException | URISyntaxException e) {
+            LOG.debug(url + "is not a valid URL", e);
             return null;
         }
     }
