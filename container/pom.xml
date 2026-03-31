@@ -34,4 +34,12 @@
     <description>
         A simplified abstraction for a container managed environment.
     </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
