@@ -42,9 +42,9 @@ import java.net.URI;
  */
 public class AsynchronousAgileRestClient extends AbstractAsynchronousRestClient {
     private final JsonObjectParser<Board> boardParser = new BoardParser();
-    private final JsonObjectParser<Page<Board>> boardsParser = new PageParser(boardParser);
+    private final JsonObjectParser<Page<Board>> boardsParser = new PageParser<>(boardParser);
     private final JsonObjectParser<Sprint> sprintParser = new SprintParser();
-    private final JsonObjectParser<Page<Sprint>> sprintPageParser = new PageParser(sprintParser);
+    private final JsonObjectParser<Page<Sprint>> sprintPageParser = new PageParser<>(sprintParser);
 
     private final URI baseUri;
 
@@ -53,7 +53,7 @@ public class AsynchronousAgileRestClient extends AbstractAsynchronousRestClient 
         this.baseUri = baseUri;
     }
 
-    public Promise<Page<Board>> getAllBoards(final Long startAt, final Integer maxResults, @Deprecated final String type, final String name, final String projectKeyOrId) {
+    public Promise<Page<Board>> getAllBoards(final Long startAt, final Integer maxResults, final String type, final String name, final String projectKeyOrId) {
         final UriBuilder builder = UriBuilder.fromUri(baseUri).path("board");
         if (startAt != null) builder.queryParam("startAt", startAt);
         if (maxResults != null) builder.queryParam("maxResults", maxResults);
@@ -65,7 +65,7 @@ public class AsynchronousAgileRestClient extends AbstractAsynchronousRestClient 
     }
 
     // https://docs.atlassian.com/jira-software/REST/latest/#agile/1.0/board/{boardId}/sprint-getAllSprints
-    public Promise<Page<Sprint>> getAllSprints(final int boardId, final Long startAt, final Integer maxResults, @Deprecated final String state) {
+    public Promise<Page<Sprint>> getAllSprints(final int boardId, final Long startAt, final Integer maxResults, final String state) {
         final UriBuilder builder = UriBuilder.fromUri(baseUri).path("board").path(Integer.toString(boardId)).path("sprint");
         if (startAt != null) builder.queryParam("startAt", startAt);
         if (maxResults != null) builder.queryParam("maxResults", maxResults);
