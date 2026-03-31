@@ -141,7 +141,7 @@ class GitHubWrapper {
     }
 
     public RateLimit ghRateLimittoRateLimit(GHRateLimit ghRateLimit) {
-        return new RateLimit(ghRateLimit.remaining, ghRateLimit.limit, ghRateLimit.reset);
+        return new RateLimit(ghRateLimit.getRemaining(), ghRateLimit.getLimit(), ghRateLimit.getResetDate());
     }
 
     private Codebase repositoryBranchToCodebase(GHBranch branch) {

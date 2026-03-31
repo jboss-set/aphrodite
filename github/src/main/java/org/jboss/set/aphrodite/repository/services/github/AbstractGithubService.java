@@ -26,7 +26,8 @@ import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
-import org.kohsuke.github.extras.okhttp3.OkHttpConnector;
+import org.kohsuke.github.connector.GitHubConnector;
+import org.kohsuke.github.extras.okhttp3.OkHttpGitHubConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,9 +96,11 @@ public abstract class AbstractGithubService extends AbstractRepositoryService {
                 }
 
                 // oauthAccessToken here, if you use text password, call .withPassword()
+                OkHttpClient client = new OkHttpClient.Builder().cache(cache).build();
+                GitHubConnector connector = new OkHttpGitHubConnector(client);
                 github = new GitHubBuilder()
                         .withOAuthToken(config.getPassword(), config.getUsername())
-                        .withConnector(new OkHttpConnector(new OkHttpClient.Builder().cache(cache).build()))
+                        .withConnector(connector)
                         .build();
 
             }
