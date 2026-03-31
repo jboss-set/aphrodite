@@ -30,12 +30,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 
 import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.expr.ExpressionResolver;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 
 /**
@@ -165,35 +167,38 @@ public class AphroditeConfig {
     public void setThreadCount(int threadCount) {
         this.threadCount = threadCount;
     }
-
     public static AphroditeConfig fromJson(JsonObject jsonObject) {
+        return fromJson(expr -> expr, jsonObject);
+    }
+
+    public static AphroditeConfig fromJson(ExpressionResolver exprResolver, JsonObject jsonObject) {
         int maxThreadCount = jsonObject.getInt("maxThreadCount", DEFAULT_MAX_THREADS);
         int streamServiceUpdateRate = jsonObject.getInt("streamServiceUpdateRate", DEFAULT_STREAM_SERVICE_UPDATE_RATE);
         int initialDelay = jsonObject.getInt("initialDelay", DEFAULT_INITIAL_DELAY);
 
-        List<IssueTrackerConfig> issueTrackerConfigs = getIssueTrackerConfigs(jsonObject);
-        List<RepositoryConfig> repositoryConfigs = getRepositoryConfigs(jsonObject);
+        List<IssueTrackerConfig> issueTrackerConfigs = getIssueTrackerConfigs(exprResolver, jsonObject);
+        List<RepositoryConfig> repositoryConfigs = getRepositoryConfigs(exprResolver, jsonObject);
         List<StreamConfig> streamConfigs = getStreamConfigs(jsonObject);
 
         return new AphroditeConfig(Executors.newScheduledThreadPool(maxThreadCount, new DefaultThreadFactory()), issueTrackerConfigs,
                     repositoryConfigs, streamConfigs, streamServiceUpdateRate, initialDelay, maxThreadCount);
     }
 
-    private static List<IssueTrackerConfig> getIssueTrackerConfigs(JsonObject jsonObject) {
+    private static List<IssueTrackerConfig> getIssueTrackerConfigs(ExpressionResolver exprResolver, JsonObject jsonObject) {
         JsonArray jsonArray = jsonObject.getJsonArray("issueTrackerConfigs");
         Objects.requireNonNull(jsonArray, "issueTrackerConfigs array must be specified");
         return jsonArray.stream()
                 .map(JsonObject.class::cast)
                 .map(json -> new IssueTrackerConfig(
                         json.getString("url", null),
-                        json.getString("username", null),
-                        json.getString("password", null),
+                        exprResolver.resolve(json.getString("username", null)),
+                        exprResolver.resolve(json.getString("password", null)),
                         TrackerType.valueOf(json.getString("tracker", null)),
                         json.getInt("defaultIssueLimit", -1)))
                 .collect(Collectors.toList());
     }
 
-    private static List<RepositoryConfig> getRepositoryConfigs(JsonObject jsonObject) {
+    private static List<RepositoryConfig> getRepositoryConfigs(ExpressionResolver exprResolver, JsonObject jsonObject) {
         JsonArray jsonArray = jsonObject.getJsonArray("repositoryConfigs");
         Objects.requireNonNull(jsonArray, "repositoryConfigs array must be specified");
         return jsonArray.stream()
@@ -201,8 +206,8 @@ public class AphroditeConfig {
                 .map(json ->
                         new RepositoryConfig(
                                 json.getString("url", null),
-                                json.getString("username", null),
-                                json.getString("password", null),
+                                exprResolver.resolve(json.getString("username", null)),
+                                exprResolver.resolve(json.getString("password", null)),
                                 RepositoryType.valueOf(json.getString("type", null))))
                 .collect(Collectors.toList());
     }
