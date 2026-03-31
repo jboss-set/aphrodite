@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Commit;
@@ -55,13 +53,15 @@ import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRateLimit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Ryan Emerson
  */
 class GitHubWrapper {
 
-    private static final Log LOG = LogFactory.getLog(GitHubWrapper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GitHubWrapper.class);
 
     Repository toAphroditeRepository(URL url, Collection<GHBranch> branches) {
         Repository repo = new Repository(url);

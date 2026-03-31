@@ -38,7 +38,7 @@
         <io.atlassian.fugue.version>4.7.2</io.atlassian.fugue.version>
         <com.atlassian.jira.version>11.3.2</com.atlassian.jira.version>
         <com.atlassian.jira.client.version> 7.0.1</com.atlassian.jira.client.version>
-        <org.slf4j.version>1.7.12</org.slf4j.version>
+        <org.slf4j.version>2.0.17</org.slf4j.version>
     </properties>
 
     <modules>
@@ -111,11 +111,6 @@
                 <groupId>org.glassfish</groupId>
                 <artifactId>javax.json</artifactId>
                 <version>${javax.json.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>${commons.logging.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.enterprise</groupId>

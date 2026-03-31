@@ -16,8 +16,13 @@
 
 package org.jboss.set.aphrodite.repository.services.github;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
@@ -26,18 +31,13 @@ import org.jboss.set.aphrodite.domain.spi.CompareHome;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHTag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class GithubCompareHomeService extends AbstractGithubService implements CompareHome {
-    private static final Log LOG = LogFactory.getLog(GithubCompareHomeService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GithubCompareHomeService.class);
     private static final GitHubWrapper WRAPPER = new GitHubWrapper();
 
     public GithubCompareHomeService(Aphrodite aphrodite) {
@@ -78,8 +78,4 @@ public class GithubCompareHomeService extends AbstractGithubService implements C
         }
     }
 
-    @Override
-    protected Log getLog() {
-        return LOG;
-    }
 }

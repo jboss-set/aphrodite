@@ -22,6 +22,44 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.xmlrpc.XmlRpcException;
+import org.apache.xmlrpc.XmlRpcRequest;
+import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.client.XmlRpcClientConfig;
+import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.apache.xmlrpc.client.XmlRpcClientException;
+import org.apache.xmlrpc.client.XmlRpcCommonsTransport;
+import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
+import org.apache.xmlrpc.client.XmlRpcTransport;
+import org.apache.xmlrpc.client.XmlRpcTransportFactory;
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.domain.Comment;
+import org.jboss.set.aphrodite.domain.FlagStatus;
+import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.IssueStatus;
+import org.jboss.set.aphrodite.domain.SearchCriteria;
+import org.jboss.set.aphrodite.spi.AphroditeException;
+import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.API_URL;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMMENT_BODY;
@@ -42,8 +80,8 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.MET
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_SEARCH;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_UPDATE_BUG;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.NAME;
-import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIVATE_COMMENT;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_BUGS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_FIELDS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.RESULT_INCLUDE_FIELDS;
@@ -54,50 +92,12 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TAR
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.UPDATE_FIELDS;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.VERSION;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.xmlrpc.XmlRpcException;
-import org.apache.xmlrpc.XmlRpcRequest;
-import org.apache.xmlrpc.client.XmlRpcClient;
-import org.apache.xmlrpc.client.XmlRpcClientConfig;
-import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
-import org.apache.xmlrpc.client.XmlRpcClientException;
-import org.apache.xmlrpc.client.XmlRpcCommonsTransport;
-import org.apache.xmlrpc.client.XmlRpcCommonsTransportFactory;
-import org.apache.xmlrpc.client.XmlRpcTransport;
-import org.apache.xmlrpc.client.XmlRpcTransportFactory;
-import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.domain.Comment;
-import org.jboss.set.aphrodite.domain.FlagStatus;
-import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.IssueStatus;
-import org.jboss.set.aphrodite.domain.SearchCriteria;
-import org.jboss.set.aphrodite.spi.AphroditeException;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-
 /**
  * @author Ryan Emerson
  */
 public class BugzillaClient {
 
-    private static final Log LOG = LogFactory.getLog(BugzillaClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BugzillaClient.class);
 
     static final Pattern ID_PARAM_PATTERN = Pattern.compile("id=([^&]+)");
     static final Pattern FILTER_NAME_PARAM_PATTERN = Pattern.compile("namedcmd=([^&]+)");

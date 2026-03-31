@@ -19,8 +19,6 @@ package org.jboss.set.aphrodite.repository.services.github;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.RepositoryConfig;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
@@ -29,6 +27,8 @@ import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.kohsuke.github.extras.okhttp3.OkHttpConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
@@ -39,7 +39,7 @@ import okhttp3.OkHttpClient;
  */
 public abstract class AbstractGithubService extends AbstractRepositoryService {
 
-    private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.repository.services.github.AbstractGithubService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractGithubService.class);
     private static final String CACHE_DIR = "cacheDir";
     private static final String CACHE_NAME = "cacheName";
     private static final String CACHE_SIZE = "cacheSize";

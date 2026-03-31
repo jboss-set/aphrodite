@@ -22,10 +22,6 @@
 
 package org.jboss.set.aphrodite.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,12 +31,16 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author Ryan Emerson
  */
 public class Utils {
 
-    private static final Log LOG = LogFactory.getLog(Utils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
     public static String decodeURLParam(String parameter) {
         try {
@@ -84,35 +84,35 @@ public class Utils {
         }
     }
 
-    public static void logWarnMessage(Log log, String message) {
+    public static void logWarnMessage(Logger log, String message) {
         if (log.isWarnEnabled())
             log.warn(message);
     }
 
-    public static void logDebugMessage(Log log, String message) {
+    public static void logDebugMessage(Logger log, String message) {
         if (log.isDebugEnabled())
             log.debug(message);
     }
 
-    public static void logException(Log log, Exception e) {
+    public static void logException(Logger log, Exception e) {
         logException(log, null, e);
     }
 
-    public static void logException(Log log, String message, Exception e) {
+    public static void logException(Logger log, String message, Exception e) {
         if (log.isErrorEnabled()) {
             if (message == null)
-                log.error(e);
+                log.error(e.getMessage(), e);
             else
                 log.error(message, e);
         }
     }
 
-    public static Exception logExceptionAndGet(Log log, Exception e) {
+    public static Exception logExceptionAndGet(Logger log, Exception e) {
         logException(log, null, e);
         return e;
     }
 
-    public static Exception logExceptionAndGet(Log log, String message, Exception e) {
+    public static Exception logExceptionAndGet(Logger log, String message, Exception e) {
         logException(log, message, e);
         return e;
     }

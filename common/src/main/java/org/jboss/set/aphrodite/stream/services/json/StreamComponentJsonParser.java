@@ -32,12 +32,12 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.RepositoryType;
 import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple parser to compartmentalize all those nasty operations.
@@ -46,7 +46,7 @@ import org.jboss.set.aphrodite.domain.StreamComponent;
  *
  */
 public class StreamComponentJsonParser {
-    private static final Log LOG = LogFactory.getLog(StreamComponentJsonParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StreamComponentJsonParser.class);
     public static final String JSON_NAME = "component_name";
     public static final String JSON_CONTACTS = "contacts";
     public static final String JSON_REPOSITORY_TYPE = "repository_type";

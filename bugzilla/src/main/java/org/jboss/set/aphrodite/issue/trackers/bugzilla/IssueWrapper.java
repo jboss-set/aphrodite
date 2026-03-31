@@ -22,6 +22,31 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.config.TrackerType;
+import org.jboss.set.aphrodite.domain.Flag;
+import org.jboss.set.aphrodite.domain.FlagStatus;
+import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.IssueEstimation;
+import org.jboss.set.aphrodite.domain.IssueStatus;
+import org.jboss.set.aphrodite.domain.IssueType;
+import org.jboss.set.aphrodite.domain.Release;
+import org.jboss.set.aphrodite.domain.Stage;
+import org.jboss.set.aphrodite.domain.User;
+import org.jboss.set.aphrodite.spi.AphroditeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaClient.ID_PARAM_PATTERN;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ASSIGNEE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.BLOCKS;
@@ -41,10 +66,10 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISS
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ISSUE_TYPE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.LAST_UPDATED;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.METHOD_SET_COLLECTION;
+import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIORITY;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRODUCT;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.REPORTER;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.STATUS;
-import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.PRIORITY;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.SUMMARY;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_MILESTONE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.TARGET_RELEASE;
@@ -52,37 +77,12 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.VER
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.getAphroditeFlag;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.getBugzillaFlag;
 
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.config.TrackerType;
-import org.jboss.set.aphrodite.domain.Flag;
-import org.jboss.set.aphrodite.domain.FlagStatus;
-import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.IssueEstimation;
-import org.jboss.set.aphrodite.domain.IssueStatus;
-import org.jboss.set.aphrodite.domain.IssueType;
-import org.jboss.set.aphrodite.domain.Release;
-import org.jboss.set.aphrodite.domain.Stage;
-import org.jboss.set.aphrodite.domain.User;
-import org.jboss.set.aphrodite.spi.AphroditeException;
-
 /**
  * @author Ryan Emerson
  */
 class IssueWrapper {
 
-    private static final Log LOG = LogFactory.getLog(BugzillaIssueTracker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BugzillaIssueTracker.class);
 
     Issue bugzillaBugToIssue(Map<String, Object> bug, URL baseURL) {
         Integer id = (Integer) bug.get(ID);
