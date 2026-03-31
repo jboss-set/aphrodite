@@ -113,7 +113,7 @@ public class PullRequestUpgrade {
 
     @Override
     public String toString() {
-        return "PullRequestUpgrade [pullRequest=" + pullRequest.getURL() + ", id=" + id + ", tag=" + tag + ", version="
+        return "PullRequestUpgrade [pullRequest=" + pullRequest.getURI() + ", id=" + id + ", tag=" + tag + ", version="
                 + version + ", branch=" + branch + "]";
     }
 

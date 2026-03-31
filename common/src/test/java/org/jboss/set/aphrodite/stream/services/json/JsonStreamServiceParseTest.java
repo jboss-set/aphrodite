@@ -2,10 +2,8 @@ package org.jboss.set.aphrodite.stream.services.json;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,20 +24,20 @@ import org.junit.Test;
 
 public class JsonStreamServiceParseTest {
 
-    private URL url;
+    private URI uri;
     private File tmpFile;
     private JsonStreamService jsonStreamService;
 
     @Before
-    public void before() throws MalformedURLException, NotFoundException {
-        this.url = new File("src/test/resources/streams.json").getAbsoluteFile().toURI().toURL();
+    public void before() throws URISyntaxException, NotFoundException {
+        this.uri = new File("src/test/resources/streams.json").getAbsoluteFile().toURI();
         this.tmpFile = new File("src/test/resources/streams2.json").getAbsoluteFile();
-        initStreamService(this.url);
+        initStreamService(this.uri);
     }
 
-    private void initStreamService(URL url) throws NotFoundException {
+    private void initStreamService(URI uri) throws NotFoundException {
         final List<StreamConfig> streamConfigs = new ArrayList<>();
-        final StreamConfig streamConfig = new StreamConfig(url, StreamType.JSON);
+        final StreamConfig streamConfig = new StreamConfig(uri, StreamType.JSON);
         streamConfigs.add(streamConfig);
         final AphroditeConfig config = new AphroditeConfig(null, null, streamConfigs);
         this.jsonStreamService = new JsonStreamService();
@@ -80,9 +78,9 @@ public class JsonStreamServiceParseTest {
 
     @Test
     public void testWithWrite() throws Exception {
-        this.jsonStreamService.serializeStreams(this.url, new FileOutputStream(this.tmpFile));
+        this.jsonStreamService.serializeStreams(this.uri, new FileOutputStream(this.tmpFile));
         Assert.assertEquals(true, this.tmpFile.exists());
-        this.initStreamService(this.tmpFile.toURI().toURL());
+        this.initStreamService(this.tmpFile.toURI());
         // run regular tests
         testParsedValues();
     }
@@ -95,8 +93,8 @@ public class JsonStreamServiceParseTest {
         final StreamComponent streamComponent = stream.getComponent("comp1");
         streamComponent.setTag("1.0-redhat-13");
         this.jsonStreamService.updateStreamComponent(streamComponent);
-        this.jsonStreamService.serializeStreams(this.url, new FileOutputStream(this.tmpFile));
-        this.initStreamService(this.tmpFile.toURI().toURL());
+        this.jsonStreamService.serializeStreams(this.uri, new FileOutputStream(this.tmpFile));
+        this.initStreamService(this.tmpFile.toURI());
         testParsedValues(streamComponent);
     }
 

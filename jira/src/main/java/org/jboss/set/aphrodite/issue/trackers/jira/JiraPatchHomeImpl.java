@@ -16,7 +16,7 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,11 +42,11 @@ public class JiraPatchHomeImpl implements PatchHome {
 
     @Override
     public java.util.stream.Stream<Patch> findPatchesByIssue(Issue issue) {
-        List<URL> urls = ((JiraIssue) issue).getPullRequests();
+        List<URI> urls = ((JiraIssue) issue).getPullRequests();
         return mapURLtoPatchStream(urls);
     }
 
-    private java.util.stream.Stream<Patch> mapURLtoPatchStream(List<URL> urls) {
+    private java.util.stream.Stream<Patch> mapURLtoPatchStream(List<URI> urls) {
         List<Patch> list = urls.stream().map(e -> {
             PatchType patchType = getPatchType(e);
             PatchState patchState = getPatchState(e, patchType);
@@ -55,7 +55,7 @@ public class JiraPatchHomeImpl implements PatchHome {
         return list.stream();
     }
 
-    private PatchType getPatchType(URL url) {
+    private PatchType getPatchType(URI url) {
         String urlStr = url.toString();
         if (urlStr.contains("/pull/"))
             return PatchType.PULLREQUEST;
@@ -65,7 +65,7 @@ public class JiraPatchHomeImpl implements PatchHome {
             return PatchType.FILE;
     }
 
-    private PatchState getPatchState(URL url, PatchType patchType) {
+    private PatchState getPatchState(URI url, PatchType patchType) {
         if (patchType.equals(PatchType.PULLREQUEST)) {
             try {
                 PullRequest pullRequest = Aphrodite.instance().getPullRequest(url);

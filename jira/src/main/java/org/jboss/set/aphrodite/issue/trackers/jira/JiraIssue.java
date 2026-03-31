@@ -21,19 +21,19 @@
  */
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import org.jboss.set.aphrodite.config.TrackerType;
-import org.jboss.set.aphrodite.container.Container;
-import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.spi.PatchHome;
-
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.naming.NameNotFoundException;
+
+import org.jboss.set.aphrodite.config.TrackerType;
+import org.jboss.set.aphrodite.container.Container;
+import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.spi.PatchHome;
 
 import static org.jboss.set.aphrodite.config.TrackerType.JIRA;
 
@@ -42,7 +42,7 @@ import static org.jboss.set.aphrodite.config.TrackerType.JIRA;
  */
 public class JiraIssue extends Issue {
 
-    private List<URL> pullRequests = new ArrayList<URL>();
+    private List<URI> pullRequests = new ArrayList<>();
 
     private String sprintRelease = "";
 
@@ -53,29 +53,29 @@ public class JiraIssue extends Issue {
     private List<JiraChangelogGroup> changelog = new ArrayList<>();
 
     //Links to issues cloned from/to
-    private List<URL> linkedCloneIssues = new ArrayList<>();
+    private List<URI> linkedCloneIssues = new ArrayList<>();
 
-    private List<URL> linkedIncorporatesIssues = new ArrayList<>();
+    private List<URI> linkedIncorporatesIssues = new ArrayList<>();
     private Optional<String> securityLevel = Optional.empty();
     private boolean securitySensitiveIssue;
     private List<String> involved = new ArrayList<>();
 
-    public JiraIssue(final URL url) {
-        super(url, JIRA);
+    public JiraIssue(final URI uri) {
+        super(uri, JIRA);
     }
 
     @Deprecated
-    public JiraIssue(URL url, TrackerType type) {
+    public JiraIssue(URI url, TrackerType type) {
         super(url, type);
         if (!type.equals(JIRA))
             throw new IllegalStateException("Can't instantiate if issue is not of JIRA type");
     }
 
-    public List<URL> getPullRequests() {
+    public List<URI> getPullRequests() {
         return pullRequests;
     }
 
-    public void setPullRequests(List<URL> pullRequests) {
+    public void setPullRequests(List<URI> pullRequests) {
         this.pullRequests = pullRequests;
     }
 
@@ -111,19 +111,19 @@ public class JiraIssue extends Issue {
         this.changelog = changelog;
     }
 
-    public void setLinkedCloneIssues(List<URL> linkedCloneIssues) {
+    public void setLinkedCloneIssues(List<URI> linkedCloneIssues) {
         this.linkedCloneIssues = linkedCloneIssues;
     }
 
-    public List<URL> getLinkedCloneIssues() {
+    public List<URI> getLinkedCloneIssues() {
         return linkedCloneIssues;
     }
 
-    public List<URL> getLinkedIncorporatesIssues() {
+    public List<URI> getLinkedIncorporatesIssues() {
         return linkedIncorporatesIssues;
     }
 
-    public void setLinkedIncorporatesIssues(List<URL> linkedIncorporatesIssues) {
+    public void setLinkedIncorporatesIssues(List<URI> linkedIncorporatesIssues) {
         this.linkedIncorporatesIssues = linkedIncorporatesIssues;
     }
 

@@ -23,8 +23,8 @@
 package org.jboss.set.aphrodite.common;
 
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,7 @@ public class Utils {
         }
     }
 
-    public static String getParamaterFromUrl(Pattern pattern, URL url) throws NotFoundException {
+    public static String getParamaterFromUrl(Pattern pattern, URI url) throws NotFoundException {
         Matcher matcher = pattern.matcher(url.getQuery());
         if (!matcher.find())
             throw new NotFoundException("No parameter matching the specified pattern exists in the provided url.");
@@ -58,9 +58,9 @@ public class Utils {
         return decodeURLParam(matcher.group(1));
     }
 
-    public static List<String> getParametersFromUrls(Pattern pattern, List<URL> urls) {
+    public static List<String> getParametersFromUrls(Pattern pattern, List<URI> urls) {
         List<String> ids = new ArrayList<>();
-        for (URL url : urls) {
+        for (URI url : urls) {
             try {
                 ids.add(Utils.getParamaterFromUrl(pattern, url));
             } catch (NotFoundException e) {
@@ -70,16 +70,16 @@ public class Utils {
         return ids;
     }
 
-    public static String getTrailingValueFromUrlPath(URL url) {
+    public static String getTrailingValueFromUrlPath(URI url) {
         String path = url.getPath();
         String[] components = path.split("/");
         return components[components.length - 1];
     }
 
-    public static URL createURL(String path) {
+    public static URI createURI(String path) {
         try {
-            return new URL(path);
-        } catch (MalformedURLException e) {
+            return new URI(path);
+        } catch (URISyntaxException e) {
             throw new IllegalStateException(e);
         }
     }

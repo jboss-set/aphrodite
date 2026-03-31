@@ -16,10 +16,8 @@
 
 package org.jboss.set.aphrodite.repository.services.common;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -38,7 +36,7 @@ public class RepositoryUtils {
     private static final Pattern ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO = Pattern
             .compile("([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)#(\\d+)", Pattern.CASE_INSENSITIVE);
 
-    public static String createRepositoryIdFromUrl(URL url) {
+    public static String createRepositoryIdFromUrl(URI url) {
         return url != null ? createRepositoryIdFromId(url.getPath()) : null;
     }
 
@@ -58,15 +56,14 @@ public class RepositoryUtils {
         return owner != null && owner.length() > 0 && name != null && name.length() > 0 ? owner + "/" + name : null;
     }
 
-    public static List<URL> getPRFromDescription(URL url, String content) throws MalformedURLException, URISyntaxException {
-        String[] paths = url.getPath().split("/");
+    public static List<URI> getPRFromDescription(URI uri, String content) throws URISyntaxException {
+        String[] paths = uri.getPath().split("/");
         Matcher matcher = RELATED_PR_PATTERN.matcher(content);
-        List<URL> relatedPullRequests = new ArrayList<>();
+        List<URI> relatedPullRequests = new ArrayList<>();
         while (matcher.find()) {
             if (matcher.groupCount() == 3) {
-                URL relatedPullRequest = new URI(
-                        "https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pulls/" + matcher.group(3))
-                                .toURL();
+                URI relatedPullRequest = new URI(
+                        "https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pulls/" + matcher.group(3));
                 relatedPullRequests.add(relatedPullRequest);
             }
         }
@@ -76,17 +73,16 @@ public class RepositoryUtils {
             Matcher abbreviatedExternalMatcher = ABBREVIATED_RELATED_PR_PATTERN_EXTERNAL_REPO.matcher(match);
             if (abbreviatedExternalMatcher.find()) {
                 if (abbreviatedExternalMatcher.groupCount() == 3) {
-                    URL relatedPullRequest = new URI("https://github.com/" + abbreviatedExternalMatcher.group(1) + "/"
-                            + abbreviatedExternalMatcher.group(2) + "/pull/" + abbreviatedExternalMatcher.group(3)).toURL();
+                    URI relatedPullRequest = new URI("https://github.com/" + abbreviatedExternalMatcher.group(1) + "/"
+                            + abbreviatedExternalMatcher.group(2) + "/pull/" + abbreviatedExternalMatcher.group(3));
                     relatedPullRequests.add(relatedPullRequest);
                     continue;
                 }
             }
 
             if (abbreviatedMatcher.groupCount() == 2) {
-                URL relatedPullRequest = new URI(
-                        "https://github.com/" + paths[1] + "/" + paths[2] + "/" + "/pulls/" + abbreviatedMatcher.group(2))
-                                .toURL();
+                URI relatedPullRequest = new URI(
+                        "https://github.com/" + paths[1] + "/" + paths[2] + "/" + "/pulls/" + abbreviatedMatcher.group(2));
                 relatedPullRequests.add(relatedPullRequest);
             }
         }

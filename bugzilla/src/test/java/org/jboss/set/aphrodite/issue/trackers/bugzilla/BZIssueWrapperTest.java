@@ -22,6 +22,20 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import org.jboss.set.aphrodite.config.TrackerType;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
@@ -39,20 +53,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -69,33 +69,33 @@ public class BZIssueWrapperTest {
 
     public static String BUGZILLA_URL = "https://bugzilla.redhat.com/";
 
-    private URL bugzillaURL;
-    private URL bz01URL;
+    private URI bugzillaURL;
+    private URI bz01URL;
     private Map<String, Object> bz01;
     private Issue issue01;
 
     private IssueWrapper wrapper = new IssueWrapper();
 
     @Before
-    public void setUp() throws MalformedURLException, ParseException {
-        bugzillaURL = new URL(BUGZILLA_URL);
-        bz01URL = new URL("https://bugzilla.redhat.com/show_bug.cgi?id=1111111");
+    public void setUp() throws URISyntaxException, ParseException {
+        bugzillaURL = new URI(BUGZILLA_URL);
+        bz01URL = new URI("https://bugzilla.redhat.com/show_bug.cgi?id=1111111");
 
         bz01 = createTestBZ01();
         issue01 = createTestIssue01(bz01URL);
     }
 
     @Test
-    public void validBZToIssueTest() throws MalformedURLException {
+    public void validBZToIssueTest() throws URISyntaxException {
         Issue result = wrapper.bugzillaBugToIssue(bz01, bugzillaURL);
 
         assertNotNull(result);
         TestUtils.assertDeepEqualsIssue(issue01, result);
-        assertEquals(bz01URL, issue01.getURL());
+        assertEquals(bz01URL, issue01.getURI());
     }
 
     @Test
-    public void nullBZToIssueTest() throws MalformedURLException {
+    public void nullBZToIssueTest() throws URISyntaxException {
         expectedException.expect(NullPointerException.class);
 
         Issue result = wrapper.bugzillaBugToIssue(null, bugzillaURL);
@@ -120,7 +120,7 @@ public class BZIssueWrapperTest {
     }
 
     @Test
-    public void noFlagShouldStillLeadToAProperStateMap() throws MalformedURLException {
+    public void noFlagShouldStillLeadToAProperStateMap() throws URISyntaxException {
         bz01.remove(BugzillaFields.FLAGS);
         Issue result = wrapper.bugzillaBugToIssue(bz01, bugzillaURL);
         for (Flag f : Flag.values())
@@ -167,7 +167,7 @@ public class BZIssueWrapperTest {
         return result;
     }
 
-    private Issue createTestIssue01(URL url) throws MalformedURLException, ParseException {
+    private Issue createTestIssue01(URI url) throws URISyntaxException, ParseException {
         Issue result = new Issue(url, TrackerType.BUGZILLA);
 
         result.setTrackerId("1111111");
@@ -186,12 +186,12 @@ public class BZIssueWrapperTest {
         result.setReleases(releases);
 
         result.setDependsOn(Arrays.asList(
-                new URL("https://bugzilla.redhat.com/show_bug.cgi?id=1111112"),
-                new URL("https://bugzilla.redhat.com/show_bug.cgi?id=1111113")
+                new URI("https://bugzilla.redhat.com/show_bug.cgi?id=1111112"),
+                new URI("https://bugzilla.redhat.com/show_bug.cgi?id=1111113")
         ));
         result.setBlocks(Arrays.asList(
-                new URL("https://bugzilla.redhat.com/show_bug.cgi?id=1111114"),
-                new URL("https://bugzilla.redhat.com/show_bug.cgi?id=1111115")
+                new URI("https://bugzilla.redhat.com/show_bug.cgi?id=1111114"),
+                new URI("https://bugzilla.redhat.com/show_bug.cgi?id=1111115")
         ));
         result.setEstimation(new IssueEstimation(8.0, 8.0));
 

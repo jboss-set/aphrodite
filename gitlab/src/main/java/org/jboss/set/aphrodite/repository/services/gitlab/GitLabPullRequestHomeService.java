@@ -21,10 +21,8 @@
  */
 package org.jboss.set.aphrodite.repository.services.gitlab;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -70,7 +68,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
         this.gitLabApi = gitLabApi;
         this.gitLabRepo = gitLabRepo;
         // create a pattern to locate the PRs in the description to this GitLab repository
-        String patternString = ".*" + Pattern.quote(gitLabRepo.getBaseUrl().getHost()) + ".*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/-?/?merge_requests/(\\d+)";
+        String patternString = ".*" + Pattern.quote(gitLabRepo.getBaseURI().getHost()) + ".*?/([a-zA-Z_0-9-]*)/([a-zA-Z_0-9-]*)/-?/?merge_requests/(\\d+)";
         prPattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
     }
 
@@ -81,7 +79,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
      */
     @Override
     public boolean addComment(PullRequest pullRequest, String comment) {
-        String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             gitLabApi.getDiscussionsApi().createMergeRequestDiscussion(repoId, mergeId, comment, new Date(), null, null);
@@ -99,7 +97,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
      */
     @Override
     public List<Label> getLabels(PullRequest pullRequest) {
-        String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             MergeRequest merge = gitLabApi.getMergeRequestApi().getMergeRequest(repoId, mergeId);
@@ -107,7 +105,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
             List<Label> res = new ArrayList<>(labels.size());
             for (String name : labels) {
                 org.gitlab4j.api.models.Label l = gitLabApi.getLabelsApi().getProjectLabel(repoId, name);
-                res.add(GitLabUtils.toLabel(l, pullRequest.getRepository().getURL()));
+                res.add(GitLabUtils.toLabel(l, pullRequest.getRepository().getURI()));
             }
             return res;
         } catch (GitLabApiException e) {
@@ -121,7 +119,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
      */
     @Override
     public boolean setLabels(PullRequest pullRequest, List<Label> labels) {
-        String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             List<String> names = labels.stream().map(Label::getName).collect(Collectors.toList());
@@ -138,7 +136,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
      */
     @Override
     public boolean addLabel(PullRequest pullRequest, Label label) {
-        String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             MergeRequest merge = gitLabApi.getMergeRequestApi().getMergeRequest(repoId, mergeId);
@@ -159,7 +157,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
      */
     @Override
     public boolean removeLabel(PullRequest pullRequest, Label label) {
-        String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             MergeRequest merge = gitLabApi.getMergeRequestApi().getMergeRequest(repoId, mergeId);
@@ -176,13 +174,13 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
 
     // Pull Requests
 
-    private List<URL> getPRFromDescription(URL url, String content) throws MalformedURLException, URISyntaxException {
+    private List<URI> getPRFromDescription(String content) throws URISyntaxException {
         Matcher gitlabMatcher = prPattern.matcher(content);
-        List<URL> relatedPullRequests = new ArrayList<>();
+        List<URI> relatedPullRequests = new ArrayList<>();
         while (gitlabMatcher.find()) {
             if (gitlabMatcher.groupCount() == 3) {
-                URL relatedPullRequest = new URI(gitLabRepo.getBaseUrl() + gitlabMatcher.group(1) + "/"
-                        + gitlabMatcher.group(2) + "/-/merge_requests/" + gitlabMatcher.group(3)).toURL();
+                URI relatedPullRequest = new URI(gitLabRepo.getBaseURI() + gitlabMatcher.group(1) + "/"
+                        + gitlabMatcher.group(2) + "/-/merge_requests/" + gitlabMatcher.group(3));
                 relatedPullRequests.add(relatedPullRequest);
             }
         }
@@ -195,10 +193,10 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
     @Override
     public List<PullRequest> findReferencedPullRequests(PullRequest pullRequest) {
         try {
-            List<URL> urls = getPRFromDescription(pullRequest.getURL(), pullRequest.getBody());
+            List<URI> urls = getPRFromDescription(pullRequest.getBody());
             List<PullRequest> related = new ArrayList<>();
-            for (URL url : urls) {
-                if (GitLabUtils.urlIsInRepo(url, pullRequest.getRepository().getURL())) {
+            for (URI url : urls) {
+                if (GitLabUtils.urlIsInRepo(url, pullRequest.getRepository().getURI())) {
                     try {
                         related.add(gitLabRepo.getPullRequest(url));
                     } catch (NotFoundException e) {
@@ -207,8 +205,8 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
                 }
             }
             return related;
-        } catch (MalformedURLException | URISyntaxException e) {
-            Utils.logException(LOG, "something went wrong while trying to get related pull requests to " + pullRequest.getURL(), e);
+        } catch (URISyntaxException e) {
+            Utils.logException(LOG, "something went wrong while trying to get related pull requests to " + pullRequest.getURI(), e);
             return Collections.emptyList();
         }
     }
@@ -218,7 +216,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
      */
     @Override
     public CommitStatus getCommitStatus(PullRequest pullRequest) {
-        String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             List<Commit> commits = pullRequest.getCommits();
@@ -245,7 +243,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
     @Override
     public void approveOnPullRequest(PullRequest pullRequest) {
         // Approvals are only in gitlab enterprise (gitlab.cee.redhat.com has no approvals)
-        String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             // TODO: not tested as gitlab.cee has no approvals
@@ -261,7 +259,7 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
     @Override
     public void requestChangesOnPullRequest(PullRequest pullRequest, String body) {
         // Approvals are only in gitlab enterprise (gitlab.cee.redhat.com has no approvals)
-        String repoId = GitLabUtils.getProjectIdFromURL(pullRequest.getRepository().getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             // TODO: not tested as gitlab.cee has no approvals

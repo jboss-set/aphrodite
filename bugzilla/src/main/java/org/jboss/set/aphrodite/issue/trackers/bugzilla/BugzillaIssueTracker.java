@@ -22,7 +22,7 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -78,18 +78,18 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public Issue getIssue(URL url) throws NotFoundException {
-        checkHost(url);
-        return bzClient.getIssueWithComments(url);
+    public Issue getIssue(URI uri) throws NotFoundException {
+        checkHost(uri);
+        return bzClient.getIssueWithComments(uri);
     }
 
     @Override
-    public List<Issue> getIssues(Collection<URL> urls) {
-        urls = filterUrlsByHost(urls);
-        if (urls.isEmpty())
+    public List<Issue> getIssues(Collection<URI> uris) {
+        uris = filterUrlsByHost(uris);
+        if (uris.isEmpty())
             return new ArrayList<>();
 
-        return bzClient.getIssues(urls);
+        return bzClient.getIssues(uris);
     }
 
     @Override
@@ -98,14 +98,14 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
-        checkHost(filterUrl);
-        return bzClient.searchIssuesByFilter(filterUrl);
+    public List<Issue> searchIssuesByFilter(URI filterURI) throws NotFoundException {
+        checkHost(filterURI);
+        return bzClient.searchIssuesByFilter(filterURI);
     }
 
     @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
-        checkHost(issue.getURL());
+        checkHost(issue.getURI());
         return bzClient.updateIssue(issue);
     }
 
@@ -165,7 +165,7 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
         assert details.getProjectKey() != null;
         assert localDetails.getComponent() != null;
         assert localDetails.getVersion() != null;
-        assert localDetails.getTrackerURL() != null;
+        assert localDetails.getTrackerURI() != null;
         assert localDetails.getProjectKey() != null; // cant be, but hey...
 
         return this.bzClient.createIssue(localDetails.getProjectKey(), localDetails.getDescription(),

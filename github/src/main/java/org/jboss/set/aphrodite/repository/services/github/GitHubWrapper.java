@@ -24,7 +24,7 @@ package org.jboss.set.aphrodite.repository.services.github;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -63,8 +63,8 @@ class GitHubWrapper {
 
     private static final Logger LOG = LoggerFactory.getLogger(GitHubWrapper.class);
 
-    Repository toAphroditeRepository(URL url, Collection<GHBranch> branches) {
-        Repository repo = new Repository(url);
+    Repository toAphroditeRepository(URI uri, Collection<GHBranch> branches) {
+        Repository repo = new Repository(uri);
         List<Codebase> branchNames = branches.stream()
                 .map(this::repositoryBranchToCodebase)
                 .collect(Collectors.toList());
@@ -81,7 +81,7 @@ class GitHubWrapper {
     PullRequest pullRequestToPullRequest(GHPullRequest pullRequest, PullRequestHome prHome) {
         try {
             final String id = Integer.toString(pullRequest.getNumber());
-            final URL url = pullRequest.getHtmlUrl();
+            final URI uri = pullRequest.getHtmlUrl().toURI();
             final Codebase codebase = new Codebase(pullRequest.getBase().getRef());
             final PullRequestState state = getPullRequestState(pullRequest.getState());
             final String title = pullRequest.getTitle() == null ? "" : pullRequest.getTitle().replaceFirst("\\u2026", "");
@@ -97,12 +97,12 @@ class GitHubWrapper {
             final boolean merged = pullRequest.isMerged();
             final Date mergedAt = pullRequest.getMergedAt();
             final MergeableState mergeableState = pullRequest.getMergeableState() == null ? null : MergeableState.valueOf(pullRequest.getMergeableState().toUpperCase());
-            String urlString = url.toString();
+            String urlString = uri.toString();
             int idx = urlString.indexOf("pull");
             if (idx >= 0) {
                 urlString = urlString.substring(0, idx);
             }
-            final Repository repo = new Repository(URI.create(urlString).toURL());
+            final Repository repo = new Repository(URI.create(urlString));
             final int commitCount = pullRequest.getCommits();
             final List<Commit> commits = new ArrayList<>(commitCount);
 
@@ -110,7 +110,10 @@ class GitHubWrapper {
                 commits.add(new Commit(det.getSha(), det.getCommit().getMessage()));
             }
             Collections.reverse(commits);
-            return new PullRequest(id, url, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits, prHome);
+            return new PullRequest(id, uri, repo, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits, prHome);
+        } catch(URISyntaxException e) {
+            Utils.logException(LOG, e);
+            return null;
         } catch (IOException e) {
             Utils.logException(LOG, e);
             return null;

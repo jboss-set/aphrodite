@@ -26,7 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,20 +47,16 @@ import javax.json.JsonReader;
 
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
-import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.aphrodite.domain.Comment;
 import org.jboss.set.aphrodite.domain.Commit;
-import org.jboss.set.aphrodite.domain.CommitStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.PullRequestState;
-import org.jboss.set.aphrodite.domain.PullRequestUpgrade;
 import org.jboss.set.aphrodite.domain.RateLimit;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
-import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.expr.SystemPropertyExpressionResolver;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
@@ -78,7 +74,6 @@ import org.slf4j.LoggerFactory;
 
 public class Aphrodite implements AutoCloseable {
 
-    @SuppressWarnings("WeakerAccess")
     public static final String FILE_PROPERTY = "aphrodite.config";
 
     private static final Logger LOG = LoggerFactory.getLogger(Aphrodite.class);
@@ -236,14 +231,14 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException if the provided <code>URL</code> is not associated with an issue at any of the active issuetrackers.
      *
      */
-    public Issue getIssue(URL url) throws NotFoundException {
-        Objects.requireNonNull(url, "url cannot be null");
+    public Issue getIssue(URI uri) throws NotFoundException {
+        Objects.requireNonNull(uri, "url cannot be null");
         checkIssueTrackerExists();
-        final IssueTrackerService its = getTrackerFor(url);
+        final IssueTrackerService its = getTrackerFor(uri);
         if(its != null){
-           return its.getIssue(url);
+           return its.getIssue(uri);
         }
-        throw new NotFoundException("No tracker for issue url: " + url);
+        throw new NotFoundException("No tracker for issue url: " + uri);
     }
 
     /**
@@ -255,156 +250,14 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException
      * @throws MalformedURLException
      */
-    public Issue createIssue(final IssueCreationDetails details) throws NotFoundException, MalformedURLException, AphroditeException {
+    public Issue createIssue(final IssueCreationDetails details) throws NotFoundException, URISyntaxException, AphroditeException {
         assert details != null;
-        assert details.getTrackerURL() != null;
-        final IssueTrackerService its = getTrackerFor(details.getTrackerURL());
+        assert details.getTrackerURI() != null;
+        final IssueTrackerService its = getTrackerFor(details.getTrackerURI());
         if(its != null){
             return its.createIssue(details);
          }
-        throw new NotFoundException("No tracker for url: " + details.getTrackerURL());
-    }
-    /**
-     * Retrieve issue associated with PR. This method require PR to conform to metadata scheme and have issue linked to this PR
-     * with 'Issue: &lt;TICKET&gt;'
-     *
-     * @param pullRequest - PR which will be interrogated.
-     * @return
-     *         <ul>
-     *         <li>null</li> - if no issue is linked in PR
-     *         <li>Issue</li> - if there is linked issue that can be fetched
-     *         </ul>
-     * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
-     * @throws MalformedURLException
-     */
-    @Deprecated
-    public Issue getIssue(final PullRequest pullRequest) throws NotFoundException, MalformedURLException {
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        checkIssueTrackerExists();
-
-        URL url = pullRequest.findIssueURL();
-        if (url == null)
-            return null;
-        else
-            return getIssue(url);
-    }
-
-    /**
-     * Retrieve list of related issues associated with PR. This method require PR to conform to metadata scheme and have issue
-     * linked to this PR with 'Related Issues: &lt;TICKET&gt;,&lt;TICKET&gt;,&lt;TICKET&gt;'
-     *
-     * @param pullRequest - PR which will be interrogated.
-     * @return
-     *         <ul>
-     *         <li>null</li> - if no issues are linked in PR
-     *         <li>Issue</li> - if there are linked issues that can be fetched
-     *         </ul>
-     * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
-     * @throws MalformedURLException
-     */
-    @Deprecated
-    public List<Issue> getRelatedIssues(final PullRequest pullRequest) throws MalformedURLException, NotFoundException {
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        checkIssueTrackerExists();
-        List<URL> urls = pullRequest.findRelatedIssuesURL();
-        if (urls == null || urls.size() == 0) {
-            return null;
-        } else {
-            List<Issue> issues = new ArrayList<>(urls.size());
-            for (URL url : urls) {
-                issues.add(getIssue(url));
-            }
-            return issues;
-        }
-    }
-
-    /**
-     * Retrieve upstream issue associated with this PR. This method require PR to conform to metadata scheme and have issue
-     * linked to this PR with 'Upstream Issue: &lt;TICKET&gt;'.
-     *
-     * @param pullRequest - PR which will be interrogated.
-     * @return
-     *         <ul>
-     *         <li>null</li> - if no issue is linked in PR or {@link #isUpstreamRequired(PullRequest)} return false;
-     *         <li>Issue</li> - if there is linked issue that can be fetched
-     *         </ul>
-     * @throws NotFoundException - if there is linked issue but either no tracker or issue does not exist in tracker
-     * @throws MalformedURLException
-     */
-    @Deprecated
-    public Issue getUpstreamIssue(final PullRequest pullRequest) throws NotFoundException, MalformedURLException {
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        checkIssueTrackerExists();
-        if (this.isUpstreamRequired(pullRequest)) {
-            final URL url = pullRequest.findUpstreamIssueURL();
-            if (url == null)
-                return null;
-            else
-                return getIssue(url);
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Retrieve upstream PR associated with this PR. This method require PR to conform to metadata scheme and have issue linked
-     * to this PR with 'Upstream PR: &lt;TICKET&gt;'.
-     *
-     * @param pullRequest - PR which will be interrogated.
-     * @return
-     *         <ul>
-     *         <li>null</li> - if no upstream PR is linked in PR or {@link #isUpstreamRequired(PullRequest)} return false;
-     *         <li>Issue</li> - if there is linked PR that can be fetched
-     *         </ul>
-     * @throws NotFoundException - if there is linked PR but either no tracker or issue does not exist in tracker
-     * @throws MalformedURLException
-     */
-    @Deprecated
-    public PullRequest getUpstreamPullRequest(final PullRequest pullRequest) throws MalformedURLException, NotFoundException {
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        checkIssueTrackerExists();
-        if (this.isUpstreamRequired(pullRequest)) {
-            final URL url = pullRequest.findUpstreamPullRequestURL();
-            if (url == null)
-                return null;
-            else
-                return getPullRequest(url);
-        } else {
-            return null;
-        }
-    }
-
-    @Deprecated
-    public PullRequestUpgrade getPullRequestUpgrade(final PullRequest pullRequest) {
-        if (!hasUpgrade(pullRequest)) {
-            return null;
-        }
-        return pullRequest.findPullRequestUpgrade();
-    }
-
-    /**
-     * Check if PR require upstream or not.
-     *
-     * @param pullRequest
-     * @return
-     */
-    @Deprecated
-    public boolean isUpstreamRequired(final PullRequest pullRequest) {
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        checkIssueTrackerExists();
-        return pullRequest.isUpstreamRequired();
-    }
-
-    /**
-     * Check if said PR has upgrade meta present.
-     * @param pullRequest
-     * @return
-     */
-    @Deprecated
-    public boolean hasUpgrade(PullRequest pullRequest) {
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        checkIssueTrackerExists();
-        return pullRequest.hasUpgrade();
+        throw new NotFoundException("No tracker for url: " + details.getTrackerURI());
     }
 
     /**
@@ -415,14 +268,14 @@ public class Aphrodite implements AutoCloseable {
      * @param urls a collection of issue URLs.
      * @return a list of <code>Issue</code> objects associated with the provided urls.
      */
-    public List<Issue> getIssues(Collection<URL> urls) {
-        Objects.requireNonNull(urls, "the collection of urls cannot be null");
+    public List<Issue> getIssues(Collection<URI> uris) {
+        Objects.requireNonNull(uris, "the collection of urls cannot be null");
 
-        if (urls.isEmpty())
+        if (uris.isEmpty())
             return new ArrayList<>();
         List<CompletableFuture<List<Issue>>> requests =
                 issueTrackers.values().stream()
-                        .map(tracker -> CompletableFuture.supplyAsync(() -> tracker.getIssues(urls), executorService))
+                        .map(tracker -> CompletableFuture.supplyAsync(() -> tracker.getIssues(uris), executorService))
                         .collect(Collectors.toList());
 
         return requests.stream()
@@ -463,16 +316,16 @@ public class Aphrodite implements AutoCloseable {
      * @return a list of all <code>Issue</code> objects which are returned by the provided filter.
      * @throws NotFoundException if the filterURL is not associated with any filters at any of the Issue Trackers.
      */
-    public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
-        Objects.requireNonNull(filterUrl, "filterUrl cannot be null");
+    public List<Issue> searchIssuesByFilter(URI filterUri) throws NotFoundException {
+        Objects.requireNonNull(filterUri, "filterUrl cannot be null");
         checkIssueTrackerExists();
 
-        final IssueTrackerService its = getTrackerFor(filterUrl);
+        final IssueTrackerService its = getTrackerFor(filterUri);
         if(its != null){
-           return its.searchIssuesByFilter(filterUrl);
+           return its.searchIssuesByFilter(filterUri);
         }
 
-        throw new NotFoundException("No filter found which correspond to url: " + filterUrl);
+        throw new NotFoundException("No filter found which correspond to url: " + filterUri);
     }
 
     /**
@@ -491,12 +344,12 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(issue, "issue cannot be null");
         checkIssueTrackerExists();
 
-        final IssueTrackerService its = getTrackerFor(issue.getURL());
+        final IssueTrackerService its = getTrackerFor(issue.getURI());
         if(its != null){
            return its.updateIssue(issue);
         }
 
-        throw new NotFoundException("No issues found which correspond to url: " + issue.getURL());
+        throw new NotFoundException("No issues found which correspond to url: " + issue.getURI());
     }
 
     /**
@@ -510,13 +363,13 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(comment, "comment cannot be null");
         checkIssueTrackerExists();
 
-        final IssueTrackerService its = getTrackerFor(issue.getURL());
+        final IssueTrackerService its = getTrackerFor(issue.getURI());
         if(its != null){
             its.addCommentToIssue(issue, comment);
             return;
         }
 
-        throw new NotFoundException("No issues found which correspond to url: " + issue.getURL());
+        throw new NotFoundException("No issues found which correspond to url: " + issue.getURI());
     }
 
     /**
@@ -532,7 +385,7 @@ public class Aphrodite implements AutoCloseable {
 
         boolean isSuccess = true;
         for(Entry<Issue, Comment> ie:commentMap.entrySet()){
-            final IssueTrackerService its = getTrackerFor(ie.getKey().getURL());
+            final IssueTrackerService its = getTrackerFor(ie.getKey().getURI());
             if(its != null){
                 try {
                     its.addCommentToIssue(ie.getKey(), ie.getValue());
@@ -562,7 +415,7 @@ public class Aphrodite implements AutoCloseable {
 
         boolean isSuccess = true;
         for (Issue i : issues) {
-            final IssueTrackerService its = getTrackerFor(i.getURL());
+            final IssueTrackerService its = getTrackerFor(i.getURI());
             if (its != null) {
                 try {
                     its.addCommentToIssue(i, comment);
@@ -578,26 +431,6 @@ public class Aphrodite implements AutoCloseable {
     }
 
     /**
-     * Retrieve all Issues associated with the provided pull request object.
-     * Implementations of this method assume that the urls of the related issues are present in the
-     * pullRequest's description field.
-     *
-     * @param pullRequest the <code>PullRequest</code> object whoms associated Issues should be returned.
-     * @return a list of all <code>Issue</code> objects, or an empty list if no issues can be found.
-     * @deprecated
-     */
-    @Deprecated
-    public List<Issue> getIssuesAssociatedWith(PullRequest pullRequest) {
-        checkIssueTrackerExists();
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-
-        return issueTrackers.values().stream()
-                .map(service -> service.getIssuesAssociatedWith(pullRequest))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Get the repository located at the provided <code>URL</code>.
      *
      * @param url the <code>URL</code> of the repository to be retrieved.
@@ -605,34 +438,16 @@ public class Aphrodite implements AutoCloseable {
      * @throws NotFoundException if a <code>Repository</code> cannot be found at the provided base url,
      * or no service exists with the same host domain as the provided URL.
      */
-    public Repository getRepository(URL url) throws NotFoundException {
+    public Repository getRepository(URI uri) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(url, "url cannot be null");
+        Objects.requireNonNull(uri, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.repositoryAccessable(url) && repositoryService.urlExists(url))
-                return repositoryService.getRepository(url);
+            if (repositoryService.repositoryAccessable(uri) && repositoryService.uriExists(uri))
+                return repositoryService.getRepository(uri);
         }
-        throw new NotFoundException("No repositories found which correspond to url: " + url);
+        throw new NotFoundException("No repositories found which correspond to url: " + uri);
     }
-
-//    /**
-//     * Retrieve all pull requests associated with the provided <code>Issue</code> object
-//     *
-//     * @param issue the <code>Issue</code> object whose associated pull requests should be returned.
-//     * @return a list of all <code>PullRequest</code> objects, or an empty list if no pull request can be found.
-//     * @throws a <code>NotFoundException</code>, if an exception is encountered when trying to retrieve pull requests from a RepositoryService
-//     */
-//    public List<PullRequest> getPullRequestAssociatedWith(Issue issue) throws NotFoundException {
-//        checkRepositoryServiceExists();
-//        Objects.requireNonNull(issue, "issue cannot be null");
-//
-//        List<PullRequest> pullRequests = new ArrayList<>();
-//        for (RepositoryService repositoryService : repositories) {
-//            pullRequests.addAll(repositoryService.getPullRequestsAssociatedWith(issue));
-//        }
-//        return pullRequests;
-//    }
 
     /**
      * Retrieve all PullRequests associated with the provided <code>Repository</code> object, which have a
@@ -649,7 +464,7 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(state, "state cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(repository.getURL()))
+            if (repositoryService.uriExists(repository.getURI()))
                 return repositoryService.getPullRequestsByState(repository, state);
         }
         return Collections.emptyList();
@@ -662,15 +477,15 @@ public class Aphrodite implements AutoCloseable {
      * @return the <code>PullRequest</code> object.
      * @throws NotFoundException if a <code>PullRequest</code> cannot be found at the provided base url.
      */
-    public PullRequest getPullRequest(URL url) throws NotFoundException {
+    public PullRequest getPullRequest(URI uri) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(url, "url cannot be null");
+        Objects.requireNonNull(uri, "url cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(url) && repositoryService.repositoryAccessable(url))
-                return repositoryService.getPullRequest(url);
+            if (repositoryService.uriExists(uri) && repositoryService.repositoryAccessable(uri))
+                return repositoryService.getPullRequest(uri);
         }
-        throw new NotFoundException("No pull request found which corresponds to url: " + url);
+        throw new NotFoundException("No pull request found which corresponds to url: " + uri);
     }
 
     public Map<RepositoryType, RateLimit> getRateLimits() throws NotFoundException {
@@ -694,27 +509,8 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(repository, "repository cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(repository.getURL()))
+            if (repositoryService.uriExists(repository.getURI()))
                 return repositoryService.getLabelsFromRepository(repository);
-        }
-        return Collections.emptyList();
-    }
-
-    /**
-     * Retrieve all labels associated with the provided <code>PullRequest</code> object.
-     * @param pullRequest request the <code>PullRequest<code> object whose associated labels should be returned.
-     * @return a list of all matching <code>Label<code> objects, or an empty list if no pull request can be found.
-     * @throws NotFoundException if an error is encountered when trying to retrieve labels from a RepositoryService
-     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#getLabels()} instead.
-     */
-    @Deprecated
-    public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
-        checkRepositoryServiceExists();
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-
-        for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(pullRequest.getURL()))
-                return repositoryService.getLabelsFromPullRequest(pullRequest);
         }
         return Collections.emptyList();
     }
@@ -732,136 +528,10 @@ public class Aphrodite implements AutoCloseable {
         Objects.requireNonNull(repository, "repository cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(repository.getURL()))
+            if (repositoryService.uriExists(repository.getURI()))
                 return repositoryService.hasModifiableLabels(repository);
         }
-        throw new NotFoundException("No repository found which corresponds to url: " + repository.getURL());
-    }
-
-    /**
-     * Set the labels for the provided <code>PullRequest</code> object.
-     * @param pullRequest the <code>PullRequest</code> object whose will be set.
-     * @param labels the <code>Label</code> apply to the <code>PullRequest</code>
-     * @throws NotFoundException if the <code>Label</code> can not be found in the provided <code>PullRequest</code>
-     * @throws AphroditeException if add the <code>Label<code> is not consistent with get labels
-     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#setLabels()} instead.
-     */
-    @Deprecated
-    public void setLabelsToPullRequest(PullRequest pullRequest, List<Label> labels) throws NotFoundException, AphroditeException {
-        checkRepositoryServiceExists();
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        Objects.requireNonNull(labels, "labels cannot be null");
-
-        for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(pullRequest.getURL()))
-                repositoryService.setLabelsToPullRequest(pullRequest, labels);
-        }
-    }
-
-    /**
-     * Delete a label from the provided <code>PullRequest</code> object.
-     * @param pullRequest the <code>PullRequest</code> whose label will be removed.
-     * @param name the <code>Label</code> name will be removed.
-     * @throws NotFoundException if the <code>Label</code> name can not be found in the provided <code>PullRequest</code>, or an
-     * exception occurs when contacting the RepositoryService
-     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#removeLabel()} instead.
-     */
-    @Deprecated
-    public void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException {
-        checkRepositoryServiceExists();
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        Objects.requireNonNull(name, "labelname cannot be null");
-
-        for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(pullRequest.getURL()))
-                repositoryService.removeLabelFromPullRequest(pullRequest, name);
-        }
-    }
-
-    /**
-     * Add a <code>Comment</code> to the specified <code>PullRequest</code> object, and propagate the changes
-     * to the remote repository.
-     *
-     * @param pullRequest the <code>PullRequest</code> on which the comment will be made.
-     * @param comment the new <code>Comment</code>.
-     * @throws NotFoundException if the <code>PullRequest</code> cannot be found at the remote repository.
-     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#addComment()} instead.
-     */
-    @Deprecated
-    public void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException {
-        checkRepositoryServiceExists();
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        Objects.requireNonNull(comment, "comment cannot be null");
-
-        for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(pullRequest.getURL())) {
-                repositoryService.addCommentToPullRequest(pullRequest, comment);
-                return;
-            }
-        }
-        throw new NotFoundException("No pull request found which corresponds to pull request.");
-    }
-
-    /**
-     * Attach a label to the specified pull request.  Note the label must already exist at remote repository,
-     * otherwise it will not be applied. If the specified label is already
-     * associated with the provided pull request then no further action is taken.
-     *
-     * @param pullRequest the <code>PullRequest</code> to which the label will be applied.
-     * @param labelName the name of the label to be applied.
-     * @throws NotFoundException if the <code>PullRequest</code> cannot be found, or the labelName does not exist.
-     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#addLabel()} instead.
-     */
-    @Deprecated
-    public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
-        checkRepositoryServiceExists();
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-        Objects.requireNonNull(labelName, "labelName cannot be null");
-
-        for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(pullRequest.getURL()))
-                repositoryService.addLabelToPullRequest(pullRequest, labelName);
-        }
-    }
-
-    /**
-     * Retrieve all <code>PullRequest</code> objects related to the supplied pull request. A pull request is related if its URL is referenced in the
-     * provided pull request object. Note, this method fails silently if a pull request cannot be retrieved from a URL, with the error message
-     * simply logged.
-     *
-     * @param pullRequest request the <code>PullRequest</code> object to be queried against
-     * @return a list of PullRequest objects that are related to the supplied pull request object
-     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#findReferencedPullRequests()} instead.
-     */
-    @Deprecated
-    public List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest) {
-        checkRepositoryServiceExists();
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-
-        return repositories.stream()
-                .filter(service -> service.urlExists(pullRequest.getURL()))
-                .flatMap(service -> service.findPullRequestsRelatedTo(pullRequest).stream())
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Retrieve the current CI status of the latest commit associated with a given pull request.
-     *
-     * @param pullRequest the <code>PullRequest</code> object whose status is to be queried
-     * @return the CI status of the latest commit associated with the given pull request
-     * @throws NotFoundException if no commit status can be found for the provided pull request
-     * @deprecated Use {@link org.jboss.set.aphrodite.domain.spi.PullRequestHome#getCommitStatus()} instead.
-     */
-    @Deprecated
-    public CommitStatus getCommitStatusFromPullRequest(PullRequest pullRequest) throws NotFoundException {
-        checkRepositoryServiceExists();
-        Objects.requireNonNull(pullRequest, "pull request cannot be null");
-
-        for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(pullRequest.getURL()))
-                return repositoryService.getCommitStatusFromPullRequest(pullRequest);
-        }
-        throw new NotFoundException("No commit status found for pull request:" + pullRequest.getURL());
+        throw new NotFoundException("No repository found which corresponds to url: " + repository.getURI());
     }
 
     /**
@@ -913,81 +583,6 @@ public class Aphrodite implements AutoCloseable {
         return released;
     }
 
-    /**
-     * Retrieve all unique Repositories that exists across all Streams.
-     *
-     * @return a list of unique Repositories.
-     */
-    @Deprecated
-    public List<URI> getDistinctURLRepositoriesFromStreams() {
-        checkStreamServiceExists();
-
-        return streamServices.stream()
-                .flatMap(streamService -> streamService.getDistinctURLRepositories().stream())
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Retrieve all Repositories associated with a given Stream, or an empty lists if no Repositories are associated
-     * with the given streamName.
-     *
-     * @param streamName the name of the <code>Stream</code> containing the returned repositories.
-     * @return a list of unique Repositories, or an empty lists if no Repositories are associated with the given
-     * streamName.
-     */
-    @Deprecated
-    public List<URI> getDistinctURLRepositoriesByStream(String streamName) {
-        checkStreamServiceExists();
-        Objects.requireNonNull(streamName, "streamName can not be null");
-
-        return streamServices.stream()
-                .flatMap(streamService -> streamService.getDistinctURLRepositoriesByStream(streamName).stream())
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Find all streams associated with a given repository and codebase.
-     * @param repository the Repository to be searched against
-     * @param codebase the codebase to be searched against
-     * @return a list of Streams associated with the given repository and codebase.
-     */
-    @Deprecated
-    public List<Stream> getStreamsBy(URI repository, Codebase codebase) {
-        checkStreamServiceExists();
-        Objects.requireNonNull(repository, "repository cannot be null");
-        Objects.requireNonNull(codebase, "codebase cannot be null");
-
-        return streamServices.stream()
-                .flatMap(streamService -> streamService.getStreamsBy(repository, codebase).stream())
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Get the StreamComponent which specifies the given repository and codebase. Note, this returns the first matching
-     * component found in any of the loaded StreamServices.
-     *
-     * @param repository the Repository to be searched against.
-     * @param codebase the codebase to be searched against.
-     * @return the name of the component of this repository. If it does not exist it will return the URL of the repository.
-     * @throws NotFoundException if a StreamComponent with the specified repository and codebase does not exist at this
-     * stream service.
-     */
-    @Deprecated
-    public StreamComponent getComponentBy(URI repository, Codebase codebase) throws NotFoundException {
-        checkStreamServiceExists();
-        Objects.requireNonNull(repository, "repository cannot be null");
-        Objects.requireNonNull(codebase, "codebase cannot be null");
-
-        for (StreamService streamService : streamServices) {
-            StreamComponent streamComponent = streamService.getComponentBy(repository, codebase);
-            if (streamComponent != null)
-                return streamComponent;
-        }
-        throw new NotFoundException("No StreamComponent is associated with '" + repository + "' and '" + codebase + "'");
-    }
-
     private void checkIssueTrackerExists() {
         if (issueTrackers.isEmpty())
             throw new IllegalStateException("Unable to retrieve issues as a valid " +
@@ -1026,8 +621,8 @@ public class Aphrodite implements AutoCloseable {
         }
     }
 
-    public IssueTrackerService getTrackerFor(final URL url){
-        final String id = AbstractIssueTracker.convertToTrackerID(url);
+    public IssueTrackerService getTrackerFor(final URI uri){
+        final String id = AbstractIssueTracker.convertToTrackerID(uri);
         if(this.issueTrackers.containsKey(id)){
            return this.issueTrackers.get(id);
         }
@@ -1066,15 +661,15 @@ public class Aphrodite implements AutoCloseable {
      * @return List of commits past the given date
      * @throws NotFoundException if the specified <code>Repository</code> cannot be found.
      */
-    public List<Commit> getCommitsSince(URL url, String branch, long since) throws NotFoundException {
+    public List<Commit> getCommitsSince(URI uri, String branch, long since) throws NotFoundException {
         checkRepositoryServiceExists();
-        Objects.requireNonNull(url, "url cannot be null");
+        Objects.requireNonNull(uri, "url cannot be null");
         Objects.requireNonNull(branch, "branch cannot be null");
 
         for (RepositoryService repositoryService : repositories) {
-            if (repositoryService.urlExists(url) && repositoryService.repositoryAccessable(url))
-                return repositoryService.getCommitsSince(url, branch, since);
+            if (repositoryService.uriExists(uri) && repositoryService.repositoryAccessable(uri))
+                return repositoryService.getCommitsSince(uri, branch, since);
         }
-        throw new NotFoundException("No pull request found which corresponds to url: " + url);
+        throw new NotFoundException("No pull request found which corresponds to url: " + uri);
     }
 }

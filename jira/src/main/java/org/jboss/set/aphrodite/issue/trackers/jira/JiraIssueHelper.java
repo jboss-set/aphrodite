@@ -21,9 +21,9 @@
  */
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
+import java.net.URI;
 
-import java.net.URL;
+import com.atlassian.jira.rest.client.api.domain.Issue;
 
 /**
  * Expose what should have been exposed in the first place.
@@ -33,7 +33,7 @@ import java.net.URL;
 public class JiraIssueHelper {
     private static final IssueWrapper WRAPPER = new IssueWrapper();
 
-    public static void copy(final URL url, final Issue jiraIssue, final JiraIssue domainIssue) {
+    public static void copy(final URI url, final Issue jiraIssue, final JiraIssue domainIssue) {
         WRAPPER.copy(url, jiraIssue, domainIssue);
     }
 }

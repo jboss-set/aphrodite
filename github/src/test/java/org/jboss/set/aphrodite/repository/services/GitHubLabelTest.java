@@ -32,7 +32,7 @@ import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.Repository;
-import org.jboss.set.aphrodite.spi.AphroditeException;
+
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,9 +40,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-import org.mockito.Mockito;
 
 /**
  * Test the label function,get ,set and remove method
@@ -55,8 +52,6 @@ public class GitHubLabelTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     private List<Label> labels, labelsTest;
-    private List<Label> prlabels, prlabelsTest, addlabel;
-    private String labelname = "bug";
 
     @Mock
     private Aphrodite aphrodite;
@@ -70,8 +65,6 @@ public class GitHubLabelTest {
         MockitoAnnotations.initMocks(this);
 
         labels = new ArrayList<>();
-        prlabels = new ArrayList<>();
-        addlabel = new ArrayList<>();
         createTestLabel();
         mockLabel();
     }
@@ -125,77 +118,6 @@ public class GitHubLabelTest {
 
     }
 
-    @Test
-    public void getLabelsfromPatchTest() throws NotFoundException {
-        prlabelsTest = aphrodite.getLabelsFromPullRequest(pullRequest);
-
-        Label label1 = prlabelsTest.get(0);
-        assertEquals("bug color mismatch", "fc2929", label1.getColor());
-        assertEquals("bug name mismatch", "bug", label1.getName());
-        assertEquals("bug url mismatch", "https://api.github.com/repos/abc/xyz/labels/bug",
-                label1.getUrl());
-
-        Label label2 = prlabelsTest.get(1);
-        assertEquals(
-                "bug color mismatch", "cccccc", label2.getColor());
-        assertEquals("bug name mismatch", "duplicate",
-                label2.getName());
-        assertEquals("bug url mismatch",
-                "https://api.github.com/repos/abc/xyz/labels/duplicate", label2.getUrl());
-
-    }
-
-    @Test
-    public void setLabelTest() throws NotFoundException, AphroditeException {
-
-        Mockito.doAnswer(new Answer<Object>() {
-            @SuppressWarnings("unchecked")
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                int count = 0;
-                addlabel = (List<Label>) args[1];
-                for (Label label : addlabel) {
-                    if (!labels.contains(label)) {
-                        addlabel.remove(label);
-                        count++;
-                    }
-
-                }
-                if (prlabels.size() - count == addlabel.size())
-                    return "yes";
-                else
-                    throw new RuntimeException();
-            }
-        }).when(aphrodite).setLabelsToPullRequest(pullRequest, addlabel);
-
-        aphrodite.setLabelsToPullRequest(pullRequest, addlabel);
-    }
-
-    @Test
-    public void removeLabelTest() throws NotFoundException {
-
-        Mockito.doAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                labelname = (String) args[1];
-                for (Label label : prlabels) {
-                    if (label.getName().equals(labelname)) {
-                        prlabels.remove(label);
-                    }
-                }
-                if (prlabels.size() == 1 && prlabels.get(0).getName().equals("duplicate"))
-                    return "yes";
-                else
-                    throw new RuntimeException();
-            }
-        }).when(aphrodite).removeLabelFromPullRequest(pullRequest, labelname);
-
-        aphrodite.removeLabelFromPullRequest(pullRequest, labelname);
-        ;
-    }
-
     private void createTestLabel() {
         labels.add(new Label(null, "fc2929", "bug", "https://api.github.com/repos/abc/xyz/labels/bug"));
         labels.add(new Label(null, "cccccc", "duplicate",
@@ -210,20 +132,9 @@ public class GitHubLabelTest {
                 "https://api.github.com/repos/abc/xyz/labels/question"));
         labels.add(new Label(null, "ffffff", "wontfix",
                 "https://api.github.com/repos/abc/xyz/labels/wontfix"));
-
-        prlabels.add(new Label("1", "fc2929", "bug", "https://api.github.com/repos/abc/xyz/labels/bug"));
-        prlabels.add(new Label("1", "cccccc", "duplicate",
-                "https://api.github.com/repos/abc/xyz/labels/duplicate"));
-
-        addlabel.add(new Label("1", "84b6eb", "enhancement",
-                "https://api.github.com/repos/abc/xyz/labels/enhancement"));
-        addlabel.add(new Label("1", "159818", "help wanted",
-                "https://api.github.com/repos/abc/xyz/labels/help wanted"));
     }
 
     private void mockLabel() throws NotFoundException {
         when(aphrodite.getLabelsFromRepository(repository)).thenReturn(labels);
-        when(aphrodite.getLabelsFromPullRequest(pullRequest)).thenReturn(prlabels);
-
     }
 }

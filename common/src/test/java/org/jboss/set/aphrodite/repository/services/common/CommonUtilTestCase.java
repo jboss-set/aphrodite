@@ -16,15 +16,14 @@
 
 package org.jboss.set.aphrodite.repository.services.common;
 
-import static org.junit.Assert.*;
-
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author wangc
@@ -52,16 +51,16 @@ public class CommonUtilTestCase {
     @Test
     public void testCreateFromUrl() {
         try {
-            String result = RepositoryUtils.createRepositoryIdFromUrl(new URL(TEST_URL));
+            String result = RepositoryUtils.createRepositoryIdFromUrl(new URI(TEST_URL));
             Assert.assertEquals("repository id don't match", TEST_REPOSITORYID, result);
-        } catch (MalformedURLException e) {
+        } catch (URISyntaxException e) {
             fail("MalformedURLException should not happen in test");
         }
         
         try {
-            String result = RepositoryUtils.createRepositoryIdFromUrl(new URL(TEST_URL_WITH_SLASH));
+            String result = RepositoryUtils.createRepositoryIdFromUrl(new URI(TEST_URL_WITH_SLASH));
             Assert.assertEquals("repository id don't match", TEST_REPOSITORYID, result);
-        } catch (MalformedURLException e) {
+        } catch (URISyntaxException e) {
             fail("MalformedURLException should not happen in test");
         }
     }
@@ -69,20 +68,20 @@ public class CommonUtilTestCase {
     @Test
     public void testGetPRFromDescription() {
         try {
-            URL url = new URL(PR_URL);
-            List<URL> pullRequests = RepositoryUtils.getPRFromDescription(url, DESC);
+            URI url = new URI(PR_URL);
+            List<URI> pullRequests = RepositoryUtils.getPRFromDescription(url, DESC);
             Assert.assertEquals("Incorrect number of PR from description ", 1, pullRequests.size());
             Assert.assertEquals("Incorrect PR from description ", REFERENCED_PR_URL_EXTERNAL, pullRequests.get(0).toString());
-        } catch (MalformedURLException | URISyntaxException e) {
+        } catch (URISyntaxException e) {
             fail("Exception should not happen in test");
         }
         
         try {
-            URL url = new URL(PR_URL);
-            List<URL> pullRequests = RepositoryUtils.getPRFromDescription(url, DESC_WITH_EXTERNAL_PR);
+            URI url = new URI(PR_URL);
+            List<URI> pullRequests = RepositoryUtils.getPRFromDescription(url, DESC_WITH_EXTERNAL_PR);
             Assert.assertEquals("Incorrect number of PR from description ", 1, pullRequests.size());
             Assert.assertEquals("Incorrect PR from description ", REFERENCED_PR_URL, pullRequests.get(0).toString());
-        } catch (MalformedURLException | URISyntaxException e) {
+        } catch (URISyntaxException e) {
             fail("Exception should not happen in test");
         }
     }

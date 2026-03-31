@@ -22,7 +22,7 @@
 
 package org.jboss.set.aphrodite.spi;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 
 import org.jboss.set.aphrodite.config.AphroditeConfig;
@@ -67,14 +67,14 @@ public interface RepositoryService {
      * @return true if the provided <code>URL</code> has the same host as this service, otherwise false.
      * @throws NullPointerException if the provided <code>URL</code> is null.
      */
-    boolean urlExists(URL url);
+    boolean uriExists(URI uri);
 
     /**
      * Checks whether the provided <code>URL</code> is accessable.
      * @param url the <code>URL</code> to check.
      * @return true if the provided <code>URL</code> is accessable, otherwise false.
      */
-    boolean repositoryAccessable(URL url);
+    boolean repositoryAccessable(URI uri);
 
     /**
      * Get the repository located at the provided <code>URL</code>.
@@ -83,7 +83,7 @@ public interface RepositoryService {
      * @return the <code>Repository</code> object.
      * @throws NotFoundException if a <code>Repository</code> cannot be found at the provided base url.
      */
-    Repository getRepository(URL url) throws NotFoundException;
+    Repository getRepository(URI uri) throws NotFoundException;
 
     /**
      * Get the <code>PullRequest</code> located at the provided <code>URL</code>.
@@ -92,7 +92,7 @@ public interface RepositoryService {
      * @return the <code>PullRequest</code> object.
      * @throws NotFoundException if a <code>PullRequest</code> cannot be found at the provided base url.
      */
-    PullRequest getPullRequest(URL url) throws NotFoundException;
+    PullRequest getPullRequest(URI uri) throws NotFoundException;
 
     /**
      * Retrieve all pull requests associated with the provided <code>Issue</code> object
@@ -237,5 +237,5 @@ public interface RepositoryService {
      * @param since - date in Unix time
      * @return list of commits since a given date
      */
-    List<Commit> getCommitsSince(URL url, String branch, long since);
+    List<Commit> getCommitsSince(URI uri, String branch, long since);
 }

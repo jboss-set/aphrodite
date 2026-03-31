@@ -22,9 +22,7 @@
 
 package org.jboss.set.aphrodite.repository.services.gitlab;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -63,26 +61,20 @@ public class GitLabUtils {
      * @param url The gitab repo URL
      * @return The project id in the form <em>group/project</em>
      */
-    public static String getProjectIdFromURL(URL url) {
-        try {
-            url = url.toURI().normalize().toURL();
-            String[] path = url.getPath().split("/");
-            String projectId = null;
-            boolean done = false;
-            for (int i = 0; i < path.length && !done; i++) {
-                if (!path[i].isEmpty()) {
-                    if ("-".equals(path[i])) {
-                        done = true;
-                    } else {
-                        projectId = projectId == null ? path[i] : projectId + "/" + path[i];
-                    }
+    public static String getProjectIdFromURI(URI uri) {
+        String[] path = uri.getPath().split("/");
+        String projectId = null;
+        boolean done = false;
+        for (int i = 0; i < path.length && !done; i++) {
+            if (!path[i].isEmpty()) {
+                if ("-".equals(path[i])) {
+                    done = true;
+                } else {
+                    projectId = projectId == null ? path[i] : projectId + "/" + path[i];
                 }
             }
-            return projectId;
-        } catch (MalformedURLException | URISyntaxException e) {
-            LOG.debug(url + "is not a valid URL", e);
-            return null;
         }
+        return projectId;
     }
 
     /**
@@ -101,40 +93,36 @@ public class GitLabUtils {
      * @param url The URL to parse
      * @return The array with two parts or null
      */
-    public static String[] getProjectIdAndLastFieldFromURL(URL url) {
-        try {
-            url = url.toURI().normalize().toURL();
-            String[] path = url.getPath().split("/");
-            String projectId = null;
-            boolean done = false;
-            int idx = -1;
-            for (int i = 0; i < path.length && !done; i++) {
+    public static String[] getProjectIdAndLastFieldFromURI(URI url) {
+
+        String[] path = url.getPath().split("/");
+        String projectId = null;
+        boolean done = false;
+        int idx = -1;
+        for (int i = 0; i < path.length && !done; i++) {
+            if (!path[i].isEmpty()) {
+                if ("-".equals(path[i])) {
+                    done = true;
+                    idx = i;
+                } else {
+                    projectId = projectId == null ? path[i] : projectId + "/" + path[i];
+                }
+            }
+        }
+        String mergeId = null;
+        if (idx != -1) {
+            for (int i = path.length - 1; i > idx && mergeId == null; i--) {
                 if (!path[i].isEmpty()) {
-                    if ("-".equals(path[i])) {
-                        done = true;
-                        idx = i;
-                    } else {
-                        projectId = projectId == null ? path[i] : projectId + "/" + path[i];
-                    }
+                    mergeId = path[i];
                 }
             }
-            String mergeId = null;
-            if (idx != -1) {
-                for (int i = path.length - 1; i > idx && mergeId == null; i--) {
-                    if (!path[i].isEmpty()) {
-                        mergeId = path[i];
-                    }
-                }
-            }
-            if (projectId != null && mergeId != null) {
-                return new String[]{projectId, mergeId};
-            } else {
-                return null;
-            }
-        } catch (MalformedURLException | URISyntaxException e) {
-            LOG.debug(url + "is not a valid URL", e);
+        }
+        if (projectId != null && mergeId != null) {
+            return new String[]{projectId, mergeId};
+        } else {
             return null;
         }
+
     }
 
     /**
@@ -144,9 +132,9 @@ public class GitLabUtils {
      * @param repoUrl The repository URL
      * @return true if the URL is in the same origin than the repo URL
      */
-    public static boolean urlIsInRepo(URL url, URL repoUrl) {
+    public static boolean urlIsInRepo(URI url, URI repoUrl) {
         Objects.requireNonNull(url);
-        return url.getProtocol().equals(repoUrl.getProtocol()) &&
+        return url.getScheme().equals(repoUrl.getScheme()) &&
                 url.getHost().equalsIgnoreCase(repoUrl.getHost()) &&
                 url.getPort() == repoUrl.getPort();
     }
@@ -158,7 +146,7 @@ public class GitLabUtils {
      * @param repoUrl The repository URL
      * @throws NotFoundException If url is not in repoUrl
      */
-    public static void checkIsInRepo(URL url, URL repoUrl) throws NotFoundException {
+    public static void checkIsInRepo(URI url, URI repoUrl) throws NotFoundException {
         if (!urlIsInRepo(url, repoUrl)) {
             throw new NotFoundException("Repository " + url + " cannot be found as it is not hosted on this server.");
         }
@@ -226,9 +214,9 @@ public class GitLabUtils {
      * @param prHome The pull request home to use in the or
      * @return The aphrodite PullRequesy
      */
-    public static PullRequest toPullRequest(MergeRequest m, List<Commit> commits, URL url, Repository repo, PullRequestHome prHome) {
+    public static PullRequest toPullRequest(MergeRequest m, List<Commit> commits, URI uri, Repository repo, PullRequestHome prHome) {
         return new PullRequest(m.getIid().toString(),
-                url,
+                uri,
                 repo,  // repo
                 new Codebase(m.getTargetBranch()), // codebase
                 toPullRequestState(m.getState()), // state
@@ -249,7 +237,7 @@ public class GitLabUtils {
      * @param repoUrl The label URL
      * @return The aphrodite label
      */
-    public static Label toLabel(org.gitlab4j.api.models.Label l, URL repoUrl) {
-        return new Label(l.getId().toString(), l.getColor(), l.getName(), repoUrl + "/labels/" + l.getName());
+    public static Label toLabel(org.gitlab4j.api.models.Label l, URI repoURI) {
+        return new Label(l.getId().toString(), l.getColor(), l.getName(), repoURI + "/labels/" + l.getName());
     }
 }

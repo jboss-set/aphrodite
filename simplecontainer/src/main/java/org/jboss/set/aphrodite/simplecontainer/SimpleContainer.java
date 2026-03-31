@@ -38,7 +38,7 @@ public class SimpleContainer extends Container {
         final Object obj = registry.get(name);
         if (obj == null) throw new NameNotFoundException(name + " not found in registry");
         if (!expected.isInstance(obj)) throw new NameNotFoundException(name + " is of wrong type, expected " + expected + " got " + obj.getClass());
-        return (T) obj;
+        return expected.cast(obj);
     }
 
     public void register(final String name, final Object obj) {

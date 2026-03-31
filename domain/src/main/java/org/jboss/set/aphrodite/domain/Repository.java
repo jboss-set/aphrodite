@@ -22,11 +22,7 @@
 
 package org.jboss.set.aphrodite.domain;
 
-import org.jboss.set.aphrodite.container.Container;
-import org.jboss.set.aphrodite.domain.spi.CompareHome;
-
-import javax.naming.NameNotFoundException;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,20 +31,25 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.naming.NameNotFoundException;
+
+import org.jboss.set.aphrodite.container.Container;
+import org.jboss.set.aphrodite.domain.spi.CompareHome;
+
 public class Repository {
 
     private static final Pattern COMPONENT_VERSION = Pattern.compile("[+\\-]\\s+<version\\.(.*)>(.*)</version\\.(.*)>");
 
-    private final URL url;
+    private final URI uri;
 
     private final List<Codebase> codebases = new ArrayList<>();
 
-    public Repository(URL url) {
-        this.url = url;
+    public Repository(URI uri) {
+        this.uri = uri;
     }
 
-    public URL getURL() {
-        return url;
+    public URI getURI() {
+        return uri;
     }
 
     public List<Codebase> getCodebases() {
@@ -56,15 +57,15 @@ public class Repository {
     }
 
     public Compare getCompare(String tag1, String tag2) throws NameNotFoundException {
-        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getCompare(this.url, tag1, tag2);
+        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getCompare(this.uri, tag1, tag2);
     }
 
     public List<String> getTags() throws NameNotFoundException {
-        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getTags(this.url);
+        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getTags(this.uri);
     }
 
     public List<String> getBranches() throws NameNotFoundException {
-        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getBranches(this.url);
+        return Container.instance().lookup(CompareHome.class.getSimpleName(), (CompareHome.class)).getBranches(this.uri);
     }
 
     public List<VersionUpgrade> getUpgradesForFile(String fileName, String tag1, String tag2) {
@@ -90,7 +91,7 @@ public class Repository {
 
             return upgrades;
         } catch (NameNotFoundException nnfe) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
@@ -102,7 +103,7 @@ public class Repository {
     public boolean equals(Object obj) {
         if(obj instanceof Repository) {
             Repository that = (Repository) obj;
-            return this.url.toString().equals(that.url.toString());
+            return this.uri.toString().equals(that.uri.toString());
         }
         return false;
     }
@@ -111,14 +112,14 @@ public class Repository {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        result = prime * result + ((uri == null) ? 0 : uri.hashCode());
         return result;
     }
 
     @Override
     public String toString() {
         return "Repository{" +
-                "url=" + url +
+                "uri=" + uri +
                 '}';
     }
 }

@@ -30,10 +30,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -90,7 +88,7 @@ public class JiraIssueWrapperTest {
 
     private static String JIRA_URL = "https://issues.redhat.com/";
     private IssueWrapper issueWrapper;
-    private URL jiraURL;
+    private URI jiraURL;
 
     @Mock
     private com.atlassian.jira.rest.client.api.domain.Issue jiraIssue01;
@@ -118,10 +116,10 @@ public class JiraIssueWrapperTest {
     private Issue issue01;
 
     @Before
-    public void setUp() throws MalformedURLException, ParseException {
+    public void setUp() throws URISyntaxException, ParseException {
         issueWrapper = new IssueWrapper();
         genericDateTime = new DateTime(2015, 12, 29, 15, 16, 50, 946, DateTimeZone.forOffsetHours(1));
-        jiraURL = new URL(JIRA_URL);
+        jiraURL = new URI(JIRA_URL);
         mockJiraIssue01();
 
         issue01 = createTestIssue01(jiraURL);
@@ -216,7 +214,7 @@ public class JiraIssueWrapperTest {
         when(jiraIssue01.getComments()).thenReturn(Collections.singletonList(commentMock));
     }
 
-    private Issue createTestIssue01(URL url) throws ParseException {
+    private Issue createTestIssue01(URI url) throws ParseException {
         Issue result = new Issue(url, TrackerType.JIRA);
 
         result.setTrackerId("1111111");

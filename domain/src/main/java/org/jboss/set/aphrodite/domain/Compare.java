@@ -24,7 +24,7 @@ public class Compare {
     private Map<String, String> diffs;
 
     public Compare() {
-        this(Collections.EMPTY_MAP);
+        this(Collections.emptyMap());
     }
 
     public Compare(Map<String, String> diffs) {

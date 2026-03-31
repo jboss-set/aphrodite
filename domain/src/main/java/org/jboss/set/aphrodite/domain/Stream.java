@@ -22,7 +22,7 @@
 
 package org.jboss.set.aphrodite.domain;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +44,7 @@ public class Stream {
 
     //this is non encodable value, it is just here to identify JSON resource
     //that this stream belong to, so we know which one to serialize
-    private final URL url;
+    private final URI uri;
     public Stream() {
         this("N/A");
     }
@@ -57,11 +57,11 @@ public class Stream {
         this(null,name, upstream, new HashMap<>());
     }
 
-    public Stream(URL url,String name, Stream upstream, Map<String, StreamComponent> components) {
+    public Stream(URI uri,String name, Stream upstream, Map<String, StreamComponent> components) {
         this.name = name;
         this.upstream = upstream;
         this.components = components;
-        this.url = url;
+        this.uri = uri;
         for(StreamComponent streamComponent:components.values()){
             streamComponent.setStream(this);
         }
@@ -79,8 +79,8 @@ public class Stream {
         return upstream;
     }
 
-    public URL getURL() {
-        return url;
+    public URI getURI() {
+        return uri;
     }
 
     public Collection<StreamComponent> getAllComponents() {
@@ -125,7 +125,7 @@ public class Stream {
         return "Stream{" +
                 "name='" + name + '\'' +
                 ", upstream=" + (upstream!=null?upstream.getName():"") +
-                ",url="+url+
+                ",uri="+uri+
                 ", components=" + components +
                 '}';
     }

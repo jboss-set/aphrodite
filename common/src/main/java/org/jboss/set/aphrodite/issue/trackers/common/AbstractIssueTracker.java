@@ -22,8 +22,8 @@
 
 package org.jboss.set.aphrodite.issue.trackers.common;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,6 +48,8 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * An abstract IssueTracker which provides logic common to all issue trackers.
  *
@@ -61,7 +64,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     protected final TrackerType TRACKER_TYPE;
     protected ExecutorService executorService;
     protected IssueTrackerConfig config;
-    protected URL baseUrl;
+    protected URI baseUrl;
 
     public AbstractIssueTracker(TrackerType TRACKER_TYPE) {
         this.TRACKER_TYPE = TRACKER_TYPE;
@@ -90,8 +93,8 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
             url = url + "/";
 
         try {
-            baseUrl = new URL(url);
-        } catch (MalformedURLException e) {
+            baseUrl = new URI(url);
+        } catch (URISyntaxException e) {
             String errorMsg = "Invalid IssueTracker url. " + this.getClass().getName() +
                     " service for '" + url + "' cannot be started";
             Utils.logException(LOG, errorMsg, e);
@@ -107,10 +110,10 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         while (m.find()) {
             String link = m.group();
             try {
-                URL url = new URL(link);
-                if (url.getHost().equals(baseUrl.getHost()))
-                    issues.add(getIssue(url));
-            } catch (MalformedURLException e) {
+                URI uri = new URI(link);
+                if (uri.getHost().equals(baseUrl.getHost()))
+                    issues.add(getIssue(uri));
+            } catch (URISyntaxException e) {
                 if (LOG.isTraceEnabled())
                     LOG.trace(e.getMessage(), e);
             } catch (NotFoundException e) {
@@ -122,23 +125,23 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
 
     @Override
     public void addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
-        checkHost(issue.getURL());
+        checkHost(issue.getURI());
         comment.getId().ifPresent(id ->
                 Utils.logWarnMessage(LOG, "ID: " + id + "ignored when posting comments " +
                         "as this is set by the issue tracker.")
         );
     }
 
-    protected void checkHost(URL url) throws NotFoundException {
-        if (!urlExists(url))
+    protected void checkHost(URI uri) throws NotFoundException {
+        if (!uriExists(uri))
             throw new NotFoundException("The requested entity cannot be found at this tracker as " +
                     "the specified host domain is different from this service.");
     }
 
     @Override
-    public boolean urlExists(URL url) {
-        Objects.requireNonNull(url);
-        return convertToTrackerID(url).equals(getTrackerID());
+    public boolean uriExists(URI uri) {
+        Objects.requireNonNull(uri);
+        return convertToTrackerID(uri).equals(getTrackerID());
     }
 
     @Override
@@ -150,12 +153,12 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         return abstractIssueTracker.TRACKER_TYPE != null && abstractIssueTracker.baseUrl != null;
     }
 
-    public static String convertToTrackerID(URL url) {
-        Objects.requireNonNull(url);
+    public static String convertToTrackerID(URI uri) {
+        Objects.requireNonNull(uri);
         StringBuilder stringBuilder = new StringBuilder(40);
-        stringBuilder.append(url.getProtocol()).append("://").append(url.getHost());
-        if(url.getPort()>0)
-            stringBuilder.append(":").append(url.getPort());
+        stringBuilder.append(uri.getScheme()).append("://").append(uri.getHost());
+        if(uri.getPort()>0)
+            stringBuilder.append(":").append(uri.getPort());
         return stringBuilder.toString();
     }
 
@@ -164,7 +167,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
 
         return commentMap.entrySet()
                 .stream()
-                .filter(entry -> entry.getKey() != null && urlExists(entry.getKey().getURL()))
+                .filter(entry -> entry.getKey() != null && uriExists(entry.getKey().getURI()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
@@ -172,15 +175,16 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         Objects.requireNonNull(issues);
 
         return issues.stream()
-                .filter(i -> i != null && urlExists(i.getURL()))
+                .filter(i -> i != null && uriExists(i.getURI()))
                 .collect(Collectors.toList());
     }
 
-    protected Collection<URL> filterUrlsByHost(Collection<URL> urls) {
-        Objects.requireNonNull(urls);
+    protected Collection<URI> filterUrlsByHost(Collection<URI> uris) {
+        Objects.requireNonNull(uris);
 
-        return urls.stream()
-                .filter(url -> url != null && urlExists(url))
-                .collect(Collectors.toList());
+        return uris.stream()
+                .filter(Predicate.not(Objects::isNull))
+                .filter(this::uriExists)
+                .collect(toList());
     }
 }

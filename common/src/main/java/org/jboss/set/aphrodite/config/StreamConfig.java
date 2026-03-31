@@ -22,16 +22,16 @@
 package org.jboss.set.aphrodite.config;
 
 import java.io.File;
-import java.net.URL;
+import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 
 public class StreamConfig {
     private File streamFile;
     private StreamType streamType;
-    private URL url;
+    private URI url;
 
-    public StreamConfig(URL url, StreamType streamType) {
+    public StreamConfig(URI url, StreamType streamType) {
         Objects.requireNonNull(url, "A 'url' must be specified for each service.");
         Objects.requireNonNull(streamType, "A 'streamType' must be specified for each service.");
         this.url = url;
@@ -53,7 +53,7 @@ public class StreamConfig {
         return Optional.ofNullable(streamFile);
     }
 
-    public Optional<URL> getURL() {
+    public Optional<URI> getURI() {
         return Optional.ofNullable(url);
     }
 

@@ -22,7 +22,7 @@
 
 package org.jboss.set.aphrodite.domain;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,7 +45,7 @@ import org.jboss.set.aphrodite.domain.spi.PatchHome;
  */
 public class Issue {
 
-    private URL url;
+    private URI uri;
 
     // The unique id of an issue within its issue tracker domain e.g WFLY-5048
     private String trackerId;
@@ -82,9 +82,9 @@ public class Issue {
 
     private Map<String, FlagStatus> streamStatus;
 
-    private List<URL> dependsOn;
+    private List<URI> dependsOn;
 
-    private List<URL> blocks;
+    private List<URI> blocks;
 
     private Date creationTime;
 
@@ -102,11 +102,11 @@ public class Issue {
      */
     private List<Patch> patches;
 
-    public Issue(URL url, TrackerType type) {
-        if (url == null)
+    public Issue(URI uri, TrackerType type) {
+        if (uri == null)
             throw new IllegalArgumentException("Issue URL cannot be null");
 
-        this.url = url;
+        this.uri = uri;
         this.trackerType = type;
         this.stage = new Stage();
         this.status = IssueStatus.UNDEFINED;
@@ -122,8 +122,8 @@ public class Issue {
         this.patches = new ArrayList<>();
     }
 
-    public URL getURL() {
-        return url;
+    public URI getURI() {
+        return uri;
     }
 
     public Optional<String> getTrackerId() {
@@ -203,11 +203,6 @@ public class Issue {
         return status;
     }
 
-    @Deprecated
-    public void setStatus(IssueStatus status) {
-        setStatus(status, status.name());
-    }
-
     public void setStatus(IssueStatus issueStatus, String rawStatus) {
         Objects.requireNonNull(issueStatus, "An Issue's status cannot be set to null");
         this.rawStatus = rawStatus.toUpperCase();
@@ -270,20 +265,20 @@ public class Issue {
         this.streamStatus = streamStatus;
     }
 
-    public List<URL> getDependsOn() {
+    public List<URI> getDependsOn() {
         return dependsOn;
     }
 
-    public void setDependsOn(List<URL> dependsOn) {
+    public void setDependsOn(List<URI> dependsOn) {
         Objects.requireNonNull(dependsOn, "An Issue's DependsOn List cannot be set to null");
         this.dependsOn = dependsOn;
     }
 
-    public List<URL> getBlocks() {
+    public List<URI> getBlocks() {
         return blocks;
     }
 
-    public void setBlocks(List<URL> blocks) {
+    public void setBlocks(List<URI> blocks) {
         Objects.requireNonNull(blocks, "An Issue's Blocks List cannot be set to null");
         this.blocks = blocks;
     }
@@ -332,7 +327,7 @@ public class Issue {
     @Override
     public String toString() {
         return "Issue{" +
-                "url=" + url +
+                "uri=" + uri +
                 ", trackerId='" + trackerId + '\'' +
                 ", trackerType='" + trackerType + '\'' +
                 ", product='" + product + '\'' +

@@ -21,8 +21,8 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -47,28 +47,28 @@ public class BugzillaPatchHomeImpl implements PatchHome {
 
     @Override
     public Stream<Patch> findPatchesByIssue(Issue issue) {
-        List<URL> urls = new ArrayList<>();
+        List<URI> urls = new ArrayList<>();
         issue.getComments().stream().forEach(e -> extractPullRequests(urls, e.getBody()));
         return mapURLtoPatchStream(urls);
 
     }
 
-    private void extractPullRequests(List<URL> pullRequests, String messageBody) {
+    private void extractPullRequests(List<URI> pullRequests, String messageBody) {
         Matcher matcher = RepositoryUtils.RELATED_PR_PATTERN.matcher(messageBody);
         while (matcher.find()) {
             if (matcher.groupCount() == 3) {
                 String urlStr = "https://github.com/" + matcher.group(1) + "/" + matcher.group(2) + "/pull/" + matcher.group(3);
                 try {
-                    URL url = new URL(urlStr);
+                    URI url = new URI(urlStr);
                     pullRequests.add(url);
-                } catch (MalformedURLException e) {
+                } catch (URISyntaxException e) {
                     throw new IllegalArgumentException("Invalid URL:" + urlStr, e);
                 }
             }
         }
     }
 
-    private java.util.stream.Stream<Patch> mapURLtoPatchStream(List<URL> urls) {
+    private java.util.stream.Stream<Patch> mapURLtoPatchStream(List<URI> urls) {
         return urls.stream().map(e -> {
             PatchType patchType = getPatchType(e);
             PatchState patchState = getPatchState(e, patchType);
@@ -76,7 +76,7 @@ public class BugzillaPatchHomeImpl implements PatchHome {
         });
     }
 
-    private PatchType getPatchType(URL url) {
+    private PatchType getPatchType(URI url) {
         String urlStr = url.toString();
         if (urlStr.contains("/pull/"))
             return PatchType.PULLREQUEST;
@@ -86,7 +86,7 @@ public class BugzillaPatchHomeImpl implements PatchHome {
             return PatchType.FILE;
     }
 
-    private PatchState getPatchState(URL url, PatchType patchType) {
+    private PatchState getPatchState(URI url, PatchType patchType) {
         if (patchType.equals(PatchType.PULLREQUEST)) {
             try {
                 PullRequest pullRequest = Aphrodite.instance().getPullRequest(url);

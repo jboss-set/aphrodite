@@ -22,8 +22,8 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -90,8 +90,8 @@ class IssueWrapper {
 
     private static final Logger LOG = LoggerFactory.getLogger(JiraIssueTracker.class);
 
-    Issue jiraSearchIssueToIssue(URL baseURL, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
-        URL url = trackerIdToBrowsableUrl(baseURL, jiraIssue.getKey());
+    Issue jiraSearchIssueToIssue(URI baseURL, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+        URI url = trackerIdToBrowsableUrl(baseURL, jiraIssue.getKey());
         return jiraIssueToIssue(url, jiraIssue);
     }
 
@@ -103,13 +103,13 @@ class IssueWrapper {
         issue.setLastUpdated(jiraIssue.getUpdateDate().toDate());
     }
 
-    Issue jiraIssueToIssue(URL url, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
+    Issue jiraIssueToIssue(URI url, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         JiraIssue issue = new JiraIssue(url);
         copy(url, jiraIssue, issue);
         return issue;
     }
 
-    void copy(final URL url, final com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, final JiraIssue issue) {
+    void copy(final URI url, final com.atlassian.jira.rest.client.api.domain.Issue jiraIssue, final JiraIssue issue) {
         issue.setTrackerId(jiraIssue.getKey());
         issue.setSummary(jiraIssue.getSummary());
         issue.setDescription(jiraIssue.getDescription());
@@ -475,7 +475,7 @@ class IssueWrapper {
         }
     }
 
-    private void setIssueDependencies(URL originalUrl, Issue issue, Iterable<com.atlassian.jira.rest.client.api.domain.IssueLink> links) {
+    private void setIssueDependencies(URI originalUrl, Issue issue, Iterable<com.atlassian.jira.rest.client.api.domain.IssueLink> links) {
         if (links == null)
             return;
         final String INCORPORATES = "incorporates";
@@ -484,21 +484,21 @@ class IssueWrapper {
             // Add links of cloned to/from issues to the issue
             if (il.getIssueLinkType().getDescription().contains("cloned")
                     || il.getIssueLinkType().getDescription().contains("clones")) {
-                URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
+                URI url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 ((JiraIssue) issue).getLinkedCloneIssues().add(url);
             }
 
             // Add links of incorporates issues
             if(il.getIssueLinkType().getDescription().equals(INCORPORATES)) {
-                URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
+                URI url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 ((JiraIssue) issue).getLinkedIncorporatesIssues().add(url);
             }
 
             if (il.getIssueLinkType().getDirection().equals(Direction.INBOUND)) {
-                URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
+                URI url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 issue.getBlocks().add(url);
             } else {
-                URL url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
+                URI url = trackerIdToBrowsableUrl(originalUrl, il.getTargetIssueKey());
                 issue.getDependsOn().add(url);
             }
         }
@@ -520,9 +520,9 @@ class IssueWrapper {
 
     private static void extractPullRequests(JiraIssue issue, JSONArray urls) {
         if (urls != null && urls.length() > 0 ) {
-            List<URL> prUrls = new ArrayList<URL>(urls.length());
+            List<URI> prUrls = new ArrayList<URI>(urls.length());
             for ( int index = 0 ; index < urls.length(); index++ )
-                prUrls.add(Utils.createURL(getFromJSONArray(index,urls).toString()));
+                prUrls.add(Utils.createURI(getFromJSONArray(index,urls).toString()));
             issue.setPullRequests(prUrls);
         }
     }
@@ -535,11 +535,11 @@ class IssueWrapper {
         }
     }
 
-    private URL trackerIdToBrowsableUrl(URL url, String trackerId) {
+    private URI trackerIdToBrowsableUrl(URI url, String trackerId) {
         try {
-            String link = url.getProtocol() + "://" + url.getHost() + BROWSE_ISSUE_PATH + trackerId;
-            return new URL(link);
-        } catch (MalformedURLException e) {
+            String link = url.getScheme() + "://" + url.getHost() + BROWSE_ISSUE_PATH + trackerId;
+            return new URI(link);
+        } catch (URISyntaxException e) {
             return null;
         }
     }

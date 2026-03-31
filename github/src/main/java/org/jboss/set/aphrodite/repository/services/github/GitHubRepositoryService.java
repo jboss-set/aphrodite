@@ -23,9 +23,8 @@
 package org.jboss.set.aphrodite.repository.services.github;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -89,51 +88,35 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     }
 
     @Override
-    public PullRequest getPullRequest(URL url) throws NotFoundException {
-        checkHost(url);
-        String[] elements = url.getPath().split("/");
+    public PullRequest getPullRequest(URI uri) throws NotFoundException {
+        checkHost(uri);
+        String[] elements = uri.getPath().split("/");
         try {
             int pullId = Integer.parseInt(elements[elements.length - 1]);
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
             return WRAPPER.pullRequestToPullRequest(pullRequest, getPullRequestHome());
         } catch (IOException e) {
-            Utils.logException(LOG, url.toString(), e);
+            Utils.logException(LOG, uri.toString(), e);
             throw new NotFoundException(e);
         } catch (NumberFormatException ex) {
-            Utils.logWarnMessage(LOG, "Unable to get pull request from " + url);
+            Utils.logWarnMessage(LOG, "Unable to get pull request from " + uri);
             throw new NotFoundException(ex);
         }
     }
 
     @Override
-    public Repository getRepository(URL url) throws NotFoundException {
-        checkHost(url);
+    public Repository getRepository(URI uri) throws NotFoundException {
+        checkHost(uri);
         try {
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             Collection<GHBranch> branches = repository.getBranches().values();
-            return WRAPPER.toAphroditeRepository(url, branches);
+            return WRAPPER.toAphroditeRepository(uri, branches);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
         }
     }
-
-//    @Override
-//    public List<PullRequest> getPullRequestsAssociatedWith(Issue issue) throws NotFoundException {
-//        String trackerId = issue.getTrackerId().orElseThrow(() -> new IllegalArgumentException("Issue.trackerId must be set."));
-//        try {
-//            GitHubGlobalSearchService searchService = new GitHubGlobalSearchService(gitHubClient);
-//            List<SearchResult> searchResults = searchService.searchAllPullRequests(trackerId);
-//            return searchResults.stream()
-//                    .map(pr -> getPullRequest(pr.getUrl()))
-//                    .filter(patch -> patch != null)
-//                    .collect(Collectors.toList());
-//        } catch (IOException e) {
-//            Utils.logException(LOG, e);
-//            throw new NotFoundException(e);
-//        }
-//    }
 
     @Override
     @Deprecated
@@ -144,12 +127,12 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
     @Override
     public List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException {
-        URL url = repository.getURL();
-        checkHost(url);
+        URI uri = repository.getURI();
+        checkHost(uri);
 
         try {
             // String githubState = state.toString().toLowerCase();
-            GHRepository githubRepository = getGHRepository(url);
+            GHRepository githubRepository = getGHRepository(uri);
             GHIssueState issueState;
             try {
                 issueState = GHIssueState.valueOf(state.toString().toUpperCase());
@@ -167,12 +150,12 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     @Deprecated
     public void addCommentToPullRequest(PullRequest pullRequest, String comment) throws NotFoundException {
-        URL url = pullRequest.getURL();
-        checkHost(url);
+        URI uri = pullRequest.getURI();
+        checkHost(uri);
 
         int id = Integer.parseInt(pullRequest.getId());
         try {
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             GHIssue issue = repository.getIssue(id);
             issue.comment(comment);
         } catch (IOException e) {
@@ -183,12 +166,12 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
     @Override
     public boolean hasModifiableLabels(Repository repository) throws NotFoundException {
-        URL url = repository.getURL();
-        checkHost(url);
+        URI uri = repository.getURI();
+        checkHost(uri);
 
         try {
             GHMyself myself = github.getMyself();
-            GHRepository githubRepository = getGHRepository(url);
+            GHRepository githubRepository = getGHRepository(uri);
             Set<GHUser> collaborators = githubRepository.listCollaborators().asSet();
             return collaborators.stream().anyMatch(e -> e.getLogin().equals(myself.getLogin()));
         } catch (Throwable t) {
@@ -204,12 +187,12 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     @Deprecated
     public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
-        URL url = pullRequest.getURL();
-        checkHost(url);
+        URI uri = pullRequest.getURI();
+        checkHost(uri);
 
-        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(uri));
         try {
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             GHLabel newLabel = getLabel(repository, labelName);
             GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
@@ -243,12 +226,12 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
     @Override
     public List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException {
-        URL url = repository.getURL();
-        checkHost(url);
+        URI uri = repository.getURI();
+        checkHost(uri);
 
         List<GHLabel> labels;
         try {
-            GHRepository githubRepository = getGHRepository(url);
+            GHRepository githubRepository = getGHRepository(uri);
             labels = githubRepository.listLabels().asList();
         } catch (IOException e) {
             Utils.logException(LOG, e);
@@ -261,10 +244,10 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     @Deprecated
     public List<Label> getLabelsFromPullRequest(PullRequest pullRequest) throws NotFoundException {
-        URL url = pullRequest.getURL();
-        checkHost(url);
+        URI uri = pullRequest.getURI();
+        checkHost(uri);
         try {
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             GHIssue issue = repository.getIssue(Integer.parseInt(pullRequest.getId()));
             return WRAPPER.pullRequestLabeltoPullRequestLabel(issue.getLabels());
         } catch (IOException | NumberFormatException e) {
@@ -276,12 +259,12 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     @Deprecated
     public void setLabelsToPullRequest(PullRequest pullRequest, List<Label> labels) throws NotFoundException {
-        URL url = pullRequest.getURL();
-        checkHost(url);
+        URI uri = pullRequest.getURI();
+        checkHost(uri);
 
-        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(uri));
         try {
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             GHIssue issue = repository.getIssue(pullRequestId);
             List<GHLabel> issueLabels = new ArrayList<>();
             List<GHLabel> existingLabels = repository.listLabels().asList();
@@ -301,12 +284,12 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     @Deprecated
     public void removeLabelFromPullRequest(PullRequest pullRequest, String name) throws NotFoundException {
-        URL url = pullRequest.getURL();
-        checkHost(url);
+        URI uri = pullRequest.getURI();
+        checkHost(uri);
 
-        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        int pullRequestId = Integer.valueOf(Utils.getTrailingValueFromUrlPath(uri));
         try {
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
 
@@ -324,30 +307,30 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
             throw new NotFoundException(e);
         }
         throw new NotFoundException("No label exists with the name '" + name +
-                "' at repository '" + url + "'");
+                "' at repository '" + uri + "'");
     }
 
     @Override
     @Deprecated
     public List<PullRequest> findPullRequestsRelatedTo(PullRequest pullRequest) {
         try {
-            List<URL> urls = getPRFromDescription(pullRequest.getURL(), pullRequest.getBody());
+            List<URI> uris = getPRFromDescription(pullRequest.getURI(), pullRequest.getBody());
             List<PullRequest> related = new ArrayList<>();
-            for (URL url : urls) {
+            for (URI uri : uris) {
                 try {
                     // Only try and retrieve pull request if it is located on the same host as this service
-                    if (urlExists(url)) {
-                        related.add(getPullRequest(url));
+                    if (uriExists(uri)) {
+                        related.add(getPullRequest(uri));
                     } else {
-                        Utils.logWarnMessage(LOG, "Unable to process url '" + url + "' as it is not located on this service");
+                        Utils.logWarnMessage(LOG, "Unable to process url '" + uri + "' as it is not located on this service");
                     }
                 } catch (NotFoundException e) {
-                    Utils.logException(LOG, "Unable to retrieve url '" + url + "' referenced in the pull request at: " + pullRequest.getURL(), e);
+                    Utils.logException(LOG, "Unable to retrieve url '" + uri + "' referenced in the pull request at: " + pullRequest.getURI(), e);
                 }
             }
             return related;
-        } catch (MalformedURLException | URISyntaxException e) {
-            Utils.logException(LOG, "something went wrong while trying to get related pull requests to " + pullRequest.getURL(), e);
+        } catch (URISyntaxException e) {
+            Utils.logException(LOG, "something went wrong while trying to get related pull requests to " + pullRequest.getURI(), e);
             return Collections.emptyList();
         }
     }
@@ -355,15 +338,15 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     @Override
     @Deprecated
     public CommitStatus getCommitStatusFromPullRequest(PullRequest pullRequest) throws NotFoundException {
-        URL url = pullRequest.getURL();
-        checkHost(url);
+        URI uri = pullRequest.getURI();
+        checkHost(uri);
 
         CommitStatus status = null;
         int pullRequestId = Integer.parseInt(pullRequest.getId());
         try {
             String sha = null;
 
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             GHPullRequest ghPullRequest = repository.getPullRequest(pullRequestId);
 
             List<GHPullRequestCommitDetail> commits = ghPullRequest.listCommits().asList();
@@ -391,28 +374,28 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     }
 
     @Override
-    public boolean repositoryAccessable(URL url) {
-        if (url.toString().contains("svn.jboss.org")) {
+    public boolean repositoryAccessable(URI uri) {
+        if (uri.toString().contains("svn.jboss.org")) {
             // svn repository is not supported
-            Utils.logWarnMessage(LOG, "svn repository : " + url + " is not supported.");
+            Utils.logWarnMessage(LOG, "svn repository : " + uri + " is not supported.");
             return false;
         }
 
         try {
-            GHRepository repository = getGHRepository(url);
+            GHRepository repository = getGHRepository(uri);
             repository.getBranches(); // action to test account repository accessibility
         } catch (IOException e) {
             Utils.logWarnMessage(LOG,
-                    "repository : " + url + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
+                    "repository : " + uri + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
             return false;
         }
         return true;
     }
 
     @Override
-    public List<Commit> getCommitsSince(URL url, String branch, long since) {
+    public List<Commit> getCommitsSince(URI uri, String branch, long since) {
         try {
-            GHRepository repo = github.getRepository(createRepositoryIdFromUrl(url));
+            GHRepository repo = github.getRepository(createRepositoryIdFromUrl(uri));
             Iterable<GHCommit> ghCommits = repo.queryCommits().from(branch).since(since).pageSize(100).list();
 
             List<Commit> commits = new ArrayList<>();
@@ -448,8 +431,8 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         return prHome;
     }
 
-    private GHRepository getGHRepository(URL url) throws IOException {
-        String repositoryId = createRepositoryIdFromUrl(url);
+    private GHRepository getGHRepository(URI uri) throws IOException {
+        String repositoryId = createRepositoryIdFromUrl(uri);
         if (Duration.between(timeStamp, LocalTime.now()).toHours() >= 2) {
             timeStamp = LocalTime.now();
             ghRepositories.clear();
