@@ -22,19 +22,19 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.IssueStatus;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.ASSIGNEE;
 import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.COMPONENT;
@@ -60,7 +60,7 @@ import static org.jboss.set.aphrodite.issue.trackers.bugzilla.BugzillaFields.get
  */
 class BugzillaQueryBuilder {
 
-    private static final Log LOG = LogFactory.getLog(BugzillaQueryBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BugzillaQueryBuilder.class);
 
     private final SearchCriteria criteria;
     private final int defaultIssueLimit;

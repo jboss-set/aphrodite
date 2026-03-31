@@ -22,27 +22,27 @@
 
 package org.jboss.set.aphrodite.repository.services.common;
 
-import org.apache.commons.logging.Log;
-import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.config.AphroditeConfig;
-import org.jboss.set.aphrodite.config.RepositoryConfig;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.Objects;
+
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.config.RepositoryConfig;
+import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Ryan Emerson
  */
 public abstract class AbstractRepositoryService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractRepositoryService.class);
     protected final RepositoryType repositoryType;
     protected RepositoryConfig config;
     protected URL baseUrl;
-
-    protected abstract Log getLog();
 
     public AbstractRepositoryService(RepositoryType repositoryType) {
         this.repositoryType = repositoryType;
@@ -73,7 +73,7 @@ public abstract class AbstractRepositoryService {
         } catch (MalformedURLException e) {
             String errorMsg = "Invalid Repository url. " + this.getClass().getName() +
                     " service for '" + url + "' cannot be started";
-            Utils.logException(getLog(), errorMsg, e);
+            Utils.logException(LOG, errorMsg, e);
             return false;
         }
         return true;

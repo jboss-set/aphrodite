@@ -32,8 +32,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.CommitStatusFilter;
@@ -46,6 +45,8 @@ import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>PullRequestHome implementation for the gitlab repository</p>
@@ -54,7 +55,7 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
  */
 public class GitLabPullRequestHomeService implements PullRequestHome {
 
-    private static final Log LOG = LogFactory.getLog(GitLabPullRequestHomeService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GitLabPullRequestHomeService.class);
 
     private final GitLabApi gitLabApi;
     private final GitLabRepositoryService gitLabRepo;

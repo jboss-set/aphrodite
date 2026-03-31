@@ -27,8 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -55,6 +54,8 @@ import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryServ
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Repository service for gitlab. It uses the <a href="https://github.com/gitlab4j/gitlab4j-api">
@@ -64,7 +65,7 @@ import org.jboss.set.aphrodite.spi.RepositoryService;
  */
 public class GitLabRepositoryService extends AbstractRepositoryService implements RepositoryService {
 
-    private static final Log LOG = LogFactory.getLog(GitLabRepositoryService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GitLabRepositoryService.class);
 
     private GitLabApi gitLabApi;
     private GitLabPullRequestHomeService prHome;
@@ -105,16 +106,7 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
         return result;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Log getLog() {
-        return LOG;
-    }
-
     // repository
-
     private Repository getRepository(String repoId) throws NotFoundException {
         try {
             List<Branch> branches = gitLabApi.getRepositoryApi().getBranches(repoId);

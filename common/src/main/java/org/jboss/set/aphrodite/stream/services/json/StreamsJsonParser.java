@@ -39,13 +39,13 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.StreamService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple parser to compartmentalize all those nasty operations.
@@ -54,7 +54,7 @@ import org.jboss.set.aphrodite.spi.StreamService;
  *
  */
 public class StreamsJsonParser {
-    private static final Log LOG = LogFactory.getLog(StreamService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StreamService.class);
     public static final String JSON_STREAMS = "streams";
     public static final String JSON_UPSTREAM = "upstream";
     public static final String JSON_CODEBASES = "codebases";

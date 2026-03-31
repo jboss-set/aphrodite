@@ -41,8 +41,6 @@ import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 import javax.json.stream.JsonGenerator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.StreamConfig;
@@ -53,6 +51,8 @@ import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.domain.StreamComponentUpdateException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.StreamService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A stream service which reads stream data from the specified JSON file. This implementation assumes that streams are written
@@ -63,7 +63,7 @@ import org.jboss.set.aphrodite.spi.StreamService;
  * @author baranowb
  */
 public class JsonStreamService implements StreamService {
-    private static final Log LOG = LogFactory.getLog(JsonStreamService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JsonStreamService.class);
 
     private final Map<String, Stream> parsedStreamsMap = new LinkedHashMap<>();
     // DO NOT CHANGE THIS

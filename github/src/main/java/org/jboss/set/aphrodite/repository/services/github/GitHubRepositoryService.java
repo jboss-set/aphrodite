@@ -37,8 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Commit;
 import org.jboss.set.aphrodite.domain.CommitStatus;
@@ -66,10 +64,11 @@ import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRateLimit;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.getPRFromDescription;
-
 import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.getCombineStatus;
 
 /**
@@ -77,7 +76,7 @@ import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.get
  */
 public class GitHubRepositoryService extends AbstractGithubService implements RepositoryService {
 
-    private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.spi.RepositoryService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GitHubRepositoryService.class);
     private static final GitHubWrapper WRAPPER = new GitHubWrapper();
 
     private GithubPullRequestHomeService prHome;
@@ -87,11 +86,6 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
     public GitHubRepositoryService() {
         super(RepositoryType.GITHUB);
-    }
-
-    @Override
-    protected Log getLog() {
-        return LOG;
     }
 
     @Override

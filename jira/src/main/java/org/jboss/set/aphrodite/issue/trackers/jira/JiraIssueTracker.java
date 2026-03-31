@@ -22,16 +22,6 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PROJECTS_ISSUE_PATTERN;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE_VALUE_TRUE;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
-import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -52,8 +42,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.config.TrackerType;
@@ -67,6 +55,8 @@ import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
 import org.jboss.set.aphrodite.issue.trackers.jira.auth.BearerHttpAuthenticationHandler;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -87,6 +77,16 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientF
 
 import io.atlassian.util.concurrent.Promise;
 
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.API_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.JSON_CUSTOM_FIELD;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.PROJECTS_ISSUE_PATTERN;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.SECURITY_SENSITIVE_VALUE_TRUE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.TARGET_RELEASE;
+import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getJiraTransition;
+
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the JIRA issue tracker.
@@ -97,7 +97,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
     static final Pattern JIRAFIXVERSION = Pattern.compile("(\\d\\.)(\\d\\.)(\\d+).GA");
 
-    private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JiraIssueTracker.class);
 
     private final IssueWrapper WRAPPER = new IssueWrapper();
     private final JiraQueryBuilder queryBuilder = new JiraQueryBuilder();
@@ -373,11 +373,6 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             Utils.logException(LOG, e);
             return false;
         }
-    }
-
-    @Override
-    public Log getLog() {
-        return LOG;
     }
 
     static String getIssueKey(URL url) throws NotFoundException {

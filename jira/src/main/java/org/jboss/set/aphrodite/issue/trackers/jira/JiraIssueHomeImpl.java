@@ -22,20 +22,20 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.spi.IssueHome;
 import org.jboss.set.aphrodite.spi.AphroditeException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by Marek Marusic <mmarusic@redhat.com> on 6/23/17.
@@ -45,7 +45,7 @@ import java.util.stream.Stream;
  */
 public class JiraIssueHomeImpl implements IssueHome {
     public static final String JBEAPProject = "JBoss Enterprise Application Platform";
-    private static final Log LOG = LogFactory.getLog(JiraIssueHomeImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JiraIssueHomeImpl.class);
 
     @Override
     public Stream<Issue> findUpstreamReferences(Issue issue) {

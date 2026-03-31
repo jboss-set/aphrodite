@@ -22,17 +22,6 @@
 
 package org.jboss.set.aphrodite.issue.trackers.common;
 
-import org.apache.commons.logging.Log;
-import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.config.AphroditeConfig;
-import org.jboss.set.aphrodite.config.IssueTrackerConfig;
-import org.jboss.set.aphrodite.config.TrackerType;
-import org.jboss.set.aphrodite.domain.Comment;
-import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.PullRequest;
-import org.jboss.set.aphrodite.spi.IssueTrackerService;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,6 +35,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.config.AphroditeConfig;
+import org.jboss.set.aphrodite.config.IssueTrackerConfig;
+import org.jboss.set.aphrodite.config.TrackerType;
+import org.jboss.set.aphrodite.domain.Comment;
+import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.PullRequest;
+import org.jboss.set.aphrodite.spi.IssueTrackerService;
+import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * An abstract IssueTracker which provides logic common to all issue trackers.
  *
@@ -55,12 +56,12 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     public static final Pattern URL_REGEX = Pattern
             .compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\\d+");
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractIssueTracker.class);
+
     protected final TrackerType TRACKER_TYPE;
     protected ExecutorService executorService;
     protected IssueTrackerConfig config;
     protected URL baseUrl;
-
-    protected abstract Log getLog();
 
     public AbstractIssueTracker(TrackerType TRACKER_TYPE) {
         this.TRACKER_TYPE = TRACKER_TYPE;
@@ -93,7 +94,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
         } catch (MalformedURLException e) {
             String errorMsg = "Invalid IssueTracker url. " + this.getClass().getName() +
                     " service for '" + url + "' cannot be started";
-            Utils.logException(getLog(), errorMsg, e);
+            Utils.logException(LOG, errorMsg, e);
             return false;
         }
         return true;
@@ -110,10 +111,10 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
                 if (url.getHost().equals(baseUrl.getHost()))
                     issues.add(getIssue(url));
             } catch (MalformedURLException e) {
-                if (getLog().isTraceEnabled())
-                    getLog().trace(e);
+                if (LOG.isTraceEnabled())
+                    LOG.trace(e.getMessage(), e);
             } catch (NotFoundException e) {
-                Utils.logException(getLog(), "Unable to retrieve Issue at " + link + ":", e);
+                Utils.logException(LOG, "Unable to retrieve Issue at " + link + ":", e);
             }
         }
         return issues;
@@ -123,7 +124,7 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     public void addCommentToIssue(Issue issue, Comment comment) throws NotFoundException {
         checkHost(issue.getURL());
         comment.getId().ifPresent(id ->
-                Utils.logWarnMessage(getLog(), "ID: " + id + "ignored when posting comments " +
+                Utils.logWarnMessage(LOG, "ID: " + id + "ignored when posting comments " +
                         "as this is set by the issue tracker.")
         );
     }

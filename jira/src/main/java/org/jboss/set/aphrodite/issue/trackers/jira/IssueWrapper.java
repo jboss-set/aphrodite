@@ -22,6 +22,52 @@
 
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.jboss.set.aphrodite.common.Utils;
+import org.jboss.set.aphrodite.domain.Comment;
+import org.jboss.set.aphrodite.domain.Flag;
+import org.jboss.set.aphrodite.domain.FlagStatus;
+import org.jboss.set.aphrodite.domain.Issue;
+import org.jboss.set.aphrodite.domain.IssueEstimation;
+import org.jboss.set.aphrodite.domain.Release;
+import org.jboss.set.aphrodite.domain.Stage;
+import org.jboss.set.aphrodite.domain.User;
+import org.jboss.set.aphrodite.spi.AphroditeException;
+import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.atlassian.jira.rest.client.api.domain.BasicComponent;
+import com.atlassian.jira.rest.client.api.domain.BasicProject;
+import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
+import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
+import com.atlassian.jira.rest.client.api.domain.IssueField;
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId;
+import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
+import com.atlassian.jira.rest.client.api.domain.Project;
+import com.atlassian.jira.rest.client.api.domain.TimeTracking;
+import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
+import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
+
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.BROWSE_ISSUE_PATH;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.DEV_ACK;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.FLAG_MAP;
@@ -37,58 +83,12 @@ import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphrodit
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeStatus;
 import static org.jboss.set.aphrodite.issue.trackers.jira.JiraFields.getAphroditeType;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.jboss.set.aphrodite.common.Utils;
-import org.jboss.set.aphrodite.domain.Comment;
-import org.jboss.set.aphrodite.domain.Flag;
-import org.jboss.set.aphrodite.domain.FlagStatus;
-import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.IssueEstimation;
-import org.jboss.set.aphrodite.domain.Release;
-import org.jboss.set.aphrodite.domain.Stage;
-import org.jboss.set.aphrodite.domain.User;
-import org.jboss.set.aphrodite.spi.AphroditeException;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-
-import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
-import com.atlassian.jira.rest.client.api.domain.BasicComponent;
-import com.atlassian.jira.rest.client.api.domain.BasicProject;
-import com.atlassian.jira.rest.client.api.domain.IssueField;
-import com.atlassian.jira.rest.client.api.domain.IssueFieldId;
-import com.atlassian.jira.rest.client.api.domain.IssueLinkType.Direction;
-import com.atlassian.jira.rest.client.api.domain.Project;
-import com.atlassian.jira.rest.client.api.domain.TimeTracking;
-import com.atlassian.jira.rest.client.api.domain.Version;
-import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
-import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
-import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
-import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
-
 /**
  * @author Ryan Emerson
  */
 class IssueWrapper {
 
-    private static final Log LOG = LogFactory.getLog(JiraIssueTracker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JiraIssueTracker.class);
 
     Issue jiraSearchIssueToIssue(URL baseURL, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         URL url = trackerIdToBrowsableUrl(baseURL, jiraIssue.getKey());

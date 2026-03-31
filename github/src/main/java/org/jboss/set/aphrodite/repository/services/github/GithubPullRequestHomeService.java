@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
@@ -50,10 +48,11 @@ import org.kohsuke.github.GHPullRequestReviewEvent;
 import org.kohsuke.github.GHPullRequestReviewState;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.createRepositoryIdFromUrl;
 import static org.jboss.set.aphrodite.repository.services.common.RepositoryUtils.getPRFromDescription;
-
 import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.getCombineStatus;
 
 /**
@@ -62,7 +61,7 @@ import static org.jboss.set.aphrodite.repository.services.github.GithubUtils.get
  * in container.
  */
 public class GithubPullRequestHomeService extends AbstractGithubService implements PullRequestHome {
-    private static final Log LOG = LogFactory.getLog(org.jboss.set.aphrodite.repository.services.github.GithubPullRequestHomeService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GithubPullRequestHomeService.class);
     private static final GitHubWrapper WRAPPER = new GitHubWrapper();
 
     public GithubPullRequestHomeService(Aphrodite aphrodite) {
@@ -356,8 +355,4 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
         return true;
     }
 
-    @Override
-    protected Log getLog() {
-        return LOG;
-    }
 }

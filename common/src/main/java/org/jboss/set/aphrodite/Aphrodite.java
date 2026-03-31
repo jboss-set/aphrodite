@@ -45,8 +45,6 @@ import java.util.stream.Collectors;
 import javax.json.Json;
 import javax.json.JsonReader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.domain.Codebase;
@@ -75,13 +73,15 @@ import org.jboss.set.aphrodite.spi.IssueTrackerService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.aphrodite.spi.RepositoryService;
 import org.jboss.set.aphrodite.spi.StreamService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Aphrodite implements AutoCloseable {
 
     @SuppressWarnings("WeakerAccess")
     public static final String FILE_PROPERTY = "aphrodite.config";
 
-    private static final Log LOG = LogFactory.getLog(Aphrodite.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Aphrodite.class);
     private static Aphrodite instance;
 
     /**

@@ -22,8 +22,14 @@
 
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.config.TrackerType;
@@ -35,14 +41,8 @@ import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the <code>IssueTrackerService</code> for the Bugzilla issue tracker.
@@ -53,7 +53,7 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
 
     static final Pattern BUGZILLAFIXVERSION = Pattern.compile("(\\d\\.)(\\d\\.)(\\d+)");
 
-    private static final Log LOG = LogFactory.getLog(BugzillaIssueTracker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BugzillaIssueTracker.class);
 
     private BugzillaClient bzClient;
 
@@ -129,11 +129,6 @@ public class BugzillaIssueTracker extends AbstractIssueTracker {
 
     public BugzillaClient getBzClient() {
         return bzClient;
-    }
-
-    @Override
-    protected Log getLog() {
-        return LOG;
     }
 
     @Override
