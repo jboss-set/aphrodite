@@ -125,9 +125,6 @@ public class JiraIssueTracker extends AbstractIssueTracker {
                 // Attempt with username/password for Basic Authentication.
                 restClient = factory.createWithBasicHttpAuthentication(jiraServerUri, username, password);
             }
-            //work around to auth. No need to check number, its just garbage or general login failure number, not related to our
-            //activity.
-            restClient.getSessionClient().getCurrentSession().get().getLoginInfo().getFailedLoginCount();
         } catch (Exception e) {
             Utils.logException(LOG, e);
             return false;
@@ -500,4 +497,5 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         LinkIssuesInput link = new LinkIssuesInput(toKey(from.getURL()), toKey(to.getURL()),linkType);
         restClient.getIssueClient().linkIssue(link).claim();
     }
+
 }

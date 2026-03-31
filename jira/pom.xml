@@ -12,7 +12,8 @@
 
     <properties>
         <io.atlassian.fugue.version>4.7.2</io.atlassian.fugue.version>
-        <com.atlassian.jira.version>5.2.2</com.atlassian.jira.version>
+        <com.atlassian.jira.version>11.3.2</com.atlassian.jira.version>
+        <com.atlassian.jira.client.version> 7.0.1</com.atlassian.jira.client.version>
         <org.slf4j.version>1.7.12</org.slf4j.version>
     </properties>
 
@@ -31,7 +32,7 @@
         <dependency>
             <groupId>com.atlassian.jira</groupId>
             <artifactId>jira-rest-java-client-core</artifactId>
-            <version>${com.atlassian.jira.version}</version>
+            <version>${com.atlassian.jira.client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.set</groupId>
