@@ -23,7 +23,8 @@
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -105,11 +106,11 @@ public class BugzillaClient {
 
     private final ExecutorService executorService;
     private final IssueWrapper WRAPPER = new IssueWrapper();
-    private final URL baseURL;
+    private final URI baseURI;
     private final String apiKey;
 
-    public BugzillaClient(URL baseURL, String apiKey, ExecutorService executorService) throws IllegalStateException {
-        this.baseURL = baseURL;
+    public BugzillaClient(URI baseURI, String apiKey, ExecutorService executorService) throws IllegalStateException {
+        this.baseURI = baseURI;
         // remove old authentication login via username and password in call parameters.
         // set header with API key later in XmlRpcClient for every call.
         this.apiKey = apiKey;
@@ -129,21 +130,21 @@ public class BugzillaClient {
             Map<String, Object> results = (Map<String, Object>) bugs[0];
             // BugZilla does not contain the "Type" parameter, required by the Issue Class.
             results.putIfAbsent(ISSUE_TYPE, "UNDEFINED");
-            return WRAPPER.bugzillaBugToIssue(results, baseURL);
+            return WRAPPER.bugzillaBugToIssue(results, baseURI);
         } else {
             Utils.logWarnMessage(LOG, "Zero or more than one bug found with id: " + trackerId);
         }
         throw new NotFoundException("No issues found with id: " + trackerId);
     }
 
-    public List<Issue> getIssues(Collection<URL> urls) {
+    public List<Issue> getIssues(Collection<URI> uris) {
         List<String> ids = new ArrayList<>();
-        for (URL url : urls) {
+        for (URI uri : uris) {
             try {
-                ids.add(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, url));
+                ids.add(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, uri));
             } catch (NotFoundException e) {
                 if (LOG.isWarnEnabled())
-                    LOG.warn("Unable to extract trackerId from: " + url);
+                    LOG.warn("Unable to extract trackerId from: " + uri);
             }
         }
 
@@ -159,13 +160,13 @@ public class BugzillaClient {
         for (Object bugObject : bugs) {
             @SuppressWarnings("unchecked")
             Map<String, Object> bug = (Map<String, Object>) bugObject;
-            issues.add(WRAPPER.bugzillaBugToIssue(bug, baseURL));
+            issues.add(WRAPPER.bugzillaBugToIssue(bug, baseURI));
         }
         return issues;
     }
 
-    public Issue getIssueWithComments(URL url) throws NotFoundException {
-        String trackerId = Utils.getParamaterFromUrl(ID_PARAM_PATTERN, url);
+    public Issue getIssueWithComments(URI uri) throws NotFoundException {
+        String trackerId = Utils.getParamaterFromUrl(ID_PARAM_PATTERN, uri);
         return getIssueWithComments(trackerId);
     }
 
@@ -190,7 +191,7 @@ public class BugzillaClient {
         if (issue.getTrackerId().isPresent())
             return getCommentsForIssue(issue.getTrackerId().get());
 
-        return getCommentsForIssue(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, issue.getURL()));
+        return getCommentsForIssue(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, issue.getURI()));
     }
 
     public Map<String, List<Comment>> getCommentsForIssues(Map<String, Issue> issues) {
@@ -258,9 +259,9 @@ public class BugzillaClient {
         return new ArrayList<>();
     }
 
-    public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
-        String filterName = Utils.getParamaterFromUrl(FILTER_NAME_PARAM_PATTERN, filterUrl);
-        int sharerId = Integer.parseInt(Utils.getParamaterFromUrl(SHARER_ID_PARAM_PATTERN, filterUrl));
+    public List<Issue> searchIssuesByFilter(URI filterUri) throws NotFoundException {
+        String filterName = Utils.getParamaterFromUrl(FILTER_NAME_PARAM_PATTERN, filterUri);
+        int sharerId = Integer.parseInt(Utils.getParamaterFromUrl(SHARER_ID_PARAM_PATTERN, filterUri));
         Map<String, Object> queryMap = new HashMap<>();
         queryMap.put(METHOD_FILTER_SEARCH, filterName);
         queryMap.put(FILTER_SHARER_ID, sharerId);
@@ -269,7 +270,7 @@ public class BugzillaClient {
         try {
             return searchIssues(queryMap);
         } catch (RuntimeException e) {
-            throw new NotFoundException("Unable to retrieve issues associated with filter url: " + filterUrl, e);
+            throw new NotFoundException("Unable to retrieve issues associated with filter url: " + filterUri, e);
         }
     }
 
@@ -307,7 +308,7 @@ public class BugzillaClient {
     private Map<String, Issue> fetchAllIssues(final Object[] bugs) {
         Map<String, Issue> issues = new HashMap<>();
         for (Map<String, Object> struct : XMLRPC.iterable(XMLRPC.RPC_STRUCT, bugs)) {
-            Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURL);
+            Issue issue = WRAPPER.bugzillaBugToIssue(struct, baseURI);
             issues.put(issue.getTrackerId().get(), issue);
         }
         return issues;
@@ -335,8 +336,8 @@ public class BugzillaClient {
     }
 
     public boolean postComment(Issue issue, Comment comment) throws NotFoundException {
-        String trackerId = issue.getTrackerId().orElse(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, issue.getURL()));
-        return postComment(new Integer(trackerId), comment.getBody(), comment.isPrivate());
+        String trackerId = issue.getTrackerId().orElse(Utils.getParamaterFromUrl(ID_PARAM_PATTERN, issue.getURI()));
+        return postComment(Integer.valueOf(trackerId), comment.getBody(), comment.isPrivate());
     }
 
     public boolean postComment(int id, String comment, boolean isPrivate) {
@@ -435,10 +436,10 @@ public class BugzillaClient {
     }
 
     private XmlRpcClient getRpcClient() {
-        String apiURL = baseURL + API_URL;
+        String apiURL = baseURI + API_URL;
         XmlRpcClient rpcClient = new XmlRpcClient();
         try {
-            URL url = new URL(apiURL);
+            URI url = new URI(apiURL);
             rpcClient.setConfig(getClientConfig(url));
             // Sometimes org.apache.commons.httpclient.NoHttpResponseException is caught when processing request: The server
             // bugzilla.redhat.com failed to respond, but result seems fine after auto request retrying.
@@ -456,19 +457,23 @@ public class BugzillaClient {
                 }
             };
             rpcClient.setTransportFactory(xmlRpcTransportFactory);
-        } catch (MalformedURLException e) {
+        } catch (URISyntaxException e) {
             Utils.logException(LOG, e);
             throw new RuntimeException(e);
         }
         return rpcClient;
     }
 
-    private XmlRpcClientConfig getClientConfig(URL apiURL) {
-        XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-        config.setServerURL(apiURL);
-        config.setEnabledForExtensions(true);
-        config.setContentLengthOptional(false);
-        return config;
+    private XmlRpcClientConfig getClientConfig(URI apiURL) throws URISyntaxException {
+        try {
+            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+            config.setServerURL(apiURL.toURL());
+            config.setEnabledForExtensions(true);
+            config.setContentLengthOptional(false);
+            return config;
+        } catch (MalformedURLException e) {
+            throw new URISyntaxException(apiURL.toString(), e.getMessage());
+        }
     }
 
     private boolean runCommand(String method, Object... params) {

@@ -22,6 +22,13 @@
 
 package org.jboss.set.aphrodite.spi;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
 import org.jboss.set.aphrodite.domain.Comment;
@@ -30,12 +37,6 @@ import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 public interface IssueTrackerService {
 
@@ -66,7 +67,7 @@ public interface IssueTrackerService {
      * @return true if the provided <code>URL</code> has the same host as this service, otherwise false.
      * @throws NullPointerException if the provided <code>URL</code> is null.
      */
-    boolean urlExists(URL url);
+    boolean uriExists(URI url);
 
     /**
      * Return string format of tracker id, this value, can be used as key/index and compared to {@link AbstractIssueTracker#convertToTrackerID()}.
@@ -91,7 +92,7 @@ public interface IssueTrackerService {
      * @return the <code>Issue</code> associated with the provided <code>URK</code>.
      * @throws NotFoundException if the provided <code>URL</code> is not associated with an issue.
      */
-    Issue getIssue(URL url) throws NotFoundException;
+    Issue getIssue(URI uri) throws NotFoundException;
 
     /**
      * Retrieve all issues associated with the provided URLs. This method simply logs any issue URLs
@@ -101,7 +102,7 @@ public interface IssueTrackerService {
      * @param urls a collection of issue URLs.
      * @return a list of <code>Issue</code> objects associated with the provided urls.
      */
-    List<Issue> getIssues(Collection<URL> urls);
+    List<Issue> getIssues(Collection<URI> uri);
 
     /**
      * Return all issues which match the passed <code>SearchCriteria</code>.
@@ -119,7 +120,7 @@ public interface IssueTrackerService {
      * @return a list of all <code>Issue</code> objects which are returned by the provided filter.
      * @throws NotFoundException if the filterURL is not associated with any filters.
      */
-    List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException;
+    List<Issue> searchIssuesByFilter(URI filterUrl) throws NotFoundException;
 
     /**
      * Update an <code>Issue</code> at the remote issue tracker service.
@@ -183,5 +184,5 @@ public interface IssueTrackerService {
      * @throws NotFoundException
      * @throws MalformedURLException
      */
-    Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException, AphroditeException;
+    Issue createIssue(final IssueCreationDetails details) throws URISyntaxException, NotFoundException, AphroditeException;
 }

@@ -61,12 +61,8 @@ public class AphroditeConfig {
         private final String namePrefix;
 
         DefaultThreadFactory() {
-            SecurityManager s = System.getSecurityManager();
-            group = (s != null) ? s.getThreadGroup() :
-                    Thread.currentThread().getThreadGroup();
-            namePrefix = "pool-" +
-                    poolNumber.getAndIncrement() +
-                    "-thread-";
+            group = Thread.currentThread().getThreadGroup();
+            namePrefix = "pool-" +  poolNumber.getAndIncrement() + "-thread-";
         }
 
         public Thread newThread(Runnable r) {
@@ -227,7 +223,7 @@ public class AphroditeConfig {
                         throw new IllegalArgumentException("A StreamConfigs entry cannot contain both a 'file' and 'url' field");
 
                     if (url != null) {
-                        return new StreamConfig(Utils.createURL(url), type);
+                        return new StreamConfig(Utils.createURI(url), type);
                     }
 
                     if (fileLocation == null)

@@ -17,9 +17,8 @@
 package org.jboss.set.aphrodite.repository.services.github;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -78,11 +77,11 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
     @Override
     public List<PullRequest> findReferencedPullRequests(PullRequest pullRequest) {
         try {
-            List<URL> urls = getPRFromDescription(pullRequest.getURL(), pullRequest.getBody());
+            List<URI> urls = getPRFromDescription(pullRequest.getURI(), pullRequest.getBody());
             List<PullRequest> referencedPullRequests = new ArrayList<>();
-            for (URL url : urls) {
+            for (URI url : urls) {
                 // Only try and retrieve pull request if it is located on the same host as this service
-                if (url.getHost().equals(baseUrl.getHost())) {
+                if (url.getHost().equals(baseURI.getHost())) {
                     PullRequest validPullRequest = getPullRequest(url);
                     if (validPullRequest != null) {
                         referencedPullRequests.add(getPullRequest(url));
@@ -92,32 +91,32 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
                 }
             }
             return referencedPullRequests;
-        } catch (MalformedURLException | URISyntaxException e) {
-            Utils.logException(LOG, "error to get referenced pull requests to " + pullRequest.getURL(), e);
+        } catch (URISyntaxException e) {
+            Utils.logException(LOG, "error to get referenced pull requests to " + pullRequest.getURI(), e);
             return Collections.emptyList();
         }
     }
 
-    private PullRequest getPullRequest(URL url) {
-        String[] elements = url.getPath().split("/");
+    private PullRequest getPullRequest(URI uri) {
+        String[] elements = uri.getPath().split("/");
         int pullId = Integer.parseInt(elements[elements.length - 1]);
-        String repositoryId = createRepositoryIdFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(uri);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest pullRequest = repository.getPullRequest(pullId);
             return WRAPPER.pullRequestToPullRequest(pullRequest, this);
         } catch (IOException e) {
-            Utils.logException(LOG, "Unable to retrieve pull request from url " + url, e);
+            Utils.logException(LOG, "Unable to retrieve pull request from url " + uri, e);
             return null;
         }
     }
 
     @Override
     public boolean addComment(PullRequest pullRequest, String comment) {
-        URL url = pullRequest.getURL();
+        URI uri = pullRequest.getURI();
 
         int id = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createRepositoryIdFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(uri);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(id);
@@ -131,8 +130,8 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
 
     @Override
     public List<Label> getLabels(PullRequest pullRequest) {
-        URL url = pullRequest.getURL();
-        String repositoryId = createRepositoryIdFromUrl(url);
+        URI uri = pullRequest.getURI();
+        String repositoryId = createRepositoryIdFromUrl(uri);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(Integer.parseInt(pullRequest.getId()));
@@ -145,8 +144,8 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
 
     @Override
     public boolean setLabels(PullRequest pullRequest, List<Label> labels) {
-        URL url = pullRequest.getURL();
-        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        URI url = pullRequest.getURI();
+        int pullRequestId = Integer.valueOf(Utils.getTrailingValueFromUrlPath(url));
         String repositoryId = createRepositoryIdFromUrl(url);
         try {
             GHRepository repository = github.getRepository(repositoryId);
@@ -172,8 +171,8 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
 
     @Override
     public boolean addLabel(PullRequest pullRequest, Label label) {
-        URL url = pullRequest.getURL();
-        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
+        URI url = pullRequest.getURI();
+        int pullRequestId = Integer.valueOf(Utils.getTrailingValueFromUrlPath(url));
         String repositoryId = createRepositoryIdFromUrl(url);
 
         try {
@@ -211,10 +210,10 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
 
     @Override
     public boolean removeLabel(PullRequest pullRequest, Label label) {
-        URL url = pullRequest.getURL();
+        URI uri = pullRequest.getURI();
         String labelName = label.getName();
-        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(url));
-        String repositoryId = createRepositoryIdFromUrl(url);
+        int pullRequestId = Integer.valueOf(Utils.getTrailingValueFromUrlPath(uri));
+        String repositoryId = createRepositoryIdFromUrl(uri);
 
         try {
             GHRepository repository = github.getRepository(repositoryId);
@@ -239,10 +238,10 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
 
     @Override
     public CommitStatus getCommitStatus(PullRequest pullRequest) {
-        URL url = pullRequest.getURL();
+        URI uri = pullRequest.getURI();
         CommitStatus status = null;
         int pullRequestId = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createRepositoryIdFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(uri);
         try {
             String sha = null;
 
@@ -285,9 +284,9 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
     }
 
     private GHPullRequestReview findReviewStateByUser(PullRequest pullRequest, GHUser user) {
-        URL url = pullRequest.getURL();
+        URI uri = pullRequest.getURI();
         int pullRequestId = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createRepositoryIdFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(uri);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest ghPullRequest = repository.getPullRequest(pullRequestId);
@@ -309,9 +308,9 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
         if (review != null && skipReviewEvent(event, review.getState()) && review.getBody().equals(body)) {
             return; // skip if review state and comment is unchanged.
         }
-        URL url = pullRequest.getURL();
+        URI uri = pullRequest.getURI();
         int pullRequestId = Integer.parseInt(pullRequest.getId());
-        String repositoryId = createRepositoryIdFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(uri);
 
         try {
             GHRepository repository = github.getRepository(repositoryId);
@@ -337,19 +336,19 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
         return false;
     }
 
-    public boolean repositoryAccessable(URL url) {
-        if (url.toString().contains("svn.jboss.org")) {
+    public boolean repositoryAccessable(URI uri) {
+        if (uri.toString().contains("svn.jboss.org")) {
             // svn repository is not supported
-            Utils.logWarnMessage(LOG, "svn repository : " + url + " is not supported.");
+            Utils.logWarnMessage(LOG, "svn repository : " + uri + " is not supported.");
             return false;
         }
 
-        String repositoryId = createRepositoryIdFromUrl(url);
+        String repositoryId = createRepositoryIdFromUrl(uri);
         try {
             GHRepository repository = github.getRepository(repositoryId);
             repository.getBranches(); // action to test account repository accessibility
         } catch (IOException e) {
-            Utils.logWarnMessage(LOG, "repository : " + url + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
+            Utils.logWarnMessage(LOG, "repository : " + uri + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
             return false;
         }
         return true;

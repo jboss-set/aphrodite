@@ -22,7 +22,7 @@
 
 package org.jboss.set.aphrodite.domain;
 
-import java.net.URL;
+import java.net.URI;
 
 /*
  * Modeling possible Patch in different PatchType:
@@ -37,18 +37,18 @@ import java.net.URL;
 
 public class Patch {
 
-    private final URL url;
+    private final URI uri;
     private final PatchType patchType;
     private final PatchState patchState;
 
-    public Patch(URL url, PatchType patchType, PatchState patchState) {
-        this.url = url;
+    public Patch(URI uri, PatchType patchType, PatchState patchState) {
+        this.uri = uri;
         this.patchType = patchType;
         this.patchState = patchState;
     }
 
-    public URL getUrl() {
-        return url;
+    public URI getURI() {
+        return uri;
     }
 
     public PatchType getPatchType() {
@@ -68,7 +68,7 @@ public class Patch {
 
         Patch patch = (Patch) o;
 
-        return url.equals(patch.url);
+        return uri.equals(patch.uri);
 
     }
 
@@ -76,12 +76,12 @@ public class Patch {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        result = prime * result + ((uri == null) ? 0 : uri.hashCode());
         return result;
     }
 
     @Override
     public String toString() {
-        return "Patch{" + "type=" + patchType + "url=" + url + "patchState=" + patchState + '}';
+        return "Patch{" + "type=" + patchType + "uri=" + uri + "patchState=" + patchState + '}';
     }
 }

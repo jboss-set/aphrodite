@@ -21,8 +21,8 @@
  */
 package org.jboss.set.aphrodite.repository.services.gitlab;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -110,14 +110,14 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
     private Repository getRepository(String repoId) throws NotFoundException {
         try {
             List<Branch> branches = gitLabApi.getRepositoryApi().getBranches(repoId);
-            Repository repo = new Repository(new URL(baseUrl + repoId));
+            Repository repo = new Repository(new URI(baseURI + repoId));
             List<Codebase> branchNames = new ArrayList<>(branches.size());
             for (Branch b : branches) {
                 branchNames.add(new Codebase(b.getName()));
             }
             repo.getCodebases().addAll(branchNames);
             return repo;
-        } catch (GitLabApiException|MalformedURLException e) {
+        } catch (GitLabApiException|URISyntaxException e) {
             throw new NotFoundException(e);
         }
     }
@@ -126,10 +126,10 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
      * {@inheritDoc}
      */
     @Override
-    public Repository getRepository(URL url) throws NotFoundException {
-        GitLabUtils.checkIsInRepo(url, baseUrl);
+    public Repository getRepository(URI url) throws NotFoundException {
+        GitLabUtils.checkIsInRepo(url, baseURI);
 
-        String repoId = GitLabUtils.getProjectIdFromURL(url);
+        String repoId = GitLabUtils.getProjectIdFromURI(url);
         if (repoId == null) {
             throw new NotFoundException("Repository " + url + " cannot be found.");
         }
@@ -142,10 +142,10 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
      * {@inheritDoc}
      */
     @Override
-    public PullRequest getPullRequest(URL url) throws NotFoundException {
-        GitLabUtils.checkIsInRepo(url, baseUrl);
+    public PullRequest getPullRequest(URI url) throws NotFoundException {
+        GitLabUtils.checkIsInRepo(url, baseURI);
 
-        String[] res = GitLabUtils.getProjectIdAndLastFieldFromURL(url);
+        String[] res = GitLabUtils.getProjectIdAndLastFieldFromURI(url);
         if (res != null && res.length == 2) {
             try {
                 String repoId = res[0];
@@ -166,7 +166,7 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
      */
     @Override
     public List<PullRequest> getPullRequestsByState(Repository repository, PullRequestState state) throws NotFoundException {
-        String repoId = GitLabUtils.getProjectIdFromURL(repository.getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(repository.getURI());
         try {
             Project project = gitLabApi.getProjectApi().getProject(repoId);
             MergeRequestFilter filter = new MergeRequestFilter();
@@ -176,10 +176,10 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
             List<PullRequest> prs = new ArrayList<>(merges.size());
             for (MergeRequest merge : merges) {
                 List<Commit> commits = gitLabApi.getMergeRequestApi().getCommits(repoId, merge.getIid());
-                prs.add(GitLabUtils.toPullRequest(merge, commits, new URL(repository.getURL() + "/merge_requests/" + merge.getIid()), repository, prHome));
+                prs.add(GitLabUtils.toPullRequest(merge, commits, new URI(repository.getURI() + "/merge_requests/" + merge.getIid()), repository, prHome));
             }
             return prs;
-        } catch (GitLabApiException|MalformedURLException e) {
+        } catch (GitLabApiException|URISyntaxException e) {
             throw new NotFoundException(e);
         }
     }
@@ -222,7 +222,7 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
      */
     @Override
     public boolean hasModifiableLabels(Repository repository) throws NotFoundException {
-        String repoId = GitLabUtils.getProjectIdFromURL(repository.getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(repository.getURI());
         try {
             User user = gitLabApi.getUserApi().getCurrentUser();
             Member member = gitLabApi.getProjectApi().getMember(repoId, user.getId());
@@ -238,12 +238,12 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
      */
     @Override
     public List<Label> getLabelsFromRepository(Repository repository) throws NotFoundException {
-        String repoId = GitLabUtils.getProjectIdFromURL(repository.getURL());
+        String repoId = GitLabUtils.getProjectIdFromURI(repository.getURI());
         try {
             List<org.gitlab4j.api.models.Label> labels = gitLabApi.getLabelsApi().getProjectLabels(repoId);
             List<Label> res = new ArrayList<>(labels.size());
             for (org.gitlab4j.api.models.Label l : labels) {
-                res.add(GitLabUtils.toLabel(l, repository.getURL()));
+                res.add(GitLabUtils.toLabel(l, repository.getURI()));
             }
             return res;
         } catch (GitLabApiException e) {
@@ -302,10 +302,10 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
      * {@inheritDoc}
      */
     @Override
-    public boolean repositoryAccessable(URL url) {
+    public boolean repositoryAccessable(URI url) {
         try {
-            String repoId = GitLabUtils.getProjectIdFromURL(url);
-            boolean res = GitLabUtils.urlIsInRepo(url, baseUrl) &&
+            String repoId = GitLabUtils.getProjectIdFromURI(url);
+            boolean res = GitLabUtils.urlIsInRepo(url, baseURI) &&
                 gitLabApi.getRepositoryApi().getBranches(repoId) != null;
             return res;
         } catch (GitLabApiException e) {
@@ -315,9 +315,9 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
     }
 
     @Override
-    public List<org.jboss.set.aphrodite.domain.Commit> getCommitsSince(URL url, String branch, long since) {
+    public List<org.jboss.set.aphrodite.domain.Commit> getCommitsSince(URI url, String branch, long since) {
         try {
-            String repoId = GitLabUtils.getProjectIdFromURL(url);
+            String repoId = GitLabUtils.getProjectIdFromURI(url);
             List<Commit> glCommits = gitLabApi.getCommitsApi().getCommits(repoId, branch, new Date(since), new Date());
 
             List<org.jboss.set.aphrodite.domain.Commit> commits = new ArrayList<>();
@@ -326,7 +326,7 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
             }
             return commits;
         } catch (GitLabApiException glae) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 

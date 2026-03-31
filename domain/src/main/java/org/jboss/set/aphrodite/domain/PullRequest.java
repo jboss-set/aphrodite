@@ -22,15 +22,13 @@
 
 package org.jboss.set.aphrodite.domain;
 
-import static org.jboss.set.aphrodite.domain.internal.URLUtils.URL_REGEX_STRING;
-
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,7 +38,8 @@ import org.jboss.set.aphrodite.container.Container;
 import org.jboss.set.aphrodite.domain.internal.URLUtils;
 import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
+import static org.jboss.set.aphrodite.domain.internal.URLUtils.URL_REGEX_STRING;
+
 public class PullRequest {
     private static final Pattern UPGRADE_TITLE = Pattern.compile("\\s*Upgrade \\s*", Pattern.CASE_INSENSITIVE);
     private static final Pattern NO_UPSTREAM_REQUIRED = Pattern.compile("\\s*No upstream required.*$|\\s*Upstream not required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
@@ -56,7 +55,7 @@ public class PullRequest {
     private static final Pattern UPSTREAM_PR_NOT_REQUIRED = Pattern.compile("^\\s*Upstream PR not required.*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
 
     private final String id;
-    private final URL url;
+    private final URI uri;
     private final Codebase codebase;
     private PullRequestState state;
     private String title;
@@ -69,30 +68,11 @@ public class PullRequest {
     private List<Commit> commits;
     private PullRequestHome prHome;
 
-    /**
-     * @deprecated
-     * @param id
-     * @param url
-     * @param repository
-     * @param codebase
-     * @param state
-     * @param title
-     * @param body
-     * @param mergeable
-     * @param merged
-     * @param mergeableState
-     * @param mergedAt
-     */
-    public PullRequest(final String id, final URL url, final Repository repository, final Codebase codebase,
-            final PullRequestState state, final String title, final String body, final boolean mergeable, final boolean merged,
-            final MergeableState mergeableState, final Date mergedAt) {
-        this(id,url,repository,codebase,state, title, body, mergeable,merged, mergeableState, mergedAt, null);
-    }
-    public PullRequest(final String id, final URL url, final Repository repository, final Codebase codebase,
+    public PullRequest(final String id, final URI uri, final Repository repository, final Codebase codebase,
             final PullRequestState state, final String title, final String body, final boolean mergeable, final boolean merged,
             final MergeableState mergeableState, final Date mergedAt, final List<Commit> commits) {
         this.id = id;
-        this.url = url;
+        this.uri = uri;
         this.repository = repository;
         this.codebase = codebase;
         this.state = state;
@@ -119,9 +99,9 @@ public class PullRequest {
         return commits;
     }
 
-    public PullRequest(String id, URL url, Repository repository, Codebase codebase, PullRequestState state, String title, String body,
+    public PullRequest(String id, URI uri, Repository repository, Codebase codebase, PullRequestState state, String title, String body,
             boolean mergeable,boolean merged, MergeableState mergeableState, Date mergedAt, List<Commit> commits, PullRequestHome prHome) {
-        this(id, url, repository, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits);
+        this(id, uri, repository, codebase, state, title, body, mergeable, merged, mergeableState, mergedAt, commits);
         this.prHome = prHome;
     }
 
@@ -129,8 +109,8 @@ public class PullRequest {
         return id;
     }
 
-    public URL getURL() {
-        return url;
+    public URI getURI() {
+        return uri;
 
     }
 
@@ -208,7 +188,7 @@ public class PullRequest {
      * @return upstream PR URL or null
      * @throws MalformedURLException if found URL is invalid
      */
-    public URL findUpstreamPullRequestURL() throws MalformedURLException {
+    public URI findUpstreamPullRequestURI() throws URISyntaxException {
         if (this.isUpstreamRequired()) {
             final String[] url = URLUtils.extractURLs(body, UPSTREAM_PR, false);
             if (url == null || url.length == 0 || url[0] == null) {
@@ -216,10 +196,10 @@ public class PullRequest {
                 if (ghurl == null || ghurl.length == 0 || ghurl[0] == null)
                     return null;
                 else
-                    return new URL(ghurl[0]);
+                    return new URI(ghurl[0]);
             }
             else
-                return new URL(url[0]);
+                return new URI(url[0]);
         } else {
             return null;
         }
@@ -231,13 +211,13 @@ public class PullRequest {
      * @return upstream issue URL or null
      * @throws MalformedURLException if found URL is invalid
      */
-    public URL findUpstreamIssueURL() throws MalformedURLException {
+    public URI findUpstreamIssueURI() throws URISyntaxException {
         if (isUpstreamRequired()) {
             final String[] url = URLUtils.extractURLs(body, UPSTREAM_ISSUE, false);
             if (url == null || url.length == 0 || url[0] == null)
                 return null;
             else
-                return new URL(url[0]);
+                return new URI(url[0]);
         } else {
             return null;
         }
@@ -249,13 +229,13 @@ public class PullRequest {
      * @return related issue URL
      * @throws MalformedURLException if found URL is invalid
      */
-    public URL findIssueURL() throws MalformedURLException {
+    public URI findIssueURI() throws URISyntaxException {
         if (this.isIssueRequired()) {
             final String[] url = URLUtils.extractURLs(body, ISSUE, false);
             if (url == null || url.length == 0 || url[0] == null)
                 return null;
             else
-                return new URL(url[0]);
+                return new URI(url[0]);
         } else
             return null;
     }
@@ -268,14 +248,14 @@ public class PullRequest {
      * @return related issues URLs or empty list
      * @throws MalformedURLException if one of found URLs is invalid
      */
-    public List<URL> findRelatedIssuesURL() throws MalformedURLException {
+    public List<URI> findRelatedIssuesURI() throws URISyntaxException {
         final String[] urls = URLUtils.extractURLs(body, RELATED_ISSUES, true);
         if (urls == null || urls.length == 0 || urls[0] == null) {
             return Collections.emptyList();
         } else {
-            List<URL> issues = new ArrayList<>(urls.length);
+            List<URI> issues = new ArrayList<>(urls.length);
             for (String url : urls) {
-                issues.add(new URL(url));
+                issues.add(new URI(url));
             }
             return issues;
         }
@@ -289,7 +269,7 @@ public class PullRequest {
      * @return related issues URLs or empty list
      * @throws MalformedURLException if one of found URLs is invalid
      */
-    public List<URL> findDependencyPullRequestsURL() throws MalformedURLException {
+    public List<URI> findDependencyPullRequestsURL() throws URISyntaxException {
         if(!hasDependencies()) {
             return new ArrayList<>();
         }
@@ -297,48 +277,17 @@ public class PullRequest {
         if (urls == null || urls.length == 0 || urls[0] == null) {
             return Collections.emptyList();
         } else {
-            List<URL> issues = new ArrayList<>(urls.length);
+            List<URI> issues = new ArrayList<>(urls.length);
             for (String url : urls) {
-                issues.add(new URL(url));
+                issues.add(new URI(url));
             }
             return issues;
         }
     }
 
-    /**
-     * Check if this PR has upgrade meta present.
-     *
-     * @return Contains upgrade meta?
-     * @deprecated
-     */
-    public boolean hasUpgradeMeta() {
-        final Matcher m = UPGRADE.matcher(body);
-        return m.find();
-    }
-
     public boolean hasUpgrade() {
         final Matcher m = UPGRADE.matcher(body);
         return m.find();
-    }
-
-    /**
-     * TODO: Description - I don't know what this is.
-     * @deprecated - upgrade handling in processor wasnt green lit. Should be safe to remove.
-     */
-    public PullRequestUpgrade findPullRequestUpgrade() {
-        Matcher m = UPGRADE.matcher(body);
-        if (!m.find()) {
-            return null;
-        }
-        String upgradeBody = body.substring(m.start(), m.end());
-        m = Pattern.compile(UPGRADE_META_BIT_REGEX).matcher(upgradeBody);
-        Properties metas = new Properties();
-        while (m.find()) {
-            final String[] x = upgradeBody.substring(m.start(), m.end()).split("=");
-            metas.put(x[0], x[1]);
-        }
-        return new PullRequestUpgrade(this, metas.getProperty("id"), metas.getProperty("tag"),
-                metas.getProperty("version"), metas.getProperty("branch"));
     }
 
     private PullRequestHome getPullRequestHome() throws NameNotFoundException {
@@ -415,7 +364,7 @@ public class PullRequest {
 
         PullRequest pullRequset = (PullRequest) o;
 
-        return url.equals(pullRequset.url);
+        return uri.equals(pullRequset.uri);
 
     }
 
@@ -423,14 +372,14 @@ public class PullRequest {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        result = prime * result + ((uri == null) ? 0 : uri.hashCode());
         return result;
     }
 
     @Override
     public String toString() {
         return "PullRequest{" +
-                "url=" + url +
+                "uri=" + uri +
                 ", state=" + state +
                 ", title='" + title + '\'' +
                 ", body='" + body + '\'' +

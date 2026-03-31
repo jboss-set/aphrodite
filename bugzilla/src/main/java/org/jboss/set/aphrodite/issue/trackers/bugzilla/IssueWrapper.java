@@ -23,7 +23,6 @@
 package org.jboss.set.aphrodite.issue.trackers.bugzilla;
 
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -84,9 +83,9 @@ class IssueWrapper {
 
     private static final Logger LOG = LoggerFactory.getLogger(BugzillaIssueTracker.class);
 
-    Issue bugzillaBugToIssue(Map<String, Object> bug, URL baseURL) {
+    Issue bugzillaBugToIssue(Map<String, Object> bug, URI baseURI) {
         Integer id = (Integer) bug.get(ID);
-        URL url = Utils.createURL(baseURL + ID_QUERY + id);
+        URI url = Utils.createURI(baseURI + ID_QUERY + id);
         Issue issue = new Issue(url, TrackerType.BUGZILLA);
         issue.setTrackerId(id.toString());
         issue.setAssignee(User.createWithEmail((String) bug.get(ASSIGNEE)));
@@ -106,7 +105,8 @@ class IssueWrapper {
         }
         issue.setComponents(tmp);
         issue.setProduct((String) bug.get(PRODUCT));
-        issue.setStatus(IssueStatus.valueOf(((String) bug.get(STATUS)).toUpperCase()));
+        String rawStatus = (String) bug.get(STATUS);
+        issue.setStatus(IssueStatus.valueOf(rawStatus.toUpperCase()), rawStatus);
 
         String type = (String) bug.get(ISSUE_TYPE);
         issue.setType(IssueType.getMatchingIssueType(type), type);
@@ -114,10 +114,10 @@ class IssueWrapper {
         setAffectedVersions(issue, (Object[]) (bug.get(VERSION)) );
         setReleases(issue, bug);
 
-        List<URL> dependsOn = getListOfURlsFromIds(bug, baseURL, DEPENDS_ON);
+        List<URI> dependsOn = getListOfURlsFromIds(bug, baseURI, DEPENDS_ON);
         dependsOn.addAll(getListOfExternalURLsFromIds(bug, EXTERNAL_URL));
         issue.setDependsOn(dependsOn);
-        issue.setBlocks(getListOfURlsFromIds(bug, baseURL, BLOCKS));
+        issue.setBlocks(getListOfURlsFromIds(bug, baseURI, BLOCKS));
 
         checkIsNullEstimation(bug,issue);
         extractStageAndStreams(bug, issue);
@@ -241,26 +241,27 @@ class IssueWrapper {
         return flags;
     }
 
-    private void addURLCollectionToParameters(List<URL> urls, String flag, Map<String, Object> params) {
+    private void addURLCollectionToParameters(List<URI> urls, String flag, Map<String, Object> params) {
         Map<String, Object> map = new HashMap<>();
         List<String> ids = Utils.getParametersFromUrls(ID_PARAM_PATTERN, urls);
         map.put(METHOD_SET_COLLECTION, ids);
         params.put(flag, map);
     }
 
-    private List<URL> getListOfURlsFromIds(Map<String, Object> bug, URL baseURL, String field) {
-        List<URL> list = new ArrayList<>();
+    private List<URI> getListOfURlsFromIds(Map<String, Object> bug, URI baseURI, String field) {
+        List<URI> list = new ArrayList<>();
         Object[] ids = (Object[]) bug.get(field);
         for (Object id : ids)
-            list.add(Utils.createURL(baseURL + BugzillaFields.ID_QUERY + id));
+            list.add(Utils.createURI(baseURI + BugzillaFields.ID_QUERY + id));
         return list;
     }
 
-    private List<URL> getListOfExternalURLsFromIds(Map<String, Object> bug, String externalBugField) {
+    @SuppressWarnings("unchecked")
+    private List<URI> getListOfExternalURLsFromIds(Map<String, Object> bug, String externalBugField) {
         if(!bug.containsKey(externalBugField)) {
             return Collections.emptyList();
         }
-        List<URL> externalURL = new ArrayList<>();
+        List<URI> externalURL = new ArrayList<>();
         Object[] eBugs = (Object[]) bug.get(externalBugField);
 
         for(Object tmp : eBugs) {
@@ -273,7 +274,7 @@ class IssueWrapper {
                 String bugId = (String) bz.get("ext_bz_bug_id");
                 String urlBase = (String) bzType.get("full_url");
                 String url = urlBase.replace("%id%", bugId);
-                externalURL.add(URI.create(url).toURL());
+                externalURL.add(URI.create(url));
             } catch (Exception e) {
                 Utils.logException(LOG, "cannot convert the url", e);
             }

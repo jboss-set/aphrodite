@@ -25,7 +25,7 @@ package org.jboss.set.aphrodite.stream.services.json;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.URI;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -64,8 +64,8 @@ public class StreamsJsonParser {
     private StreamsJsonParser() {
     }
 
-    public static Map<String, Stream> parse(final URL url) throws NotFoundException {
-        try (InputStream is = url.openStream()) {
+    public static Map<String, Stream> parse(final URI url) throws NotFoundException {
+        try (InputStream is = url.toURL().openStream()) {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is));
             JsonReader jr = Json.createReader(rd);
 

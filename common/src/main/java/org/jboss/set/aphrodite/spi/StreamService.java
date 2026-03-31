@@ -2,7 +2,6 @@ package org.jboss.set.aphrodite.spi;
 
 import java.io.OutputStream;
 import java.net.URI;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
@@ -102,5 +101,5 @@ public interface StreamService {
      * @param out - sink for bytes
      * @throws NotFoundException - if url does not match any set of streams
      */
-    void serializeStreams(URL url, OutputStream out) throws NotFoundException;
+    void serializeStreams(URI url, OutputStream out) throws NotFoundException;
 }

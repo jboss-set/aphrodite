@@ -16,16 +16,16 @@
 
 package org.jboss.set.aphrodite.domain.spi;
 
-import org.jboss.set.aphrodite.domain.Compare;
-
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
+
+import org.jboss.set.aphrodite.domain.Compare;
 
 public interface CompareHome {
 
-    Compare getCompare(URL url, String tag1, String tag2);
+    Compare getCompare(URI url, String tag1, String tag2);
 
-    List<String> getTags(URL url);
-    List<String> getBranches(URL url);
+    List<String> getTags(URI url);
+    List<String> getBranches(URI url);
 
 }

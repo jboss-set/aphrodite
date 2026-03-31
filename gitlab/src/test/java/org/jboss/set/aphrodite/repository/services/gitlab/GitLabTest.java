@@ -21,10 +21,12 @@
  */
 package org.jboss.set.aphrodite.repository.services.gitlab;
 
-import java.net.URL;
+
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.config.AphroditeConfig;
 import org.jboss.set.aphrodite.config.IssueTrackerConfig;
@@ -74,9 +76,9 @@ public class GitLabTest {
 
     @Test
     public void testGetRepository() throws Exception {
-        URL url = new URL(PROJECT_URL);
+        URI url = new URI(PROJECT_URL);
         Repository repo = aphrodite.getRepository(url);
-        Assert.assertEquals(url, repo.getURL());
+        Assert.assertEquals(url, repo.getURI());
         Assert.assertTrue(repo.getCodebases().size() >= 1);
         Assert.assertTrue(repo.getCodebases().stream().filter(n -> n.getName().equals(PULL_REQUEST_BRANCH)).findFirst().isPresent());
         Assert.assertTrue(aphrodite.isRepositoryLabelsModifiable(repo));
@@ -86,10 +88,10 @@ public class GitLabTest {
 
     @Test
     public void testGetPullRequest() throws Exception {
-        URL url = new URL(PULL_REQUEST_URL);
+        URI url = new URI(PULL_REQUEST_URL);
         PullRequest pr = aphrodite.getPullRequest(url);
         Assert.assertNotNull(pr);
-        Assert.assertEquals(url, pr.getURL());
+        Assert.assertEquals(url, pr.getURI());
         Assert.assertEquals(PULL_REQUEST_ID, pr.getId());
         Assert.assertEquals(PULL_REQUEST_BRANCH, pr.getCodebase().getName());
         Assert.assertFalse(pr.getCommits().isEmpty());
@@ -114,7 +116,7 @@ public class GitLabTest {
 
     @Test
     public void testLabels() throws Exception {
-        URL url = new URL(PULL_REQUEST_URL);
+        URI url = new URI(PULL_REQUEST_URL);
         PullRequest pr = aphrodite.getPullRequest(url);
         Assert.assertNotNull(pr);
         Repository repo = aphrodite.getRepository(url);
@@ -147,7 +149,7 @@ public class GitLabTest {
 
     @Test
     public void testComment() throws Exception {
-        URL url = new URL(PULL_REQUEST_URL);
+        URI url = new URI(PULL_REQUEST_URL);
         PullRequest pr = aphrodite.getPullRequest(url);
         Assert.assertNotNull(pr);
         pr.addComment("comment added by the test-suite");

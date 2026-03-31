@@ -21,7 +21,7 @@
  */
 package org.jboss.set.aphrodite.issue.trackers.common;
 
-import java.net.URL;
+import java.net.URI;
 
 /**
  * Abstract class for details required to create new issue. Each tracker has different requirements and package should provide
@@ -36,7 +36,7 @@ public abstract class IssueCreationDetails {
     private String description;
     //ID of project, JBEAP, 'JBoss Enterprise Application Platform 6'
     private String projectKey;
-    private URL trackerURL;
+    private URI trackerURI;
 
     public String getDescription() {
         return description;
@@ -46,8 +46,8 @@ public abstract class IssueCreationDetails {
         return projectKey;
     }
 
-    public URL getTrackerURL() {
-        return trackerURL;
+    public URI getTrackerURI() {
+        return trackerURI;
     }
 
     public IssueCreationDetails setDescription(String description) {
@@ -60,8 +60,8 @@ public abstract class IssueCreationDetails {
         return this;
     }
 
-    public IssueCreationDetails setTrackerURL(URL trackerURL) {
-        this.trackerURL = trackerURL;
+    public IssueCreationDetails setTrackerURL(URI trackerURI) {
+        this.trackerURI = trackerURI;
         return this;
     }
 

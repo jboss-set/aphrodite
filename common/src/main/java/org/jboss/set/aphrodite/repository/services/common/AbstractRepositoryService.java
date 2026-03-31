@@ -22,8 +22,8 @@
 
 package org.jboss.set.aphrodite.repository.services.common;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -42,7 +42,7 @@ public abstract class AbstractRepositoryService {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractRepositoryService.class);
     protected final RepositoryType repositoryType;
     protected RepositoryConfig config;
-    protected URL baseUrl;
+    protected URI baseURI;
 
     public AbstractRepositoryService(RepositoryType repositoryType) {
         this.repositoryType = repositoryType;
@@ -69,8 +69,8 @@ public abstract class AbstractRepositoryService {
             url = url + "/";
 
         try {
-            baseUrl = new URL(url);
-        } catch (MalformedURLException e) {
+            baseURI = new URI(url);
+        } catch (URISyntaxException e) {
             String errorMsg = "Invalid Repository url. " + this.getClass().getName() +
                     " service for '" + url + "' cannot be started";
             Utils.logException(LOG, errorMsg, e);
@@ -79,22 +79,22 @@ public abstract class AbstractRepositoryService {
         return true;
     }
 
-    public boolean urlExists(URL url) {
-        Objects.requireNonNull(url);
-        return url.getHost().equals(baseUrl.getHost());
+    public boolean uriExists(URI uri) {
+        Objects.requireNonNull(uri);
+        return uri.getHost().equals(baseURI.getHost());
     }
 
     public static boolean exists(AbstractRepositoryService abstractRepositoryService) {
-        return abstractRepositoryService.repositoryType != null && abstractRepositoryService.baseUrl != null;
+        return abstractRepositoryService.repositoryType != null && abstractRepositoryService.baseURI != null;
     }
 
-    protected void checkHost(URL url) throws NotFoundException {
-        if (!urlExists(url))
+    protected void checkHost(URI uri) throws NotFoundException {
+        if (!uriExists(uri))
             throw new NotFoundException("The requested Repository cannot be found as it is not " +
                     "hosted on this server.");
     }
 
-    public URL getBaseUrl() {
-        return baseUrl;
+    public URI getBaseURI() {
+        return baseURI;
     }
 }

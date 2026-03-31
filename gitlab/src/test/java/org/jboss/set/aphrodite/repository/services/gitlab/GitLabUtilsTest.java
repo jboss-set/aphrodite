@@ -21,10 +21,10 @@
  */
 package org.jboss.set.aphrodite.repository.services.gitlab;
 
+import java.net.URI;
+
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.net.URL;
 
 /**
  * <p>Tests for GitLabUtils.</p>
@@ -35,53 +35,53 @@ public class GitLabUtilsTest {
 
     @Test
     public void testGetProjectIdFromURL() throws Exception {
-        URL url = new URL("https://gitlab.xxx.redhat.com/jboss-set/jackson-databind");
-        String projectId = GitLabUtils.getProjectIdFromURL(url);
+        URI uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/jackson-databind");
+        String projectId = GitLabUtils.getProjectIdFromURI(uri);
         Assert.assertEquals("jboss-set/jackson-databind", projectId);
 
-        url = new URL("https://gitlab.xxx.redhat.com/jboss-set/xxx/jackson-databind");
-        projectId = GitLabUtils.getProjectIdFromURL(url);
+        uri  = new URI("https://gitlab.xxx.redhat.com/jboss-set/xxx/jackson-databind");
+        projectId = GitLabUtils.getProjectIdFromURI(uri);
         Assert.assertEquals("jboss-set/xxx/jackson-databind", projectId);
 
-        url = new URL("https://gitlab.xxx.redhat.com/jboss-set/xxx/yyy/jackson-databind");
-        projectId = GitLabUtils.getProjectIdFromURL(url);
+        uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/xxx/yyy/jackson-databind");
+        projectId = GitLabUtils.getProjectIdFromURI(uri);
         Assert.assertEquals("jboss-set/xxx/yyy/jackson-databind", projectId);
 
-        url = new URL("https://gitlab.xxx.redhat.com/jboss-set/jackson-databind/-/merge_requests/2");
-        projectId = GitLabUtils.getProjectIdFromURL(url);
+        uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/jackson-databind/-/merge_requests/2");
+        projectId = GitLabUtils.getProjectIdFromURI(uri);
         Assert.assertEquals("jboss-set/jackson-databind", projectId);
 
-        url = new URL("https://gitlab.xxx.redhat.com/jboss-set/xxx/yyy/jackson-databind/-/merge_requests/2");
-        projectId = GitLabUtils.getProjectIdFromURL(url);
+        uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/xxx/yyy/jackson-databind/-/merge_requests/2");
+        projectId = GitLabUtils.getProjectIdFromURI(uri);
         Assert.assertEquals("jboss-set/xxx/yyy/jackson-databind", projectId);
 
-        url = new URL("https://gitlab.xxx.redhat.com/jboss-set/xxx/yyy/jackson-databind/-/commits/master");
-        projectId = GitLabUtils.getProjectIdFromURL(url);
+        uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/xxx/yyy/jackson-databind/-/commits/master");
+        projectId = GitLabUtils.getProjectIdFromURI(uri);
         Assert.assertEquals("jboss-set/xxx/yyy/jackson-databind", projectId);
     }
 
     @Test
-    public void testGetProjectIdAndLastFieldFromURL() throws Exception {
-        URL url = new URL("https://gitlab.xxx.redhat.com/jboss-set/jackson-databind");
-        String[] parts = GitLabUtils.getProjectIdAndLastFieldFromURL(url);
+    public void testGetProjectIdAndLastFieldFromURI() throws Exception {
+        URI uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/jackson-databind");
+        String[] parts = GitLabUtils.getProjectIdAndLastFieldFromURI(uri);
         Assert.assertNull(parts);
 
-        url = new URL("https://gitlab.xxx.redhat.com/jboss-set/jackson-databind/-/merge_requests/2");
-        parts = GitLabUtils.getProjectIdAndLastFieldFromURL(url);
+        uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/jackson-databind/-/merge_requests/2");
+        parts = GitLabUtils.getProjectIdAndLastFieldFromURI(uri);
         Assert.assertNotNull(parts);
         Assert.assertEquals(2, parts.length);
         Assert.assertEquals("jboss-set/jackson-databind", parts[0]);
         Assert.assertEquals("2", parts[1]);
 
-        url = new URL("https://gitlab.xxx.redhat.com/jboss-set/xxx/jackson-databind/-/merge_requests/2");
-        parts = GitLabUtils.getProjectIdAndLastFieldFromURL(url);
+        uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/xxx/jackson-databind/-/merge_requests/2");
+        parts = GitLabUtils.getProjectIdAndLastFieldFromURI(uri);
         Assert.assertNotNull(parts);
         Assert.assertEquals(2, parts.length);
         Assert.assertEquals("jboss-set/xxx/jackson-databind", parts[0]);
         Assert.assertEquals("2", parts[1]);
 
-        url = new URL("https://gitlab.xxx.redhat.com/jboss-set/xxx/yyy/jackson-databind/-/issues/3");
-        parts = GitLabUtils.getProjectIdAndLastFieldFromURL(url);
+        uri = new URI("https://gitlab.xxx.redhat.com/jboss-set/xxx/yyy/jackson-databind/-/issues/3");
+        parts = GitLabUtils.getProjectIdAndLastFieldFromURI(uri);
         Assert.assertNotNull(parts);
         Assert.assertEquals(2, parts.length);
         Assert.assertEquals("jboss-set/xxx/yyy/jackson-databind", parts[0]);

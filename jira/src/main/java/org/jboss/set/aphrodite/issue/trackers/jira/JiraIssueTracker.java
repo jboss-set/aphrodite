@@ -23,9 +23,8 @@
 package org.jboss.set.aphrodite.issue.trackers.jira;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -115,7 +114,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
         try {
             JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-            URI jiraServerUri = baseUrl.toURI();
+            URI jiraServerUri = baseUrl;
             String username = config.getUsername();
             String password = config.getPassword();
             if (username == null || username.isEmpty()) {
@@ -133,7 +132,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public Issue getIssue(URL url) throws NotFoundException {
+    public Issue getIssue(URI url) throws NotFoundException {
         String issueKey = getIssueKey(url);
         List<IssueRestClient.Expandos> expandos = createExpandos();
         try {
@@ -179,7 +178,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     private com.atlassian.jira.rest.client.api.domain.Issue getIssue(Issue issue) throws NotFoundException {
-        String trackerId = issue.getTrackerId().orElse(getIssueKey(issue.getURL()));
+        String trackerId = issue.getTrackerId().orElse(getIssueKey(issue.getURI()));
         return getIssue(trackerId);
     }
 
@@ -192,13 +191,13 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public List<Issue> getIssues(Collection<URL> urls) {
+    public List<Issue> getIssues(Collection<URI> urls) {
         urls = filterUrlsByHost(urls);
         if (urls.isEmpty())
             return new ArrayList<>();
 
         List<String> ids = new ArrayList<>();
-        for (URL url : urls) {
+        for (URI url : urls) {
             try {
                 ids.add(getIssueKey(url));
             } catch (NotFoundException e) {
@@ -267,16 +266,16 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public List<Issue> searchIssuesByFilter(URL filterUrl) throws NotFoundException {
+    public List<Issue> searchIssuesByFilter(URI filterUrl) throws NotFoundException {
         String jql = getJQLFromFilter(filterUrl);
         return searchIssues(jql, config.getDefaultIssueLimit());
     }
 
-    private String getJQLFromFilter(URL filterUrl) throws NotFoundException {
+    private String getJQLFromFilter(URI filterUrl) throws NotFoundException {
         try {
             // url type example https://issues.redhat.com/rest/api/latest/filter/12322199
             SearchRestClient searchClient = restClient.getSearchClient();
-            Filter filter = searchClient.getFilter(filterUrl.toURI()).get();
+            Filter filter = searchClient.getFilter(filterUrl).get();
             return filter.getJql();
         } catch (Exception e) {
             throw new NotFoundException("Unable to retrieve filter with url: " + filterUrl, e);
@@ -291,7 +290,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     @Override
     public boolean updateIssue(Issue issue) throws NotFoundException, AphroditeException {
         try {
-            checkHost(issue.getURL());
+            checkHost(issue.getURI());
 
             com.atlassian.jira.rest.client.api.domain.Issue jiraIssue = getIssue(issue);
             Project project = restClient.getProjectClient().getProject(jiraIssue.getProject().getSelf()).claim();
@@ -314,7 +313,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
     }
 
-    private String toKey(URL url) {
+    private String toKey(URI url) {
         try {
             return getIssueKey(url);
         } catch (NotFoundException e) {
@@ -375,7 +374,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         }
     }
 
-    static String getIssueKey(URL url) throws NotFoundException {
+    static String getIssueKey(URI url) throws NotFoundException {
         String path = correctPath(url.getPath());
         boolean api = path.contains(API_ISSUE_PATH);
         boolean browse = path.contains(BROWSE_ISSUE_PATH);
@@ -400,18 +399,18 @@ public class JiraIssueTracker extends AbstractIssueTracker {
             for (Map.Entry<Flag, String> entry : FLAG_MAP.entrySet()) {
                 if (msg.contains(entry.getValue())) {
                     String retMsg = "Flag '%1$s' set in Issue.stage cannot be set for %2$s '%3$s'";
-                    return getOptionalErrorMessage(retMsg, issue.getProduct(), entry.getKey(), issue.getURL());
+                    return getOptionalErrorMessage(retMsg, issue.getProduct(), entry.getKey(), issue.getURI());
                 }
             }
             if (msg.contains(TARGET_RELEASE)) {
                 String retMsg = "Release.milestone cannot be set for %2$s ''%3$s'";
-                return getOptionalErrorMessage(retMsg, issue.getProduct(), null, issue.getURL());
+                return getOptionalErrorMessage(retMsg, issue.getProduct(), null, issue.getURI());
             }
         }
         return null;
     }
 
-    private String getOptionalErrorMessage(String template, Optional<?> optional, Object val, URL url) {
+    private String getOptionalErrorMessage(String template, Optional<?> optional, Object val, URI url) {
         if (optional.isPresent())
             return String.format(template, val, "issues in project", optional.get());
         else
@@ -453,14 +452,14 @@ public class JiraIssueTracker extends AbstractIssueTracker {
     }
 
     @Override
-    public Issue createIssue(final IssueCreationDetails details) throws MalformedURLException, NotFoundException, AphroditeException {
+    public Issue createIssue(final IssueCreationDetails details) throws URISyntaxException, NotFoundException, AphroditeException {
 
         assert details != null;
         assert details instanceof JIRAIssueCreationDetails;
 
         final JIRAIssueCreationDetails localDetails = (JIRAIssueCreationDetails) details;
 
-        assert details.getTrackerURL() != null;
+        assert details.getTrackerURI() != null;
         assert details.getProjectKey() != null;
         assert details.getDescription() != null;
         assert localDetails.getIssueType() != null;
@@ -478,18 +477,18 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         final IssueInput newIssue = builder.build();
         final BasicIssue basicIssue = restClient.getIssueClient().createIssue(newIssue).claim();
 
-        final URL trackerURL = localDetails.getTrackerURL();
+        final URI trackerURL = localDetails.getTrackerURI();
 
         // org.jboss.set.aphrodite.domain.Issue issue = tracker.getIssue(new URL(basicIssue.getKey()));
         if (trackerURL.toString().endsWith("browse") || trackerURL.toString().endsWith("browse/")) {
-            return this.getIssue(new URL(trackerURL, basicIssue.getKey()));
+            return this.getIssue(trackerURL.resolve(basicIssue.getKey()));
         } else {
-            return this.getIssue(new URL(trackerURL, "browse/" + basicIssue.getKey()));
+            return this.getIssue(trackerURL.resolve("browse/" + basicIssue.getKey()));
         }
     }
 
     public void linkIssues(Issue from, Issue to, String linkType) {
-        LinkIssuesInput link = new LinkIssuesInput(toKey(from.getURL()), toKey(to.getURL()),linkType);
+        LinkIssuesInput link = new LinkIssuesInput(toKey(from.getURI()), toKey(to.getURI()),linkType);
         restClient.getIssueClient().linkIssue(link).claim();
     }
 

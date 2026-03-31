@@ -23,9 +23,7 @@
 package org.jboss.set.aphrodite.stream.services.json;
 
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -70,7 +68,7 @@ public class JsonStreamService implements StreamService {
     // this collection contain mapping of url to list of streams. Order of those MUST be retained
     // as on READ operation. We write from this structure, if order change, huge diff on small change
     // might happen. We store LinkedHashMap.values(), which retain order from map
-    private final Map<URL, Collection<Stream>> urlToParsedStreams = new LinkedHashMap<>();
+    private final Map<URI, Collection<Stream>> urlToParsedStreams = new LinkedHashMap<>();
     private AphroditeConfig config;
 
     @Override
@@ -92,13 +90,13 @@ public class JsonStreamService implements StreamService {
     }
 
     private boolean init(StreamConfig config) throws NotFoundException {
-        URL url = null;
-        if (config.getURL().isPresent()) {
-            url = config.getURL().get();
+        URI url = null;
+        if (config.getURI().isPresent()) {
+            url = config.getURI().get();
         } else if (config.getStreamFile().isPresent()) {
             try {
-                url = config.getStreamFile().get().toURI().toURL();
-            } catch (MalformedURLException e) {
+                url = config.getStreamFile().get().toURI();
+            } catch (Exception e) {
                 throw new NotFoundException(e);
             }
         } else {
@@ -178,10 +176,10 @@ public class JsonStreamService implements StreamService {
     }
 
     @Override
-    public void serializeStreams(URL url, OutputStream out) throws NotFoundException {
-        final Collection<Stream> streams = this.urlToParsedStreams.get(url);
+    public void serializeStreams(URI uri, OutputStream out) throws NotFoundException {
+        final Collection<Stream> streams = this.urlToParsedStreams.get(uri);
         if (streams == null) {
-            throw new NotFoundException("No matching set of streams for '" + url + "'");
+            throw new NotFoundException("No matching set of streams for '" + uri + "'");
         }
         JsonObject jsonObject = StreamsJsonParser.encode(streams);
         // JsonWriter jsonWriter = Json.createWriter(out);

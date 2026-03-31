@@ -17,7 +17,7 @@
 package org.jboss.set.aphrodite.repository.services.github;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,34 +47,34 @@ public class GithubCompareHomeService extends AbstractGithubService implements C
     }
 
     @Override
-    public Compare getCompare(URL url, String tag1, String tag2) {
+    public Compare getCompare(URI uri, String tag1, String tag2) {
         try {
-            return WRAPPER.toCompare(github.getRepository(createRepositoryIdFromUrl(url)).getCompare(tag1,tag2));
+            return WRAPPER.toCompare(github.getRepository(createRepositoryIdFromUrl(uri)).getCompare(tag1,tag2));
         } catch (IOException e) {
-            Utils.logWarnMessage(LOG, "repository : " + url + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
+            Utils.logWarnMessage(LOG, "repository : " + uri + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
             return new Compare();
         }
     }
 
     @Override
-    public List<String> getTags(URL url) {
+    public List<String> getTags(URI uri) {
         try {
-            GHRepository repo = github.getRepository(createRepositoryIdFromUrl(url));
+            GHRepository repo = github.getRepository(createRepositoryIdFromUrl(uri));
             return repo.listTags().toList().stream().map(GHTag::getName).collect(Collectors.toList());
         } catch (IOException e) {
-            Utils.logWarnMessage(LOG, "repository : " + url + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
-            return Collections.EMPTY_LIST;
+            Utils.logWarnMessage(LOG, "repository : " + uri + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
+            return Collections.emptyList();
         }
     }
 
     @Override
-    public List<String> getBranches(URL url) {
+    public List<String> getBranches(URI uri) {
         try {
-            GHRepository repo = github.getRepository(createRepositoryIdFromUrl(url));
+            GHRepository repo = github.getRepository(createRepositoryIdFromUrl(uri));
             return new ArrayList<>(repo.getBranches().keySet());
         } catch (IOException e) {
-            Utils.logWarnMessage(LOG, "repository : " + url + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
-            return Collections.EMPTY_LIST;
+            Utils.logWarnMessage(LOG, "repository : " + uri + " is not accessable due to " + e.getMessage() + ". Check repository link and your account permission.");
+            return Collections.emptyList();
         }
     }
 
