@@ -1,0 +1,20 @@
+{
+    "maxThreadCount": 10,
+
+    "issueTrackerConfigs": [
+    {
+      "url": "https://issues.redhat.com/",
+      "username": "${{RH_USR}}",
+      "password": "${{RH_PWD}}",
+      "tracker": "JIRA"
+    }
+  ],
+  "repositoryConfigs": [
+    {
+      "url": "https://github.com/",
+      "username": "${{GH_USR}}",
+      "password": "${{GH_PWD}}",
+      "type": "GITHUB"
+    }
+  ]
+}
