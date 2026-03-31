@@ -42,6 +42,11 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.jboss.set</groupId>
             <artifactId>jboss-aphrodite-container</artifactId>
         </dependency>
