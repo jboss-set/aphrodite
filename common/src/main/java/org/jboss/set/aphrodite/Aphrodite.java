@@ -64,6 +64,7 @@ import org.jboss.set.aphrodite.domain.SearchCriteria;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
+import org.jboss.set.aphrodite.expr.SystemPropertyExpressionResolver;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
 import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
@@ -147,7 +148,7 @@ public class Aphrodite implements AutoCloseable {
             throw new IllegalArgumentException("Property '" + FILE_PROPERTY + "' must be set");
 
         try (JsonReader jr = Json.createReader(new FileInputStream(propFileLocation))) {
-            init(AphroditeConfig.fromJson(jr.readObject()));
+            init(AphroditeConfig.fromJson(new SystemPropertyExpressionResolver(), jr.readObject()));
         } catch (IOException e) {
             Utils.logException(LOG, "Unable to load file: " + propFileLocation, e);
             throw new AphroditeException(e);
