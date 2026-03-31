@@ -151,7 +151,7 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(pullRequestId);
             List<GHLabel> issueLabels = new ArrayList<>();
-            List<GHLabel> existingLabels = repository.listLabels().asList();
+            List<GHLabel> existingLabels = repository.listLabels().toList();
 
             for (Label label : labels) {
                 GHLabel validLabel = validAndGetLabel(repository, label, existingLabels);
@@ -177,7 +177,7 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
 
         try {
             GHRepository repository = github.getRepository(repositoryId);
-            List<GHLabel> existingLabels = repository.listLabels().asList();
+            List<GHLabel> existingLabels = repository.listLabels().toList();
             GHLabel newLabel = validAndGetLabel(repository, label, existingLabels);
             if (newLabel == null) {
                 Utils.logWarnMessage(LOG, "No label exists with name '" + label.getName() + "' at repository '" + repository.getName() + "'");
@@ -248,13 +248,13 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest ghPullRequest = repository.getPullRequest(pullRequestId);
 
-            List<GHPullRequestCommitDetail> commits = ghPullRequest.listCommits().asList();
+            List<GHPullRequestCommitDetail> commits = ghPullRequest.listCommits().toList();
             if (commits.size() > 0) {
                 sha = commits.get(commits.size() - 1).getSha();
             }
 
             // statuses contains Finished and Started TeamCity Build
-            List<GHCommitStatus> statuses = repository.listCommitStatuses(sha).asList();
+            List<GHCommitStatus> statuses = repository.listCommitStatuses(sha).toList();
             if (statuses.size() > 0) {
                 GHCommitState sta = getCombineStatus(statuses);
                 if (sta != null)
@@ -290,7 +290,7 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
         try {
             GHRepository repository = github.getRepository(repositoryId);
             GHPullRequest ghPullRequest = repository.getPullRequest(pullRequestId);
-            List<GHPullRequestReview> reviews = ghPullRequest.listReviews().asList();
+            List<GHPullRequestReview> reviews = ghPullRequest.listReviews().toList();
             ListIterator<GHPullRequestReview> li = reviews.listIterator(reviews.size());
             // Iterate in reverse. created date and updated date are always Null, Is this really safe?
             while (li.hasPrevious()) {
@@ -338,7 +338,6 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
 
     public boolean repositoryAccessable(URI uri) {
         if (uri.toString().contains("svn.jboss.org")) {
-            // svn repository is not supported
             Utils.logWarnMessage(LOG, "svn repository : " + uri + " is not supported.");
             return false;
         }

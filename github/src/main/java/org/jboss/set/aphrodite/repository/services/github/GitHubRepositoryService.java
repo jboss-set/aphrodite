@@ -172,7 +172,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         try {
             GHMyself myself = github.getMyself();
             GHRepository githubRepository = getGHRepository(uri);
-            Set<GHUser> collaborators = githubRepository.listCollaborators().asSet();
+            Set<GHUser> collaborators = githubRepository.listCollaborators().toSet();
             return collaborators.stream().anyMatch(e -> e.getLogin().equals(myself.getLogin()));
         } catch (Throwable t) {
             if (t.getMessage().contains("Must have push access")) {
@@ -190,7 +190,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         URI uri = pullRequest.getURI();
         checkHost(uri);
 
-        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(uri));
+        int pullRequestId = Integer.valueOf(Utils.getTrailingValueFromUrlPath(uri));
         try {
             GHRepository repository = getGHRepository(uri);
             GHLabel newLabel = getLabel(repository, labelName);
@@ -211,7 +211,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
     }
 
     private GHLabel getLabel(GHRepository repository, String labelName) throws NotFoundException, IOException {
-        List<GHLabel> labels = repository.listLabels().asList();
+        List<GHLabel> labels = repository.listLabels().toList();
         return getLabel(repository, labelName, labels);
     }
 
@@ -232,7 +232,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         List<GHLabel> labels;
         try {
             GHRepository githubRepository = getGHRepository(uri);
-            labels = githubRepository.listLabels().asList();
+            labels = githubRepository.listLabels().toList();
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -262,7 +262,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
         URI uri = pullRequest.getURI();
         checkHost(uri);
 
-        int pullRequestId = new Integer(Utils.getTrailingValueFromUrlPath(uri));
+        int pullRequestId = Integer.parseInt(Utils.getTrailingValueFromUrlPath(uri));
         try {
             GHRepository repository = getGHRepository(uri);
             GHIssue issue = repository.getIssue(pullRequestId);
@@ -404,7 +404,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
             }
             return commits;
         } catch (IOException | GHException e) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
