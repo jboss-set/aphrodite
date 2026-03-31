@@ -11,28 +11,21 @@
     <artifactId>jboss-aphrodite-jira</artifactId>
 
     <properties>
-        <io.atlassian.fugue.version>4.7.2</io.atlassian.fugue.version>
-        <com.atlassian.jira.version>11.3.2</com.atlassian.jira.version>
-        <com.atlassian.jira.client.version> 7.0.1</com.atlassian.jira.client.version>
-        <org.slf4j.version>1.7.12</org.slf4j.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
-            <version>${version.javax.ws.rs}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
             <artifactId>jettison</artifactId>
-            <version>${version.codehaus.jettison}</version>
         </dependency>
         <dependency>
             <groupId>com.atlassian.jira</groupId>
             <artifactId>jira-rest-java-client-core</artifactId>
-            <version>${com.atlassian.jira.client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.set</groupId>
@@ -52,12 +45,19 @@
         <dependency>
             <groupId>io.atlassian.fugue</groupId>
             <artifactId>fugue</artifactId>
-            <version>${io.atlassian.fugue.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${org.slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
         </dependency>
     </dependencies>
 </project>

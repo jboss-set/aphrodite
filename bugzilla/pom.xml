@@ -35,12 +35,10 @@
         <dependency>
             <groupId>org.apache.xmlrpc</groupId>
             <artifactId>xmlrpc-client</artifactId>
-            <version>${org.apache.xmlrpc.xmlrpc-client}</version>
         </dependency>
         <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
-            <version>${commons-httpclient.commons-httpclient}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.set</groupId>
