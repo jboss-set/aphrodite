@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.MergeRequest;
 import org.jboss.set.aphrodite.domain.Codebase;
@@ -42,6 +40,8 @@ import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Utility methods for the gitlab repository.</p>
@@ -50,7 +50,7 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
  */
 public class GitLabUtils {
 
-    private static final Log LOG = LogFactory.getLog(GitLabUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GitLabUtils.class);
 
     /**
      * Return the project id from a gitlab repo URL. The URL is in the form:
