@@ -62,7 +62,7 @@ public class GitLabUtils {
      * @return The project id in the form <em>group/project</em>
      */
     public static String getProjectIdFromURI(URI uri) {
-        String[] path = uri.getPath().split("/");
+        String[] path = uri.normalize().getPath().split("/");
         String projectId = null;
         boolean done = false;
         for (int i = 0; i < path.length && !done; i++) {
@@ -95,7 +95,7 @@ public class GitLabUtils {
      */
     public static String[] getProjectIdAndLastFieldFromURI(URI url) {
 
-        String[] path = url.getPath().split("/");
+        String[] path = url.normalize().getPath().split("/");
         String projectId = null;
         boolean done = false;
         int idx = -1;
