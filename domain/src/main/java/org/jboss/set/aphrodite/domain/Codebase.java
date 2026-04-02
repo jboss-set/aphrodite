@@ -22,17 +22,30 @@
 
 package org.jboss.set.aphrodite.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 // represents a branch
 public class Codebase {
 
-    private final String name;
+    private final List<String> branches;
 
     public Codebase(String name) {
-        this.name = name;
+        this.branches = List.of(name.split("\\|"));
     }
 
-    public String getName() {
-        return name;
+    public String getBranch() {
+        return branches.get(0);
+    }
+
+    public List<String> getBranches() {
+        return branches;
+    }
+
+    public boolean isIn(Codebase definition) {
+        List<String> tmp = new ArrayList<>();
+        tmp.retainAll(definition.getBranches());
+        return tmp.isEmpty();
     }
 
     @Override
@@ -43,18 +56,20 @@ public class Codebase {
             return false;
 
         Codebase codebase = (Codebase) o;
-        return name.equals(codebase.name);
+        return branches.containsAll(codebase.branches);
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return branches.hashCode();
     }
 
     @Override
     public String toString() {
         return "Codebase{" +
-                "name='" + name + '\'' +
+                "branches='" + branches + '\'' +
                 '}';
     }
+
+
 }

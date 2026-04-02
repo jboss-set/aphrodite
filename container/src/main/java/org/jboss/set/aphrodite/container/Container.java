@@ -28,14 +28,13 @@ import java.util.ServiceLoader;
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
 public abstract class Container {
-    private static final Container INSTANCE;
+    private static Container INSTANCE;
 
-    static {
-        final ServiceLoader<Container> loader = ServiceLoader.load(Container.class);
-        INSTANCE = loader.iterator().next();
-    }
-
-    public static Container instance() {
+    public static final Container instance() {
+        if (INSTANCE == null) {
+            ServiceLoader<Container> loader = ServiceLoader.load(Container.class);
+            INSTANCE = loader.findFirst().orElseThrow(() -> new RuntimeException ("We could not find a container in the classpath"));
+        }
         return INSTANCE;
     }
 
@@ -48,4 +47,7 @@ public abstract class Container {
      * @throws NameNotFoundException a minimal NameNotFoundException, do not expect many fields to be correctly filled
      */
     public abstract <T> T lookup(final String name, final Class<T> expected) throws NameNotFoundException;
+
+    public abstract void register(String name, Object obj);
+
 }

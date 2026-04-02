@@ -112,7 +112,7 @@ public class JsonStreamServiceParseTest {
     private void testStreamComponent(final StreamComponent expected, final StreamComponent whatWeGot) {
         Assert.assertEquals(expected.getName(), whatWeGot.getName());
         Assert.assertEquals(expected.getContacts(), whatWeGot.getContacts());
-        Assert.assertEquals(expected.getRepositoryURL(), whatWeGot.getRepositoryURL());
+        Assert.assertEquals(expected.getRepositoryURI(), whatWeGot.getRepositoryURI());
         Assert.assertEquals(expected.getRepositoryType(), whatWeGot.getRepositoryType());
         Assert.assertEquals(expected.getCodebase(), whatWeGot.getCodebase());
         Assert.assertEquals(expected.getTag(), whatWeGot.getTag());
