@@ -41,6 +41,7 @@
         <com.atlassian.jira.client.version> 7.0.1</com.atlassian.jira.client.version>
         <org.slf4j.version>2.0.17</org.slf4j.version>
         <version.joda.time>2.14.0</version.joda.time>
+        <version.io.atlassian.fugue>6.1.2</version.io.atlassian.fugue>
         <version.com.atlassian.util>4.1.0</version.com.atlassian.util>
         <version.com.atlassian.http.client>5.0.0</version.com.atlassian.http.client>
         <version.com.google.guava>33.2.1-jre</version.com.google.guava>
@@ -91,6 +92,11 @@
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
                 <version>${version.joda.time}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.atlassian.fugue</groupId>
+                <artifactId>fugue</artifactId>
+                <version>${version.io.atlassian.fugue}</version>
             </dependency>
             <dependency>
                 <groupId>io.atlassian.util.concurrent</groupId>

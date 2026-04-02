@@ -86,7 +86,7 @@ public class StreamComponent {
         return repositoryType;
     }
 
-    public URI getRepositoryURL() {
+    public URI getRepositoryURI() {
         return repositoryURL;
     }
 
@@ -157,7 +157,7 @@ public class StreamComponent {
         if (url.contains("github.com")) {
             if (!url.endsWith("/"))
                 url += "/";
-            return Optional.of(url + "tree/" + codebase.getName());
+            return Optional.of(url + "tree/" + codebase.getBranch());
         }
         return Optional.empty();
     }

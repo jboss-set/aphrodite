@@ -100,8 +100,8 @@ public class StreamComponentJsonParser {
         object.add(JSON_NAME, c.getName());
         object.add(JSON_CONTACTS, encodeContacts(c.getContacts()));
         object.add(JSON_REPOSITORY_TYPE, c.getRepositoryType().toString());
-        object.add(JSON_REPOSITORY_URL, c.getRepositoryURL() == null ? "" : c.getRepositoryURL().toString());
-        object.add(JSON_CODEBASE, c.getCodebase().getName());
+        object.add(JSON_REPOSITORY_URL, c.getRepositoryURI() == null ? "" : c.getRepositoryURI().toString());
+        object.add(JSON_CODEBASE, c.getCodebase().getBranch());
         object.add(JSON_TAG, c.getTag());
         object.add(JSON_VERSION, c.getVersion());
         object.add(JSON_GAV, c.getGAV());

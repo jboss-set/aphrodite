@@ -31,8 +31,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 import org.jboss.set.aphrodite.common.Utils;
 import org.jboss.set.aphrodite.domain.Codebase;
@@ -56,6 +57,8 @@ import org.kohsuke.github.GHRateLimit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * @author Ryan Emerson
  */
@@ -67,15 +70,15 @@ class GitHubWrapper {
         Repository repo = new Repository(uri);
         List<Codebase> branchNames = branches.stream()
                 .map(this::repositoryBranchToCodebase)
-                .collect(Collectors.toList());
+                .collect(toList());
         repo.getCodebases().addAll(branchNames);
         return repo;
     }
 
     List<PullRequest> toAphroditePullRequests(List<GHPullRequest> pullRequests, PullRequestHome prHome) {
         return pullRequests.stream()
-                .map(pr -> this.pullRequestToPullRequest(pr, prHome)).filter(x -> x!=null)
-                .collect(Collectors.toList());
+                .map(pr -> this.pullRequestToPullRequest(pr, prHome)).filter(Predicate.not(Objects::isNull))
+                .collect(toList());
     }
 
     PullRequest pullRequestToPullRequest(GHPullRequest pullRequest, PullRequestHome prHome) {

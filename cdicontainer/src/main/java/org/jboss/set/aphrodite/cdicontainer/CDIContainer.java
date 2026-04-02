@@ -44,4 +44,9 @@ public class CDIContainer extends Container {
         final CreationalContext<?> ctx = manager.createCreationalContext(bean);
         return expected.cast(manager.getReference(bean, expected, ctx));
     }
+
+    @Override
+    public void register(String name, Object obj) {
+        throw new UnsupportedOperationException();
+    }
 }

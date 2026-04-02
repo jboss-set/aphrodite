@@ -41,6 +41,7 @@ public class SimpleContainer extends Container {
         return expected.cast(obj);
     }
 
+    @Override
     public void register(final String name, final Object obj) {
         registry.put(name, obj);
     }

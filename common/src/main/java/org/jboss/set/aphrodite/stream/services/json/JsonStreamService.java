@@ -131,7 +131,7 @@ public class JsonStreamService implements StreamService {
         if (stream == null)
             return new ArrayList<>();
 
-        return stream.getAllComponents().stream().map(StreamComponent::getRepositoryURL).distinct()
+        return stream.getAllComponents().stream().map(StreamComponent::getRepositoryURI).distinct()
                 .collect(Collectors.toList());
     }
 
@@ -140,7 +140,7 @@ public class JsonStreamService implements StreamService {
         List<Stream> streams = new ArrayList<>();
         for (Stream stream : getStreams()) {
             for (StreamComponent component : stream.getAllComponents()) {
-                if (component.getRepositoryURL().equals(repositoryURL) && component.getCodebase().equals(codebase)) {
+                if (component.getRepositoryURI().equals(repositoryURL) && component.getCodebase().equals(codebase)) {
                     streams.add(stream);
                     break; // Go to next stream
                 }
@@ -153,7 +153,7 @@ public class JsonStreamService implements StreamService {
     public StreamComponent getComponentBy(URI repositoryURL, Codebase codebase) {
         for (Stream stream : getStreams()) {
             for (StreamComponent component : stream.getAllComponents()) {
-                if (component.getRepositoryURL().equals(repositoryURL) && component.getCodebase().equals(codebase)) {
+                if (component.getRepositoryURI().equals(repositoryURL) && component.getCodebase().equals(codebase)) {
                     return component;
                 }
             }

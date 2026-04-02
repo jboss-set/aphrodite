@@ -80,7 +80,7 @@ public class GitLabTest {
         Repository repo = aphrodite.getRepository(url);
         Assert.assertEquals(url, repo.getURI());
         Assert.assertTrue(repo.getCodebases().size() >= 1);
-        Assert.assertTrue(repo.getCodebases().stream().filter(n -> n.getName().equals(PULL_REQUEST_BRANCH)).findFirst().isPresent());
+        Assert.assertTrue(repo.getCodebases().stream().filter(n -> n.getBranch().equals(PULL_REQUEST_BRANCH)).findFirst().isPresent());
         Assert.assertTrue(aphrodite.isRepositoryLabelsModifiable(repo));
         List<PullRequest> list = aphrodite.getPullRequestsByState(repo, PullRequestState.OPEN);
         Assert.assertTrue(list.size() > 0);
@@ -93,7 +93,7 @@ public class GitLabTest {
         Assert.assertNotNull(pr);
         Assert.assertEquals(url, pr.getURI());
         Assert.assertEquals(PULL_REQUEST_ID, pr.getId());
-        Assert.assertEquals(PULL_REQUEST_BRANCH, pr.getCodebase().getName());
+        Assert.assertEquals(PULL_REQUEST_BRANCH, pr.getCodebase().getBranch());
         Assert.assertFalse(pr.getCommits().isEmpty());
         Assert.assertTrue(pr.findReferencedPullRequests().size() >= 1);
     }
