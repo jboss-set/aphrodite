@@ -43,9 +43,9 @@ public class Codebase {
     }
 
     public boolean isIn(Codebase definition) {
-        List<String> tmp = new ArrayList<>();
+        List<String> tmp = new ArrayList<>(branches);
         tmp.retainAll(definition.getBranches());
-        return tmp.isEmpty();
+        return !tmp.isEmpty();
     }
 
     @Override

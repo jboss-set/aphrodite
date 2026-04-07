@@ -30,14 +30,14 @@ import static org.junit.Assert.assertEquals;
 public class AphroditeConfigTestUtils {
 
     public static void assertDeepEqualsIssueConfig(IssueTrackerConfig expected, IssueTrackerConfig result) {
-        assertEquals("invalid url property read from valid JSON file", expected.getUrl(), result.getUrl());
+        assertEquals("invalid url property read from valid JSON file", expected.getURI(), result.getURI());
         assertEquals("invalid user property read from valid JSON file", expected.getUsername(), result.getUsername());
         assertEquals("invalid password property read from valid JSON file", expected.getPassword(), result.getPassword());
         assertEquals("invalid tracker property read from valid JSON file", expected.getTracker(), result.getTracker());
     }
 
     public static void assertDeepEqualsRepositoryConfig(RepositoryConfig expected, RepositoryConfig result) {
-        assertEquals("invalid url property read from valid JSON file", expected.getUrl(), result.getUrl());
+        assertEquals("invalid url property read from valid JSON file", expected.getURI(), result.getURI());
         assertEquals("invalid user property read from valid JSON file", expected.getUsername(), result.getUsername());
         assertEquals("invalid password property read from valid JSON file", expected.getPassword(), result.getPassword());
         assertEquals("invalid type property read from valid JSON file", expected.getType(), result.getType());

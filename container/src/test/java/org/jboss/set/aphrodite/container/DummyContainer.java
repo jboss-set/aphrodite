@@ -29,4 +29,9 @@ public class DummyContainer extends Container {
     public <T> T lookup(final String name, final Class<T> expected) {
         throw new RuntimeException("NYI: org.jboss.set.aphrodite.container.DummyContainer.lookup");
     }
+
+    @Override
+    public void register(String name, Object obj) {
+
+    }
 }

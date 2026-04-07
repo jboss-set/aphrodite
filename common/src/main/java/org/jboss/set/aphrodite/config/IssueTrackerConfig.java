@@ -61,7 +61,7 @@ public class IssueTrackerConfig extends AbstractServiceConfig {
     @Override
     public String toString() {
         return "IssueTrackerConfig{" +
-                "url='" + getUrl() + '\'' +
+                "url='" + getURI() + '\'' +
                 ", username='" + getUsername() + '\'' +
                 ", password='" + getPassword() + '\'' +
                 ", tracker='" + tracker + '\'' +

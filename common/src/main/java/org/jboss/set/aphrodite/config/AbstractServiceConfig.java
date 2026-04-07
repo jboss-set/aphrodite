@@ -22,6 +22,7 @@
 
 package org.jboss.set.aphrodite.config;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -29,7 +30,7 @@ import java.util.Objects;
  */
 public abstract class AbstractServiceConfig {
 
-    private final String url;
+    private final List<String> uris;
     private final String username;
     private final String password;
 
@@ -37,13 +38,17 @@ public abstract class AbstractServiceConfig {
         Objects.requireNonNull(url, "A services 'url' must be specified.");
         Objects.requireNonNull(password, "A 'password' must be specified for each service.");
 
-        this.url = url;
+        this.uris = List.of(url.split(","));
         this.username = username;
         this.password = password;
     }
 
-    public String getUrl() {
-        return url;
+    public String getURI() {
+        return uris.get(0);
+    }
+
+    public List<String> getURIs() {
+        return uris;
     }
 
     public String getUsername() {
@@ -57,7 +62,7 @@ public abstract class AbstractServiceConfig {
     @Override
     public String toString() {
         return "AbstractServiceConfig{" +
-                "url='" + url + '\'' +
+                "url='" + uris + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 '}';
@@ -68,7 +73,7 @@ public abstract class AbstractServiceConfig {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((password == null) ? 0 : password.hashCode());
-        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        result = prime * result + ((uris == null) ? 0 : uris.hashCode());
         result = prime * result + ((username == null) ? 0 : username.hashCode());
         return result;
     }
@@ -87,10 +92,10 @@ public abstract class AbstractServiceConfig {
                 return false;
         } else if (!password.equals(other.password))
             return false;
-        if (url == null) {
-            if (other.url != null)
+        if (uris == null) {
+            if (other.uris != null)
                 return false;
-        } else if (!url.equals(other.url))
+        } else if (!uris.equals(other.uris))
             return false;
         if (username == null) {
             if (other.username != null)

@@ -56,18 +56,19 @@ import static java.util.stream.Collectors.toList;
  * @author Ryan Emerson
  */
 public abstract class AbstractIssueTracker implements IssueTrackerService {
-    public static final Pattern URL_REGEX = Pattern
-            .compile("(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\\d+");
+    public static final String REGEX = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?\\d+";
+    public static final Pattern URL_REGEX = Pattern.compile(REGEX);
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractIssueTracker.class);
 
     protected final TrackerType TRACKER_TYPE;
     protected ExecutorService executorService;
     protected IssueTrackerConfig config;
-    protected URI baseUrl;
+    protected List<URI> baseUris;
 
     public AbstractIssueTracker(TrackerType TRACKER_TYPE) {
         this.TRACKER_TYPE = TRACKER_TYPE;
+        baseUris = new ArrayList<>();
     }
 
     @Override
@@ -88,36 +89,58 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     @Override
     public boolean init(IssueTrackerConfig config) {
         this.config = config;
-        String url = config.getUrl();
-        if (!url.endsWith("/"))
-            url = url + "/";
-
-        try {
-            baseUrl = new URI(url);
-        } catch (URISyntaxException e) {
-            String errorMsg = "Invalid IssueTracker url. " + this.getClass().getName() +
-                    " service for '" + url + "' cannot be started";
-            Utils.logException(LOG, errorMsg, e);
-            return false;
+        List<String> uris = config.getURIs();
+        for (String uri : uris) {
+            String newUri = uri;
+            if (!newUri.endsWith("/"))
+                newUri = newUri + "/";
+            try {
+                baseUris.add(new URI(newUri));
+            } catch (URISyntaxException e) {
+                String errorMsg = "Invalid IssueTracker url. " + this.getClass().getName() + " service for '" + newUri + "' cannot be started";
+                Utils.logException(LOG, errorMsg, e);
+                return false;
+            }
         }
         return true;
     }
 
+    public URI getURI () {
+        return this.baseUris.get(0);
+    }
+
+    private URI cloneURI (URI original, URI synonym) throws URISyntaxException {
+        URI updatedUri = new URI(
+                original.getScheme(),
+                original.getUserInfo(),
+                original.getHost(),
+                original.getPort(),
+                synonym.getPath(),
+                synonym.getQuery(),
+                synonym.getFragment()
+        );
+        return updatedUri;
+    }
+
     @Override
     public List<Issue> getIssuesAssociatedWith(PullRequest pullRequest) {
+        URI realURI = baseUris.get(0);
         List<Issue> issues = new ArrayList<>();
-        Matcher m = URL_REGEX.matcher(pullRequest.getTitle() + pullRequest.getBody());
-        while (m.find()) {
-            String link = m.group();
-            try {
-                URI uri = new URI(link);
-                if (uri.getHost().equals(baseUrl.getHost()))
-                    issues.add(getIssue(uri));
-            } catch (URISyntaxException e) {
-                if (LOG.isTraceEnabled())
-                    LOG.trace(e.getMessage(), e);
-            } catch (NotFoundException e) {
-                Utils.logException(LOG, "Unable to retrieve Issue at " + link + ":", e);
+        for (URI baseUri : baseUris) {
+            Matcher m = URL_REGEX.matcher(pullRequest.getTitle() + pullRequest.getBody());
+            while (m.find()) {
+                String synonym = m.group();
+                try {
+                    URI uri = cloneURI(realURI, new URI(synonym));
+                    if (uri.getHost().equals(baseUri.getHost())) {
+                        issues.add(getIssue(uri));
+                    }
+                } catch (URISyntaxException e) {
+                    if (LOG.isTraceEnabled())
+                        LOG.trace(e.getMessage(), e);
+                } catch (NotFoundException e) {
+                    Utils.logException(LOG, "Unable to retrieve Issue at " + synonym + ":", e);
+                }
             }
         }
         return issues;
@@ -141,16 +164,12 @@ public abstract class AbstractIssueTracker implements IssueTrackerService {
     @Override
     public boolean uriExists(URI uri) {
         Objects.requireNonNull(uri);
-        return convertToTrackerID(uri).equals(getTrackerID());
+        return getTrackerID().contains(convertToTrackerID(uri));
     }
 
     @Override
-    public String getTrackerID() {
-        return convertToTrackerID(this.baseUrl);
-    }
-
-    public static boolean exists(AbstractIssueTracker abstractIssueTracker) {
-        return abstractIssueTracker.TRACKER_TYPE != null && abstractIssueTracker.baseUrl != null;
+    public List<String> getTrackerID() {
+        return this.baseUris.stream().map(AbstractIssueTracker::convertToTrackerID).toList();
     }
 
     public static String convertToTrackerID(URI uri) {
