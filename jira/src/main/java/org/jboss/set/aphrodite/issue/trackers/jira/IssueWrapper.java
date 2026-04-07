@@ -220,9 +220,9 @@ class IssueWrapper {
     private JiraChangelogGroup createJiraChangelogGroup(ChangelogGroup changelogGroup) {
         String author = "";
         BasicUser user = changelogGroup.getAuthor();
-        if (user.getName() != null) {
+        if (user != null && user.getName() != null) {
             author = user.getName();
-        } else if (user.getAccountId() != null) {
+        } else if (user != null && user.getAccountId() != null) {
             author = user.getAccountId();
         }
         Date dateCreated = (changelogGroup.getCreated() != null) ? changelogGroup.getCreated().toDate() : new Date();
