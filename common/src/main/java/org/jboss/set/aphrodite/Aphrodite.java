@@ -61,7 +61,6 @@ import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.expr.SystemPropertyExpressionResolver;
 import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.issue.trackers.common.IssueCreationDetails;
-import org.jboss.set.aphrodite.repository.services.common.AbstractRepositoryService;
 import org.jboss.set.aphrodite.repository.services.common.RepositoryType;
 import org.jboss.set.aphrodite.simplecontainer.SimpleContainer;
 import org.jboss.set.aphrodite.spi.AphroditeException;
@@ -158,8 +157,6 @@ public class Aphrodite implements AutoCloseable {
         if (LOG.isInfoEnabled())
             LOG.info("Initiating Aphrodite ...");
 
-        boolean failed = false;
-        StringBuilder error = new StringBuilder();
         this.config = config;
         SimpleContainer container = (SimpleContainer) SimpleContainer.instance();
 
@@ -170,11 +167,8 @@ public class Aphrodite implements AutoCloseable {
         for (IssueTrackerService is : ServiceLoader.load(IssueTrackerService.class)) {
             boolean initialised = is.init(mutableConfig);
             if (initialised) {
-                issueTrackers.put(is.getTrackerID(),is);
+                is.getTrackerID().forEach(id -> issueTrackers.put(id,is));
                 container.register(is.getClass().getSimpleName(), is);
-            } else if (AbstractIssueTracker.exists((AbstractIssueTracker) is)) {
-                error.append("Failed to initialize issue tracker: ").append(is.getTrackerID()).append("\n");
-                failed = true;
             }
         }
 
@@ -182,14 +176,8 @@ public class Aphrodite implements AutoCloseable {
             boolean initialised = rs.init(mutableConfig);
             if (initialised) {
                 repositories.add(rs);
-            } else if (AbstractRepositoryService.exists((AbstractRepositoryService) rs)) {
-                error.append("Failed to initialize repository: ").append(rs.getRepositoryType()).append("\n");
-                failed = true;
             }
         }
-
-        if (failed)
-            throw new AphroditeException("Unable to initiatilise Aphrodite.\n" + error.toString());
 
         initialiseStreams(mutableConfig);
 

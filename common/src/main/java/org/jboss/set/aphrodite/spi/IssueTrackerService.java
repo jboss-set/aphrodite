@@ -73,7 +73,7 @@ public interface IssueTrackerService {
      * Return string format of tracker id, this value, can be used as key/index and compared to {@link AbstractIssueTracker#convertToTrackerID()}.
      * @return
      */
-    String getTrackerID();
+    List<String> getTrackerID();
 
     /**
      * Retrieve all Issues associated with the provided pullRequest object.

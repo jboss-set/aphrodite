@@ -22,7 +22,7 @@
 
 package org.jboss.set.aphrodite.domain;
 
-public class Label {
+public class Label implements Comparable<Label> {
 
     private String id;
     private String color;
@@ -79,10 +79,20 @@ public class Label {
     }
 
     @Override
+    public int compareTo(Label other) {
+        if (other == null) {
+            return -1;
+        }
+
+        return this.getName().compareTo(other.getName());
+    }
+
+    @Override
     public String toString() {
         return "Label{" +
                 "name='" + name + '\'' +
                 ",color='" + color + '\'' +
                 ",url=" + url + "}";
     }
+
 }

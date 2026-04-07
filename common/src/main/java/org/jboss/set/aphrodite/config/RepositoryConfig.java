@@ -47,7 +47,7 @@ public class RepositoryConfig extends AbstractServiceConfig {
     @Override
     public String toString() {
         return "RepositoryConfig{" +
-                "url='" + getUrl() + '\'' +
+                "url='" + getURI() + '\'' +
                 ", username='" + getUsername() + '\'' +
                 ", password='" + getPassword() + '\'' +
                 ", type='" + type + '\'' +

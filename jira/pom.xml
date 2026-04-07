@@ -48,10 +48,6 @@
             <artifactId>jettison</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.atlassian.fugue</groupId>
-            <artifactId>fugue</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.atlassian.util.concurrent</groupId>
             <artifactId>atlassian-util-concurrent</artifactId>
         </dependency>

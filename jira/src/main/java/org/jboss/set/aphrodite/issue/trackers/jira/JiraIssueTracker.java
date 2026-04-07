@@ -114,7 +114,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
 
         try {
             JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-            URI jiraServerUri = baseUrl;
+            URI jiraServerUri = getURI();
             String username = config.getUsername();
             String password = config.getPassword();
             if (username == null || username.isEmpty()) {
@@ -258,7 +258,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
                 nbTotalIssue = result.getTotal();
                 if ( LOG.isDebugEnabled() ) LOG.debug("Total Issues in result:" + nbTotalIssue);
             }
-            result.getIssues().forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(baseUrl, issue)));
+            result.getIssues().forEach(issue -> issues.add(WRAPPER.jiraSearchIssueToIssue(getURI(), issue)));
             startPosition += maxResults;
         } while ( startPosition < nbTotalIssue );
         if ( LOG.isDebugEnabled() ) LOG.debug("Total issues:" + issues.size());
@@ -422,7 +422,7 @@ public class JiraIssueTracker extends AbstractIssueTracker {
         try {
             restClient.close();
         } catch (IOException e) {
-            LOG.warn("destroyin jira issue tracker", e);
+            LOG.debug("destroying jira issue tracker", e);
         }
     }
 

@@ -83,11 +83,11 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
     @Override
     public boolean init(RepositoryConfig config) {
         boolean result = super.init(config);
-        LOG.debug("Initializing GitLab repository " + config.getUrl());
+        LOG.debug("Initializing GitLab repository " + config.getURI());
         if (result) {
             try {
                 // TODO: Try using username/password too
-                gitLabApi = new GitLabApi(config.getUrl(), config.getPassword());
+                gitLabApi = new GitLabApi(config.getURI(), config.getPassword());
                 // get the current user and check the name
                 User user = gitLabApi.getUserApi().getCurrentUser();
                 if (user.getUsername().equalsIgnoreCase(config.getUsername())) {
@@ -98,7 +98,7 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
                     result = false;
                 }
             } catch (GitLabApiException e) {
-                LOG.warn("Error initializing gitlab " + config.getUrl(), e);
+                LOG.warn("Error initializing gitlab " + config.getURI(), e);
                 result = false;
             }
         }

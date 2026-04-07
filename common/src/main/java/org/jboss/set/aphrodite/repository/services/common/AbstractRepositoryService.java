@@ -64,7 +64,7 @@ public abstract class AbstractRepositoryService {
 
     public boolean init(RepositoryConfig config) {
         this.config = config;
-        String url = config.getUrl();
+        String url = config.getURI();
         if (!url.endsWith("/"))
             url = url + "/";
 

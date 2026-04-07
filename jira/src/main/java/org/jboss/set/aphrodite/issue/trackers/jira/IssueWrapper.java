@@ -31,8 +31,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -48,6 +51,7 @@ import org.jboss.set.aphrodite.domain.IssueEstimation;
 import org.jboss.set.aphrodite.domain.Release;
 import org.jboss.set.aphrodite.domain.Stage;
 import org.jboss.set.aphrodite.domain.User;
+import org.jboss.set.aphrodite.issue.trackers.common.AbstractIssueTracker;
 import org.jboss.set.aphrodite.spi.AphroditeException;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.slf4j.Logger;
@@ -55,6 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
+import com.atlassian.jira.rest.client.api.domain.BasicUser;
 import com.atlassian.jira.rest.client.api.domain.ChangelogGroup;
 import com.atlassian.jira.rest.client.api.domain.ChangelogItem;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
@@ -213,8 +218,13 @@ class IssueWrapper {
     }
 
     private JiraChangelogGroup createJiraChangelogGroup(ChangelogGroup changelogGroup) {
-        final String noAuthor = "";
-        String author = (changelogGroup.getAuthor() != null) ? changelogGroup.getAuthor().getName() : noAuthor;
+        String author = "";
+        BasicUser user = changelogGroup.getAuthor();
+        if (user.getName() != null) {
+            author = user.getName();
+        } else if (user.getAccountId() != null) {
+            author = user.getAccountId();
+        }
         Date dateCreated = (changelogGroup.getCreated() != null) ? changelogGroup.getCreated().toDate() : new Date();
         List<JiraChangelogItem> changelogItems = createJiraChangelogItems(changelogGroup.getItems());
         return new JiraChangelogGroup(User.createWithUsername(author), dateCreated, changelogItems);
@@ -513,26 +523,32 @@ class IssueWrapper {
 
     private void setPullRequests(JiraIssue issue, com.atlassian.jira.rest.client.api.domain.Issue jiraIssue) {
         IssueField fieldContent = jiraIssue.getFieldByName("Git Pull Request");//Git Pull Request
-        if ( fieldContent != null ) {
-            extractPullRequests(issue, (JSONArray) fieldContent.getValue());
+        if (fieldContent == null ) {
+            return;
         }
+
+        String uris = (String) fieldContent.getValue();
+
+        if (uris == null || uris.isEmpty()) {
+            return;
+        }
+        issue.setPullRequests(extractUris(uris));
     }
 
-    private static void extractPullRequests(JiraIssue issue, JSONArray urls) {
-        if (urls != null && urls.length() > 0 ) {
-            List<URI> prUrls = new ArrayList<URI>(urls.length());
-            for ( int index = 0 ; index < urls.length(); index++ )
-                prUrls.add(Utils.createURI(getFromJSONArray(index,urls).toString()));
-            issue.setPullRequests(prUrls);
-        }
-    }
+    private List<URI> extractUris(String input) {
+        Set<URI> uris = new TreeSet<>();
+        Pattern pattern = Pattern.compile(AbstractIssueTracker.REGEX, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(input);
 
-    private static Object getFromJSONArray(int i, JSONArray urls) {
-        try {
-            return urls.get(i);
-        } catch (JSONException e) {
-            throw new IllegalStateException(e);
+        while (matcher.find()) {
+            try {
+                // Convert the match to an actual URI object for validation
+                uris.add(new URI(matcher.group()));
+            } catch (Exception e) {
+                // Ignore matches that aren't valid URIs
+            }
         }
+        return new ArrayList<>(uris);
     }
 
     private URI trackerIdToBrowsableUrl(URI url, String trackerId) {
