@@ -200,10 +200,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
                 return;
             }
 
-            List<String> list = labels.stream().map(e -> e.getName()).collect(Collectors.toList());
-            list.add(newLabel.getName());
-            String[] labelArray = list.toArray(new String[list.size()]);
-            issue.setLabels(labelArray);
+            issue.addLabels(newLabel);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             throw new NotFoundException(e);
@@ -295,11 +292,7 @@ public class GitHubRepositoryService extends AbstractGithubService implements Re
 
             for (GHLabel label : labels)
                 if (label.getName().equalsIgnoreCase(name)) {
-                    // remove the label and reset
-                    List<String> list = labels.stream().map(e -> e.getName()).collect(Collectors.toList());
-                    list.remove(label.getName());
-                    String[] labelArray = list.toArray(new String[list.size()]);
-                    issue.setLabels(labelArray);
+                    issue.removeLabel(label.getName());
                     return;
                 }
         } catch (IOException e) {

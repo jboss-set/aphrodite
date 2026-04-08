@@ -189,10 +189,7 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
                 return true; // label is already existed.
             }
 
-            List<String> list = labels.stream().map(e -> e.getName()).collect(Collectors.toList());
-            list.add(newLabel.getName());
-            String[] labelArray = list.toArray(new String[list.size()]);
-            issue.setLabels(labelArray);
+            issue.addLabels(newLabel);
         } catch (IOException e) {
             Utils.logException(LOG, e);
             return false;
@@ -219,13 +216,9 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(pullRequestId);
             Collection<GHLabel> labels = issue.getLabels();
-            for (GHLabel l : labels)
-                if (l.getName().equalsIgnoreCase(labelName)) {
-                    // remove the label and reset
-                    List<String> list = labels.stream().map(e -> e.getName()).collect(Collectors.toList());
-                    list.remove(l.getName());
-                    String[] labelArray = list.toArray(new String[list.size()]);
-                    issue.setLabels(labelArray);
+            for (GHLabel existingLabel : labels)
+                if (existingLabel.getName().equalsIgnoreCase(labelName)) {
+                    issue.removeLabel(existingLabel.getName());
                     return true;
                 }
         } catch (IOException e) {
