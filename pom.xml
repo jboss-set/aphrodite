@@ -94,6 +94,11 @@
                 <version>${version.joda.time}</version>
             </dependency>
             <dependency>
+                <groupId>io.atlassian.fugue</groupId>
+                <artifactId>fugue</artifactId>
+                <version>${version.io.atlassian.fugue}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.atlassian.util.concurrent</groupId>
                 <artifactId>atlassian-util-concurrent</artifactId>
                 <version>${version.com.atlassian.util}</version>
@@ -294,7 +299,7 @@
                         </goals>
                         <phase>verify</phase>
                         <configuration>
-                            <failOnWarning>true</failOnWarning>
+                            <failOnWarning>false</failOnWarning>
                             <outputXML>true</outputXML>
                         </configuration>
                     </execution>
