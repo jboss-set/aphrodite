@@ -75,7 +75,7 @@ public interface PullRequestHome {
      * @param labelName the name of the label to be applied.
      * @return <tt>true</tt> if this label is added as a result of the call
      */
-    boolean addLabel(PullRequest pullRequest, Label label);
+    boolean addLabels(PullRequest pullRequest, List<Label> label);
 
     /**
      * Remove a label from the provided <code>PullRequest</code> object.
@@ -84,7 +84,7 @@ public interface PullRequestHome {
      * @param name the <code>Label</code> name will be removed.
      * @return <tt>true</tt> if a label was removed as a result of this call
      */
-    boolean removeLabel(PullRequest pullRequest, Label label);
+    boolean removeLabels(PullRequest pullRequest, List<Label> label);
 
     /**
      * Retrieve the current CI status of the latest commit associated with a given pull request.

@@ -275,7 +275,7 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
     @Override
     @Deprecated
     public void addLabelToPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
-        prHome.addLabel(pullRequest, new Label(labelName));
+        prHome.addLabels(pullRequest, List.of(new Label(labelName)));
     }
 
     /**
@@ -284,7 +284,7 @@ public class GitLabRepositoryService extends AbstractRepositoryService implement
     @Override
     @Deprecated
     public void removeLabelFromPullRequest(PullRequest pullRequest, String labelName) throws NotFoundException {
-        prHome.removeLabel(pullRequest, new Label(labelName));
+        prHome.removeLabels(pullRequest, List.of(new Label(labelName)));
     }
 
     // commit status

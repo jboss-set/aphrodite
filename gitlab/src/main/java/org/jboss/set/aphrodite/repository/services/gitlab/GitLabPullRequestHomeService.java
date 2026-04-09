@@ -135,17 +135,24 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
      * {@inheritDoc}
      */
     @Override
-    public boolean addLabel(PullRequest pullRequest, Label label) {
+    public boolean addLabels(PullRequest pullRequest, List<Label> labels) {
         String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             MergeRequest merge = gitLabApi.getMergeRequestApi().getMergeRequest(repoId, mergeId);
             List<String> names = merge.getLabels();
-            if (!names.contains(label.getName())) {
-                names.add(label.getName());
-                gitLabApi.getMergeRequestApi().updateMergeRequest(repoId, mergeId, new MergeRequestParams().withLabels(names));
-                return true;
+            List<String> newNames = new ArrayList<>();
+            for (Label label : labels) {
+                if (!names.contains(label.getName())) {
+                    newNames.add(label.getName());
+                }
             }
+
+            if (!newNames.isEmpty()) {
+                newNames.addAll(names);
+                gitLabApi.getMergeRequestApi().updateMergeRequest(repoId, mergeId, new MergeRequestParams().withLabels(newNames));
+            }
+            return true;
         } catch (GitLabApiException e) {
             Utils.logException(LOG, "Error adding the label", e);
         }
@@ -156,16 +163,24 @@ public class GitLabPullRequestHomeService implements PullRequestHome {
      * {@inheritDoc}
      */
     @Override
-    public boolean removeLabel(PullRequest pullRequest, Label label) {
+    public boolean removeLabels(PullRequest pullRequest, List<Label> labels) {
         String repoId = GitLabUtils.getProjectIdFromURI(pullRequest.getRepository().getURI());
         int mergeId = Integer.parseInt(pullRequest.getId());
         try {
             MergeRequest merge = gitLabApi.getMergeRequestApi().getMergeRequest(repoId, mergeId);
             List<String> names = merge.getLabels();
-            if (names.remove(label.getName())) {
-                gitLabApi.getMergeRequestApi().updateMergeRequest(repoId, mergeId, new MergeRequestParams().withLabels(names));
-                return true;
+            List<String> removedNames = new ArrayList<>();
+            for (Label label : labels) {
+                if (names.contains(label.getName())) {
+                    removedNames.add(label.getName());
+                }
             }
+            if (!removedNames.isEmpty()) {
+                List<String> newNames = new ArrayList<>(names);
+                newNames.removeAll(removedNames);
+                gitLabApi.getMergeRequestApi().updateMergeRequest(repoId, mergeId, new MergeRequestParams().withLabels(newNames));
+            }
+            return true;
         } catch (GitLabApiException e) {
             Utils.logException(LOG, "Error removing the label", e);
         }

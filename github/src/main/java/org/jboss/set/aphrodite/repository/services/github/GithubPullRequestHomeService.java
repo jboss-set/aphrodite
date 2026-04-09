@@ -170,26 +170,31 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
     }
 
     @Override
-    public boolean addLabel(PullRequest pullRequest, Label label) {
+    public boolean addLabels(PullRequest pullRequest, List<Label> labels) {
         URI url = pullRequest.getURI();
         int pullRequestId = Integer.valueOf(Utils.getTrailingValueFromUrlPath(url));
         String repositoryId = createRepositoryIdFromUrl(url);
-
         try {
             GHRepository repository = github.getRepository(repositoryId);
             List<GHLabel> existingLabels = repository.listLabels().toList();
-            GHLabel newLabel = validAndGetLabel(repository, label, existingLabels);
-            if (newLabel == null) {
-                Utils.logWarnMessage(LOG, "No label exists with name '" + label.getName() + "' at repository '" + repository.getName() + "'");
-                return false;
-            }
             GHIssue issue = repository.getIssue(pullRequestId);
-            Collection<GHLabel> labels = issue.getLabels();
-            if (labels.contains(newLabel)) {
-                return true; // label is already existed.
+            Collection<GHLabel> currentLabels = issue.getLabels();
+            List<GHLabel> newLabels = new ArrayList<>();
+            for (Label label : labels) {
+                GHLabel newLabel = validAndGetLabel(repository, label, existingLabels);
+                if (newLabel == null) {
+                    Utils.logWarnMessage(LOG, "No label exists with name '" + label.getName() + "' at repository '" + repository.getName() + "'");
+                    continue;
+                }
+                if (currentLabels.contains(newLabel)) {
+                    Utils.logWarnMessage(LOG, "label already contained with name '" + label.getName() + "' in pull request '" + issue.getUrl() + "'");
+                    continue;
+                }
+                newLabels.add(newLabel);
             }
-
-            issue.addLabels(newLabel);
+            if (!newLabels.isEmpty()) {
+                issue.addLabels(newLabels);
+            }
         } catch (IOException e) {
             Utils.logException(LOG, e);
             return false;
@@ -197,35 +202,44 @@ public class GithubPullRequestHomeService extends AbstractGithubService implemen
         return true;
     }
 
-    private GHLabel validAndGetLabel(GHRepository repository, Label label, List<GHLabel> existingLabels) throws IOException {
+    private GHLabel validAndGetLabel(GHRepository repository, Label label, Collection<GHLabel> existingLabels) throws IOException {
         for (GHLabel exsitingLabel : existingLabels) {
-            if (exsitingLabel.getName().equalsIgnoreCase(label.getName()))
+            if (exsitingLabel.getName().equalsIgnoreCase(label.getName())) {
                 return exsitingLabel;
+            }
         }
         return null;
     }
 
     @Override
-    public boolean removeLabel(PullRequest pullRequest, Label label) {
-        URI uri = pullRequest.getURI();
-        String labelName = label.getName();
-        int pullRequestId = Integer.valueOf(Utils.getTrailingValueFromUrlPath(uri));
-        String repositoryId = createRepositoryIdFromUrl(uri);
-
+    public boolean removeLabels(PullRequest pullRequest, List<Label> labels) {
         try {
+            URI uri = pullRequest.getURI();
+            int pullRequestId = Integer.valueOf(Utils.getTrailingValueFromUrlPath(uri));
+            String repositoryId = createRepositoryIdFromUrl(uri);
+
             GHRepository repository = github.getRepository(repositoryId);
             GHIssue issue = repository.getIssue(pullRequestId);
-            Collection<GHLabel> labels = issue.getLabels();
-            for (GHLabel existingLabel : labels)
-                if (existingLabel.getName().equalsIgnoreCase(labelName)) {
-                    issue.removeLabel(existingLabel.getName());
-                    return true;
+            Collection<GHLabel> currentLabels = issue.getLabels();
+            List<GHLabel> removedLabels = new ArrayList<>();
+
+            for (Label label : labels) {
+                GHLabel currentLabel = validAndGetLabel(repository, label, currentLabels);
+                if (currentLabel == null) {
+                    Utils.logWarnMessage(LOG, "label '" + label.getName() + "' not contained in pull request '" + issue.getUrl() + "'");
+                    continue;
                 }
+                removedLabels.add(currentLabel);
+            }
+
+            if (!removedLabels.isEmpty()) {
+                issue.removeLabels(removedLabels);
+            }
         } catch (IOException e) {
             Utils.logException(LOG, e);
             return false;
         }
-        Utils.logWarnMessage(LOG, "No label exists with name '" + labelName + "' at repository '" + repositoryId + "'");
+
         return false;
     }
 

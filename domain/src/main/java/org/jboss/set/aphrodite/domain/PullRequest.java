@@ -312,11 +312,19 @@ public class PullRequest {
     }
 
     public boolean addLabel(Label label) throws NameNotFoundException {
-        return getPullRequestHome().addLabel(this, label);
+        return getPullRequestHome().addLabels(this, List.of(label));
+    }
+
+    public boolean addLabels(List<Label> labels) throws NameNotFoundException {
+        return getPullRequestHome().addLabels(this, labels);
     }
 
     public boolean removeLabel(Label label) throws NameNotFoundException {
-        return getPullRequestHome().removeLabel(this, label);
+        return getPullRequestHome().removeLabels(this, List.of(label));
+    }
+
+    public boolean removeLabels(List<Label> labels) throws NameNotFoundException {
+        return getPullRequestHome().removeLabels(this, labels);
     }
 
     public CommitStatus getCommitStatus() throws NameNotFoundException {

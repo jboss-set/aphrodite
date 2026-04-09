@@ -84,10 +84,6 @@ public abstract class AbstractRepositoryService {
         return uri.getHost().equals(baseURI.getHost());
     }
 
-    public static boolean exists(AbstractRepositoryService abstractRepositoryService) {
-        return abstractRepositoryService.repositoryType != null && abstractRepositoryService.baseURI != null;
-    }
-
     protected void checkHost(URI uri) throws NotFoundException {
         if (!uriExists(uri))
             throw new NotFoundException("The requested Repository cannot be found as it is not " +
